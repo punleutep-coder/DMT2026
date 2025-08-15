@@ -133,7 +133,7 @@ export default function DocumentManagement() {
          {currentUser?.role === 'Admin' && (
             <>
                 <Button variant="outline" onClick={handleImportClick}>
-                    <Upload /> Import Data
+                    <Upload /> Import Data (JSON)
                 </Button>
                 <input type="file" id="json-file-input" accept=".json" className="hidden" onChange={handleImportFile} />
             </>
