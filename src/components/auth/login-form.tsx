@@ -1,0 +1,110 @@
+'use client'
+
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useAppContext } from '@/hooks/use-app-context'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { useToast } from '@/hooks/use-toast'
+import AnimatedBackground from '../ui/animated-background'
+
+const formSchema = z.object({
+  username: z.string().min(1, { message: 'Username is required.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
+})
+
+const hashPassword = async (password: string): Promise<string> => {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+export default function LoginForm() {
+  const { state, dispatch } = useAppContext()
+  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: '',
+      password: '',
+    },
+  })
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setError(null)
+    const user = state.users.find((u) => u.username === values.username)
+    if (user) {
+      const passwordHash = await hashPassword(values.password)
+      if (passwordHash === user.passwordHash) {
+        dispatch({ type: 'LOGIN', payload: user })
+        toast({
+          title: `Welcome, ${user.username}!`,
+          description: 'You have successfully logged in.',
+        })
+        return
+      }
+    }
+    setError('Invalid username or password.')
+  }
+
+  return (
+    <>
+    <AnimatedBackground />
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="modal-content w-full max-w-sm p-8 space-y-6 glassmorphic-card">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-primary">DocuFlow</h1>
+          <p className="text-muted-foreground">Please sign in to continue</p>
+        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="admin" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
+            </Button>
+          </form>
+        </Form>
+      </div>
+    </div>
+    </>
+  )
+}
