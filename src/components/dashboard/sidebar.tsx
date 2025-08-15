@@ -13,7 +13,7 @@ import {
   Home,
   Users,
   LogOut,
-  Palette,
+  Workflow,
   FileCog,
   FileJson,
   FileText,
@@ -40,7 +40,7 @@ export default function DashboardSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <Palette className="size-8 text-primary" />
+          <Workflow className="size-8 text-primary" />
           <h2 className="text-2xl font-bold text-primary">DocuFlow</h2>
         </div>
       </SidebarHeader>
