@@ -18,9 +18,17 @@ import {
   Play,
   FileEdit,
   Split,
+  MoreVertical,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { format } from 'date-fns'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface DocumentTableRowProps {
   doc: Document
@@ -77,21 +85,21 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       )}
       {columnVisibility.documentId && (
         <TableCell className="font-medium">
-            <div>{doc.id}</div>
+            <div className="font-semibold text-foreground">{doc.id}</div>
             {doc.secondaryId && <div className="text-xs text-muted-foreground">Sec: {doc.secondaryId}</div>}
             {doc.tertiaryId && <div className="text-xs text-muted-foreground">Ter: {doc.tertiaryId}</div>}
             {doc.quaternaryId && <div className="text-xs text-muted-foreground">Qua: {doc.quaternaryId}</div>}
-            <div className="flex flex-wrap gap-1 mt-1">
+            <div className="flex flex-wrap gap-1 mt-2">
                 {doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
             </div>
         </TableCell>
       )}
        {columnVisibility.department && (
-        <TableCell>{doc.assignedDepartment || 'N/A'}</TableCell>
+        <TableCell className="text-muted-foreground">{doc.assignedDepartment || 'N/A'}</TableCell>
       )}
-      {columnVisibility.name && <TableCell>{doc.name}</TableCell>}
+      {columnVisibility.name && <TableCell className="text-muted-foreground">{doc.name}</TableCell>}
       {columnVisibility.office && (
-        <TableCell>{doc.office || 'N/A'}</TableCell>
+        <TableCell className="text-muted-foreground">{doc.office || 'N/A'}</TableCell>
       )}
       {columnVisibility.currentStatus && (
         <TableCell>
@@ -101,43 +109,53 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         </TableCell>
       )}
       {columnVisibility.lastUpdate && (
-        <TableCell>{format(new Date(doc.lastUpdate), 'PPp')}</TableCell>
+        <TableCell className="text-muted-foreground">{format(new Date(doc.lastUpdate), 'PPp')}</TableCell>
       )}
       {columnVisibility.actions && (
         <TableCell>
-          <div className="flex items-center gap-1">
-            {hasPermission(currentUser, 'canViewLog') && <Button variant="ghost" size="icon" onClick={() => handleAction('viewLog', doc.id)} title="View Log"><FileText className="h-4 w-4" /></Button>}
-            {hasPermission(currentUser, 'canEditDocumentDetails') && <Button variant="ghost" size="icon" onClick={() => handleAction('editDocument', doc.id)} title="Edit Document Details"><Pencil className="h-4 w-4" /></Button>}
-            
-            {doc.isDelayed ? (
-                <>
-                 {hasPermission(currentUser, 'canReleaseDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('releaseDocument', doc.id)} title="Release Now"><Play className="h-4 w-4 text-yellow-400" /></Button>}
-                </>
-            ) : !isTerminal ? (
-                <>
-                    {hasPermission(currentUser, 'canSplitDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('splitDocument', doc.id)} title="Split Document"><Split className="h-4 w-4" /></Button>}
-                    {hasPermission(currentUser, 'canDelayDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('delayDocument', doc.id)} title="Delay"><Clock className="h-4 w-4" /></Button>}
-                    {hasPermission(currentUser, 'canEditCurrentNote') && <Button variant="ghost" size="icon" onClick={() => handleAction('editNote', doc.id)} title="Edit Current Note"><FileEdit className="h-4 w-4" /></Button>}
-                    {hasPermission(currentUser, 'canMoveDocument') && <Button variant="ghost" size="icon" disabled={doc.history.length <= 1} onClick={() => handleAction('back', doc.id)} title="Move Back"><Undo2 className="h-4 w-4" /></Button>}
-                    {hasPermission(currentUser, 'canMoveDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('advanceDocument', doc.id)} title="Advance"><Redo2 className="h-4 w-4" /></Button>}
-                    {hasPermission(currentUser, 'canCompleteDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('completeDocument', doc.id)} title="Complete"><CheckCircle2 className="h-4 w-4 text-teal-400" /></Button>}
-                </>
-            ) : isCompleted ? (
-                <>
-                 {hasPermission(currentUser, 'canMoveDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('back', doc.id)} title="Re-open"><Undo2 className="h-4 w-4"/></Button>}
-                </>
-            ) : null}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {hasPermission(currentUser, 'canViewLog') && <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id)}><FileText className="mr-2 h-4 w-4" />View Log</DropdownMenuItem>}
+                    {hasPermission(currentUser, 'canEditDocumentDetails') && <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id)}><Pencil className="mr-2 h-4 w-4" />Edit Details</DropdownMenuItem>}
+                    
+                    {Array.isArray(doc.documentLink) && doc.documentLink.map((link, i) => (
+                        hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ?
+                        <DropdownMenuItem key={i} asChild>
+                            <a href={link} target="_blank" rel="noopener noreferrer"><FileSymlink className="mr-2 h-4 w-4"/>Open Link {i+1}</a>
+                        </DropdownMenuItem> : null
+                    ))}
 
-            {Array.isArray(doc.documentLink) && doc.documentLink.map((link, i) => (
-                hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ?
-                <Button key={i} asChild variant="ghost" size="icon" title={`Open Link ${i + 1}`}>
-                    <a href={link} target="_blank" rel="noopener noreferrer"><FileSymlink className="h-4 w-4"/></a>
-                </Button> : null
-            ))}
+                    <DropdownMenuSeparator />
 
-            {hasPermission(currentUser, 'canDeleteDocument') && <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80" onClick={() => handleAction('deleteDocument', doc.id)} title="Delete Document"><Trash2 className="h-4 w-4" /></Button>}
+                    {doc.isDelayed ? (
+                        <>
+                         {hasPermission(currentUser, 'canReleaseDocument') && <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id)}><Play className="mr-2 h-4 w-4 text-yellow-400" />Release Now</DropdownMenuItem>}
+                        </>
+                    ) : !isTerminal ? (
+                        <>
+                            {hasPermission(currentUser, 'canSplitDocument') && <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id)}><Split className="mr-2 h-4 w-4" />Split Document</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canDelayDocument') && <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id)}><Clock className="mr-2 h-4 w-4" />Delay</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canEditCurrentNote') && <DropdownMenuItem onClick={() => handleAction('editNote', doc.id)}><FileEdit className="mr-2 h-4 w-4" />Edit Current Note</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem disabled={doc.history.length <= 1} onClick={() => handleAction('back', doc.id)}><Undo2 className="mr-2 h-4 w-4" />Move Back</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id)}><Redo2 className="mr-2 h-4 w-4" />Advance</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canCompleteDocument') && <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id)}><CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete</DropdownMenuItem>}
+                        </>
+                    ) : isCompleted ? (
+                        <>
+                         {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('back', doc.id)}><Undo2 className="mr-2 h-4 w-4"/>Re-open</DropdownMenuItem>}
+                        </>
+                    ) : null}
 
-          </div>
+                    <DropdownMenuSeparator />
+                    {hasPermission(currentUser, 'canDeleteDocument') && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </TableCell>
       )}
     </TableRow>

@@ -133,14 +133,14 @@ export default function DocumentTable() {
   }
 
   const columns = [
-    { key: 'select', name: 'Select' },
+    { key: 'select', name: '' },
     { key: 'documentId', name: 'Document ID' },
-    { key: 'department', name: 'Department' },
+    { key: 'department', name: 'Assigned Dept.' },
     { key: 'name', name: 'Name' },
     { key: 'office', name: 'Office' },
     { key: 'currentStatus', name: 'Current Status' },
     { key: 'lastUpdate', name: 'Last Update' },
-    { key: 'actions', name: 'Actions' },
+    { key: 'actions', name: '' },
   ]
   
   return (
@@ -149,11 +149,11 @@ export default function DocumentTable() {
         <TableRow>
           {columns.map(col => (
             columnVisibility[col.key] && (
-              <TableHead key={col.key}>
+              <TableHead key={col.key} className={col.key === 'actions' ? 'text-right' : ''}>
                 <div className="flex items-center gap-2">
                   {col.key === 'select' ? (
                     <Checkbox
-                      checked={selectedDocIds.length > 0 && selectedDocIds.length === filteredDocs.length}
+                      checked={selectedDocIds.length > 0 && selectedDocIds.length === filteredDocs.length && filteredDocs.length > 0}
                       onCheckedChange={handleSelectAll}
                     />
                   ) : (
@@ -198,7 +198,7 @@ export default function DocumentTable() {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
+            <TableCell colSpan={columns.filter(c => columnVisibility[c.key]).length} className="h-24 text-center text-muted-foreground">
               No documents found for the current filter.
             </TableCell>
           </TableRow>
