@@ -63,8 +63,8 @@ export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
                 <div className="space-y-4">
                     {sourceDocuments.map(sourceDoc => sourceDoc && (
                         <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4 border-green-500">
-                           <h4 className="font-semibold text-green-400 mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id)}>
-                             {sourceDoc.id} - {sourceDoc.name}
+                           <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id)}>
+                             <span className="text-green-400">{sourceDoc.id}</span> - {sourceDoc.name}
                            </h4>
                            <p className="text-sm text-muted-foreground">Department: {sourceDoc.assignedDepartment}</p>
                            {sourceDoc.secondaryId && <p className="text-sm text-muted-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
