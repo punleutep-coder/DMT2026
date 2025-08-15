@@ -25,8 +25,10 @@ const formatDuration = (start: string, end: string | null) => {
 
     const parts = [];
     if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
-    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
-    if (minutes > 0 || (days === 0 && hours === 0)) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+    if (hours > 0 && days < 7) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+    if (minutes > 0 && days === 0 && hours === 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+
+    if (parts.length === 0 && days > 0) return `${days} day${days > 1 ? 's' : ''}`;
     
     return parts.join(', ') || '0 minutes';
 };
@@ -41,7 +43,7 @@ export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>History for {document?.id} / {document?.name}</DialogTitle>
+          <DialogTitle className="leading-relaxed">History for {document?.id} / {document?.name}</DialogTitle>
           <DialogDescription>
             Review the complete journey and all changes made to this document.
           </DialogDescription>
