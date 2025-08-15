@@ -7,6 +7,7 @@ import {
   YAxis,
   Tooltip,
   LabelList,
+  CartesianGrid,
 } from 'recharts'
 import { CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { useAppContext } from '@/hooks/use-app-context'
@@ -81,13 +82,17 @@ export default function WorkflowChart() {
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 20 }}>
+          <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 20, right: 20, bottom: 60, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="name"
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
               tickLine={false}
               axisLine={false}
+              angle={-45}
+              textAnchor="end"
+              height={80}
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
@@ -96,6 +101,8 @@ export default function WorkflowChart() {
               axisLine={false}
               tickFormatter={(value) => `${value}`}
               allowDecimals={false}
+              domain={[0, (dataMax: number) => Math.max(60, dataMax + 5)]}
+              ticks={[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]}
             />
              <Tooltip
                 contentStyle={{
@@ -109,7 +116,7 @@ export default function WorkflowChart() {
               fill="hsl(var(--primary))"
               radius={[4, 4, 0, 0]}
             >
-              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={12} />
+              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={14} fontWeight="bold" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
