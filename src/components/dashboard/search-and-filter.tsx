@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 
 export default function SearchAndFilter() {
   const { state, dispatch } = useAppContext()
@@ -42,17 +42,14 @@ export default function SearchAndFilter() {
         dispatch({ type: 'SET_FILTER', payload: { ...state.filter } }) // Re-trigger filter
     }
   }
-  
-  const documentsWithAssignedDept = useMemo(() => {
-    return [...new Set(state.documents.map(d => d.assignedDepartment).filter(Boolean))]
-  }, [state.documents]);
-
 
   return (
-    <div className="p-3 border rounded-lg bg-background/50 space-y-4">
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative w-full md:w-auto flex-grow">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="lg:col-span-2">
+          <Label htmlFor="search-id">Search by Document ID,</Label>
           <Input
+            id="search-id"
             type="text"
             placeholder="Search by Document ID, Name, Tags..."
             className="w-full"
@@ -60,29 +57,35 @@ export default function SearchAndFilter() {
             onChange={handleSearchChange}
           />
         </div>
-        <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto">
-          <Label htmlFor="date-from">From:</Label>
-          <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-auto" />
-          <Label htmlFor="date-to">To:</Label>
-          <Input type="date" id="date-to" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-auto" />
-          <Button onClick={handleDateFilter}>Filter</Button>
-          <Button variant="ghost" onClick={clearDateFilter}>Clear</Button>
+        <div>
+          <Label htmlFor="date-from">History From:</Label>
+          <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full" />
+        </div>
+        <div>
+          <Label htmlFor="date-to">History To:</Label>
+          <Input type="date" id="date-to" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full" />
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full pt-4 border-t">
-        <Label>Exceeding:</Label>
-        <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20" />
-        <Select value={periodUnit} onValueChange={setPeriodUnit}>
-            <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Unit" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="days">Days</SelectItem>
-                <SelectItem value="hours">Hours</SelectItem>
-                <SelectItem value="minutes">Minutes</SelectItem>
-            </SelectContent>
-        </Select>
-        <Button onClick={handleCalculatePeriod} variant="secondary">Calculate</Button>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+            <Label>Documents exceeding:</Label>
+            <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-card" />
+            <Select value={periodUnit} onValueChange={setPeriodUnit}>
+                <SelectTrigger className="w-[120px] bg-card">
+                    <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="days">Days</SelectItem>
+                    <SelectItem value="hours">Hours</SelectItem>
+                    <SelectItem value="minutes">Minutes</SelectItem>
+                </SelectContent>
+            </Select>
+            <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white">Calculate</Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleDateFilter} className="bg-teal-600 hover:bg-teal-700 text-white">Filter</Button>
+          <Button variant="ghost" onClick={clearDateFilter}>Clear</Button>
+        </div>
       </div>
     </div>
   )

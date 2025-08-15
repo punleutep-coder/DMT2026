@@ -120,7 +120,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     {hasPermission(currentUser, 'canEditCurrentNote') && <Button variant="ghost" size="icon" onClick={() => handleAction('editNote', doc.id)} title="Edit Current Note"><FileEdit className="h-4 w-4" /></Button>}
                     {hasPermission(currentUser, 'canMoveDocument') && <Button variant="ghost" size="icon" disabled={doc.history.length <= 1} onClick={() => handleAction('back', doc.id)} title="Move Back"><Undo2 className="h-4 w-4" /></Button>}
                     {hasPermission(currentUser, 'canMoveDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('advanceDocument', doc.id)} title="Advance"><Redo2 className="h-4 w-4" /></Button>}
-                    {hasPermission(currentUser, 'canCompleteDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('completeDocument', doc.id)} title="Complete"><CheckCircle2 className="h-4 w-4 text-primary" /></Button>}
+                    {hasPermission(currentUser, 'canCompleteDocument') && <Button variant="ghost" size="icon" onClick={() => handleAction('completeDocument', doc.id)} title="Complete"><CheckCircle2 className="h-4 w-4 text-teal-400" /></Button>}
                 </>
             ) : isCompleted ? (
                 <>

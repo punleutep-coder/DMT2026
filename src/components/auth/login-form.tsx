@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form'
 import { useToast } from '@/hooks/use-toast'
 import AnimatedBackground from '../ui/animated-background'
+import { Workflow } from 'lucide-react'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -65,7 +66,10 @@ export default function LoginForm() {
     <AnimatedBackground />
     <div className="flex items-center justify-center min-h-screen">
       <div className="modal-content w-full max-w-sm p-8 space-y-6 glassmorphic-card">
-        <div className="text-center">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full">
+            <Workflow className="w-8 h-8 text-primary" />
+          </div>
           <h1 className="text-3xl font-bold text-primary">DocuFlow</h1>
           <p className="text-muted-foreground">Please sign in to continue</p>
         </div>

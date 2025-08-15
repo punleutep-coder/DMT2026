@@ -25,8 +25,7 @@ const isDocumentExceedingPeriod = (doc: any, value: number, unit: string) => {
   return false;
 }
 
-
-const MetricCard = ({ title, value, filter, icon }: { title: string; value: number | string; filter: string; icon?: React.ReactNode }) => {
+const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary' }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; }) => {
   const { state, dispatch } = useAppContext()
   const isActive = state.filter.mainFilter === filter
 
@@ -46,7 +45,7 @@ const MetricCard = ({ title, value, filter, icon }: { title: string; value: numb
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold text-primary">{value}</div>
+        <div className={`text-4xl font-bold ${valueColorClass}`}>{value}</div>
       </CardContent>
     </Card>
   )
@@ -81,19 +80,18 @@ export default function Metrics() {
   }, [state.documents])
 
   const metricItems = [
-    { title: 'Total Documents', value: metrics.total, filter: 'All' },
-    { title: 'In Progress', value: metrics.inProgress, filter: 'In Progress' },
-    { title: 'Delayed', value: metrics.delayed, filter: 'Delayed' },
-    { title: 'Release Reached', value: metrics.releaseReached, filter: 'Release Date Reached' },
-    { title: 'Completed', value: metrics.completed, filter: 'Completed' },
-    { title: 'Completed (Success)', value: metrics.completedSuccess, filter: 'Completed (Success)' },
-    { title: 'Completed (Unsuccess)', value: metrics.completedUnsuccess, filter: 'Completed (Unsuccess)' },
-    { title: 'Exceeding Period', value: metrics.exceeding, filter: 'Exceeding Period', icon: <Clock className="h-5 w-5 text-muted-foreground" /> },
+    { title: 'Total Documents', value: metrics.total, filter: 'All', valueColorClass: 'text-teal-400' },
+    { title: 'In Progress', value: metrics.inProgress, filter: 'In Progress', valueColorClass: 'text-yellow-400' },
+    { title: 'Delayed', value: metrics.delayed, filter: 'Delayed', valueColorClass: 'text-yellow-400' },
+    { title: 'Release Date Reached', value: metrics.releaseReached, filter: 'Release Date Reached', valueColorClass: 'text-red-500' },
+    { title: 'Completed', value: metrics.completed, filter: 'Completed', valueColorClass: 'text-green-400' },
+    { title: 'Completed (Success)', value: metrics.completedSuccess, filter: 'Completed (Success)', valueColorClass: 'text-green-400' },
+    { title: 'Completed (Unsuccess)', value: metrics.completedUnsuccess, filter: 'Completed (Unsuccess)', valueColorClass: 'text-red-500' },
+    { title: 'Exceeding Period', value: metrics.exceeding, filter: 'Exceeding Period', icon: <Clock className="h-5 w-5 text-muted-foreground" />, valueColorClass: 'text-orange-400' },
   ]
 
   return (
-    <section className="glassmorphic-card">
-      <h2 className="text-2xl font-bold text-foreground mb-6">System Overview</h2>
+    <section>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         {metricItems.map((item) => (
           <MetricCard
@@ -102,6 +100,7 @@ export default function Metrics() {
             value={item.value}
             filter={item.filter}
             icon={item.icon}
+            valueColorClass={item.valueColorClass}
           />
         ))}
       </div>

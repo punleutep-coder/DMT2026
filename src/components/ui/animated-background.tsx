@@ -23,7 +23,7 @@ export default function AnimatedBackground() {
     renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1)
     currentMount.appendChild(renderer.domElement)
 
-    const particlesCount = isMobile ? 1500 : 5000
+    const particlesCount = isMobile ? 500 : 2000
     const positions = new Float32Array(particlesCount * 3)
 
     for (let i = 0; i < particlesCount * 3; i++) {
@@ -37,11 +37,12 @@ export default function AnimatedBackground() {
     )
 
     const particlesMaterial = new THREE.PointsMaterial({
-      color: 0x60e4ac, // Emerald green
-      size: isMobile ? 0.025 : 0.02,
+      color: 0x14a39a,
+      size: 0.02,
       transparent: true,
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true,
+      opacity: 0.5,
     })
 
     const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial)
@@ -99,7 +100,7 @@ export default function AnimatedBackground() {
   return (
     <div
       ref={mountRef}
-      className="fixed top-0 left-0 w-full h-full -z-10 bg-[#232b38]"
+      className="fixed top-0 left-0 w-full h-full -z-10 bg-[#121823]"
     />
   )
 }

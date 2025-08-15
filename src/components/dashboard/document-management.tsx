@@ -106,28 +106,28 @@ export default function DocumentManagement() {
 
       <div className="flex flex-wrap gap-2">
         {hasPermission(currentUser, 'canAddDocument') && (
-          <Button onClick={() => openModal('addDocument')}>
+          <Button onClick={() => openModal('addDocument')} className="bg-[#14a39a] hover:bg-[#14a39a]/90 text-white">
             <FilePlus /> Add New Document
           </Button>
         )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
-          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2}>
+          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-[#2c6e63] hover:bg-[#2c6e63]/90 text-white">
             <Combine /> Combine Selected
           </Button>
         )}
         {currentUser?.role === 'Admin' && (
-            <Button variant="secondary" onClick={() => openModal('manageDepartments')}>
+            <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-[#3b5998] hover:bg-[#3b5998]/90 text-white">
                 <Library /> Manage Departments
             </Button>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (
-            <Button variant="secondary" onClick={() => openModal('manageColumns')}>
+            <Button variant="secondary" onClick={() => openModal('manageColumns')} className="bg-[#8a4baf] hover:bg-[#8a4baf]/90 text-white">
                 <Columns /> Manage Columns
             </Button>
         )}
          {hasPermission(currentUser, 'canExportData') && (
             <Button variant="outline" onClick={handleExport}>
-                <Download /> Export Data
+                <Download /> Export Data (JSON)
             </Button>
         )}
          {currentUser?.role === 'Admin' && (
