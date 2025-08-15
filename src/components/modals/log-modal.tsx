@@ -1,9 +1,8 @@
 'use client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAppContext } from '@/hooks/use-app-context'
-import { format } from 'date-fns'
+import { format, formatDistanceToNowStrict } from 'date-fns'
 
 interface LogModalProps {
   isOpen: boolean
@@ -11,42 +10,78 @@ interface LogModalProps {
   docId: string
 }
 
+const formatDuration = (start: string, end: string | null) => {
+    if (!start) return 'N/A';
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date();
+    return formatDistanceToNowStrict(startDate, {
+        unit: 'minute',
+        addSuffix: false,
+        roundingMethod: 'floor'
+    }).replace('minutes', 'minutes').replace('minute', 'minute')
+     .replace('hours', 'hours').replace('hour', 'hour')
+     .replace('days', 'days').replace('day', 'day');
+};
+
+
 export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
   const { state } = useAppContext()
-  const docLogs = state.logs.filter(log => log.docId === docId)
+  const docLogs = state.logs.filter(log => log.docId === docId).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   const document = state.documents.find(doc => doc.id === docId)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Activity Log for Document: {docId}</DialogTitle>
-          <DialogDescription>{document?.name}</DialogDescription>
+          <DialogTitle>History for {document?.id} / {document?.name}</DialogTitle>
+          <DialogDescription>
+            Review the complete journey and all changes made to this document.
+          </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[60vh]">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Timestamp</TableHead>
-                        <TableHead>User</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Reason / Note</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {docLogs.map((log, index) => (
-                        <TableRow key={index}>
-                            <TableCell>{format(new Date(log.timestamp), 'PPpp')}</TableCell>
-                            <TableCell>{log.user}</TableCell>
-                            <TableCell>
-                                <span className="font-medium">{log.newStatus}</span>
-                                {log.oldStatus && <span className="text-muted-foreground"> (from {log.oldStatus})</span>}
-                            </TableCell>
-                            <TableCell>{log.reason}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+        <ScrollArea className="h-[70vh]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+            {/* Department History Column */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-foreground">Department Timestamps & Details</h3>
+              <div className="space-y-4">
+                {document?.history?.map((entry, index) => (
+                  <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/50">
+                    <h4 className="font-bold text-primary mb-2">{entry.department}</h4>
+                    <div className="text-sm space-y-1 text-muted-foreground">
+                       <p><strong className="text-foreground/80">Start:</strong> {entry.start ? format(new Date(entry.start), 'PPp') : 'N/A'}</p>
+                       <p><strong className="text-foreground/80">End:</strong> {entry.end ? format(new Date(entry.end), 'PPp') : 'N/A'}</p>
+                       <p><strong className="text-foreground/80">Period:</strong> <span className="text-primary font-medium">{formatDuration(entry.start, entry.end)}</span></p>
+                       <p><strong className="text-foreground/80">Receiver Name:</strong> {entry.receiver}</p>
+                       <p><strong className="text-foreground/80">Note:</strong> {entry.note || 'N/A'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Status Change Log Column */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-foreground">Status Change Log</h3>
+              <div className="relative space-y-6 border-l-2 border-primary/30 pl-6">
+                 {docLogs.length > 0 ? docLogs.map((log, index) => (
+                    <div key={index} className="relative">
+                        <div className="absolute -left-[30px] top-1.5 h-4 w-4 rounded-full bg-primary ring-4 ring-background" />
+                        <p className="font-medium text-foreground">
+                            From <span className="font-bold text-primary/90">{log.oldStatus}</span> to <span className="font-bold text-primary">{log.newStatus}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">{format(new Date(log.timestamp), 'PPp')} by {log.user}</p>
+                        {log.reason && (
+                            <p className="text-sm mt-2 p-2 bg-muted/20 rounded-md border border-border/30">
+                                <strong className="text-foreground/80">Reason:</strong> {log.reason}
+                            </p>
+                        )}
+                    </div>
+                )) : (
+                    <p className="text-muted-foreground">No status changes logged.</p>
+                )}
+              </div>
+            </div>
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
