@@ -35,9 +35,17 @@ const formatDuration = (start: string, end: string | null) => {
 
 
 export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
-  const { state } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const docLogs = state.logs.filter(log => log.docId === docId).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   const document = state.documents.find(doc => doc.id === docId)
+
+  const sourceDocuments = document?.combinedFrom
+    ? document.combinedFrom.map(id => state.documents.find(d => d.id === id)).filter(Boolean)
+    : [];
+
+  const handleSourceDocClick = (sourceDocId: string) => {
+    dispatch({ type: 'SET_MODAL', payload: { type: 'viewLog', docId: sourceDocId }});
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -48,8 +56,25 @@ export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
             Review the complete journey and all changes made to this document.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[70vh]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+        <ScrollArea className="h-[70vh] p-4">
+          {sourceDocuments.length > 0 && (
+              <div className="space-y-4 mb-8">
+                <h3 className="text-lg font-semibold text-foreground">Source Documents</h3>
+                <div className="space-y-4">
+                    {sourceDocuments.map(sourceDoc => sourceDoc && (
+                        <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4 border-green-500">
+                           <h4 className="font-semibold text-green-400 mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id)}>
+                             {sourceDoc.id} - {sourceDoc.name}
+                           </h4>
+                           <p className="text-sm text-muted-foreground">Department: {sourceDoc.assignedDepartment}</p>
+                           {sourceDoc.secondaryId && <p className="text-sm text-muted-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
+                        </div>
+                    ))}
+                </div>
+              </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Department History Column */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-foreground">Department Timestamps & Details</h3>
