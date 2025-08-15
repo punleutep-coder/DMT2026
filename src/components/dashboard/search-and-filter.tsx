@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 
 
 export default function SearchAndFilter() {
-  const { state, dispatch } = useAppContext()
+  const { state, dispatch, filteredDocs } = useAppContext()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [periodValue, setPeriodValue] = useState(state.filter.periodValue);
@@ -47,19 +47,30 @@ export default function SearchAndFilter() {
     dispatch({ type: 'SET_FILTER', payload: { periodValue, periodUnit, mainFilter: 'Exceeding Period' } })
   }
 
+  const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All';
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-        <div className="lg:col-span-2">
-          <Label htmlFor="search-id">Search by Document ID,</Label>
-          <Input
-            id="search-id"
-            type="text"
-            placeholder="Search by Document ID, Name, Tags..."
-            className="w-full"
-            value={state.filter.search}
-            onChange={handleSearchChange}
-          />
+        <div className="lg:col-span-2 space-y-2">
+          <Label htmlFor="search-id">Search by Document ID, Name, Tags...</Label>
+          <div className="relative">
+            <Input
+              id="search-id"
+              type="text"
+              placeholder="Search..."
+              className="w-full pr-24"
+              value={state.filter.search}
+              onChange={handleSearchChange}
+            />
+            {isFiltered && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <span className="text-sm text-muted-foreground">
+                  {filteredDocs.length} found
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         <div>
           <Label htmlFor="date-from">History From:</Label>

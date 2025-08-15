@@ -16,7 +16,7 @@ import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 
 export default function DocumentManagement() {
-  const { state, dispatch, filteredDocs } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const { currentUser } = state
 
   const openModal = (type: any, docId?: string) => {
@@ -95,8 +95,6 @@ export default function DocumentManagement() {
     }
   }
 
-  const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All';
-
   return (
     <section className="glassmorphic-card space-y-6">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
@@ -104,11 +102,6 @@ export default function DocumentManagement() {
           <h2 className="text-2xl font-bold text-foreground">
             Document Management
           </h2>
-          {isFiltered && (
-            <span className="text-sm text-muted-foreground font-medium">
-              ({filteredDocs.length} result{filteredDocs.length !== 1 ? 's' : ''})
-            </span>
-          )}
         </div>
       </div>
 
