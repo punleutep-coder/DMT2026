@@ -45,10 +45,10 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
       secondaryId: doc?.secondaryId || '',
       tertiaryId: doc?.tertiaryId || '',
       quaternaryId: doc?.quaternaryId || '',
-      documentLink1: doc?.documentLink[0] || '',
-      documentLink2: doc?.documentLink[1] || '',
-      documentLink3: doc?.documentLink[2] || '',
-      documentLink4: doc?.documentLink[3] || '',
+      documentLink1: Array.isArray(doc?.documentLink) ? doc?.documentLink[0] || '' : '',
+      documentLink2: Array.isArray(doc?.documentLink) ? doc?.documentLink[1] || '' : '',
+      documentLink3: Array.isArray(doc?.documentLink) ? doc?.documentLink[2] || '' : '',
+      documentLink4: Array.isArray(doc?.documentLink) ? doc?.documentLink[3] || '' : '',
       assignedDepartment: doc?.assignedDepartment || '',
     },
   })
@@ -93,20 +93,21 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
-                <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} disabled={!hasPermission(currentUser, 'canEditDocumentId')} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} disabled={!hasPermission(currentUser, 'canEditDocumentName')} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} disabled={!hasPermission(currentUser, 'canEditOffice')} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input {...field} disabled={!hasPermission(currentUser, 'canEditAssignedDepartment')} /></FormControl><FormMessage /></FormItem> )} />
+                {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditAssignedDepartment') && <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} disabled={!hasPermission(currentUser, 'canEditSecondaryId')} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} disabled={!hasPermission(currentUser, 'canEditTertiaryId')} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} disabled={!hasPermission(currentUser, 'canEditQuaternaryId')} /></FormControl><FormMessage /></FormItem> )} />
+                    {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" {...field} disabled={!hasPermission(currentUser, 'canEditDocumentLink1')} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" {...field} disabled={!hasPermission(currentUser, 'canEditDocumentLink2')} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>Document Link 3</FormLabel><FormControl><Input type="url" {...field} disabled={!hasPermission(currentUser, 'canEditDocumentLink3')} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>Document Link 4</FormLabel><FormControl><Input type="url" {...field} disabled={!hasPermission(currentUser, 'canEditDocumentLink4')} /></FormControl><FormMessage /></FormItem> )} />
+                    {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink2') && <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink3') && <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>Document Link 3</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink4') && <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>Document Link 4</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
               </div>
             </ScrollArea>
