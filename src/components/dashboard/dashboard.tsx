@@ -17,7 +17,7 @@ export default function Dashboard() {
     <SidebarProvider>
       <AnimatedBackground />
       <DashboardSidebar />
-      <div className="relative flex min-h-svh flex-1 flex-col bg-transparent">
+      <div className="relative flex min-h-svh flex-1 flex-col bg-background/80 backdrop-blur-sm">
         <DashboardHeader />
         <main className="flex-1 space-y-6 p-4 sm:p-6 md:p-8">
           <Metrics />
