@@ -37,7 +37,7 @@ export default function AnimatedBackground() {
     )
 
     const particlesMaterial = new THREE.PointsMaterial({
-      color: 0x14a39a,
+      color: 0x3b82f6, // Updated to match primary blue
       size: 0.02,
       transparent: true,
       blending: THREE.AdditiveBlending,
@@ -100,7 +100,7 @@ export default function AnimatedBackground() {
   return (
     <div
       ref={mountRef}
-      className="fixed top-0 left-0 w-full h-full -z-10 bg-[#121823]"
+      className="fixed top-0 left-0 w-full h-full -z-10 bg-[#020817]"
     />
   )
 }
