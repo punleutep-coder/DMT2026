@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   note: z.string().min(1, 'Note cannot be empty.'),
@@ -20,9 +22,9 @@ interface EditNoteModalProps {
 }
 
 export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalProps) {
-  const { state, dispatch } = useAppContext()
-  const doc = state.documents.find(d => d.id === docId)
-  const currentNote = doc?.history[doc.history.length - 1]?.note || ''
+  const { state } = useAppContext()
+  const docToUpdate = state.documents.find(d => d.id === docId)
+  const currentNote = docToUpdate?.history[docToUpdate.history.length - 1]?.note || ''
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -31,33 +33,50 @@ export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalP
     },
   })
 
-  if (!doc) return null
+  if (!docToUpdate) return null
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const now = new Date().toISOString()
-    const updatedDocs = state.documents.map(d => {
-      if (d.id === docId) {
-        const newHistory = [...d.history]
-        const lastEntry = newHistory[newHistory.length - 1]
-        if (lastEntry) {
-          lastEntry.note = values.note
-        }
-        return { ...d, history: newHistory, lastUpdate: now } as Document
-      }
-      return d
-    })
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!docToUpdate.firestoreId) {
+        console.error("Document is missing Firestore ID");
+        return;
+    }
+    const now = new Date().toISOString();
+    const newHistory = [...docToUpdate.history];
+    const lastEntry = newHistory[newHistory.length - 1];
+    if (lastEntry) {
+        lastEntry.note = values.note;
+    }
 
-    dispatch({ type: 'UPDATE_DOCUMENTS', payload: updatedDocs })
-    dispatch({ type: 'UPDATE_LOGS', payload: [{ docId, oldStatus: doc.status, newStatus: `Note Edited in ${doc.status}`, user: state.currentUser!.username, timestamp: now, reason: values.note }, ...state.logs] })
-    onClose()
+    const updatedFields = { 
+        history: newHistory, 
+        lastUpdate: now 
+    };
+
+    const newLog = { 
+        docId, 
+        oldStatus: docToUpdate.status, 
+        newStatus: `Note Edited in ${docToUpdate.status}`, 
+        user: state.currentUser!.username, 
+        timestamp: now, 
+        reason: values.note 
+    };
+
+    try {
+        const docRef = doc(db, "documents", docToUpdate.firestoreId);
+        await updateDoc(docRef, updatedFields);
+        await addDoc(collection(db, "logs"), newLog);
+        onClose();
+    } catch(error) {
+        console.error("Error editing note: ", error);
+    }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Edit Note for {doc.id}</DialogTitle>
-          <DialogDescription>Current Status: {doc.status}</DialogDescription>
+          <DialogTitle>Edit Note for {docToUpdate.id}</DialogTitle>
+          <DialogDescription>Current Status: {docToUpdate.status}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

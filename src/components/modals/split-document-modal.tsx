@@ -10,6 +10,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { PlusCircle, Trash } from 'lucide-react'
+import { doc, writeBatch, collection } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import type { Document } from '@/lib/types'
 
 const splitDocumentSchema = z.object({
     id: z.string().min(1, 'Document ID is required'),
@@ -28,7 +31,7 @@ interface SplitDocumentModalProps {
 }
 
 export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocumentModalProps) {
-  const { state, dispatch } = useAppContext()
+  const { state } = useAppContext()
   const docToSplit = state.documents.find(d => d.id === docId);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,18 +49,22 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
 
   if (!docToSplit) return null;
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const allDocIds = new Set(state.documents.map(d => d.id));
     const newDocIds = values.newDocuments.map(d => d.id);
     if (newDocIds.some(id => allDocIds.has(id))) {
         form.setError('newDocuments', { message: 'One or more new Document IDs already exist.' });
         return;
     }
+     if (!docToSplit.firestoreId) {
+        console.error("Document is missing Firestore ID");
+        return;
+    }
 
     const now = new Date().toISOString();
     const initialDepartment = state.departments.length > 0 ? state.departments[0] : 'N/A';
     
-    const newDocs = values.newDocuments.map(newDocData => ({
+    const newDocsData: Omit<Document, 'firestoreId'>[] = values.newDocuments.map(newDocData => ({
         id: newDocData.id,
         name: newDocData.name,
         office: docToSplit.office,
@@ -77,25 +84,37 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
         splitFrom: docId,
     }));
     
-    const updatedDocs = state.documents.map(d => {
-        if (d.id === docId) {
-            const splitHistory = d.splitHistory || [];
-            splitHistory.push({ timestamp: now, splitTo: newDocIds });
-            return { ...d, status: 'Split', lastUpdate: now, splitHistory };
-        }
-        return d;
-    });
+    try {
+        const batch = writeBatch(db);
 
-    dispatch({ type: 'UPDATE_DOCUMENTS', payload: [...newDocs, ...updatedDocs] });
-    dispatch({
-        type: 'UPDATE_LOGS',
-        payload: [
-            { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` },
-            ...newDocs.map(nd => ({ docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now }))
-        ]
-    });
+        // Update the original document
+        const originalDocRef = doc(db, "documents", docToSplit.firestoreId);
+        const splitHistory = docToSplit.splitHistory || [];
+        splitHistory.push({ timestamp: now, splitTo: newDocIds });
+        batch.update(originalDocRef, { status: 'Split', lastUpdate: now, splitHistory });
 
-    onClose();
+        // Add log for splitting the original document
+        const originalDocLog = {
+            docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}`
+        };
+        const logRef1 = doc(collection(db, 'logs'));
+        batch.set(logRef1, originalDocLog);
+        
+        // Add new documents and their logs
+        newDocsData.forEach(nd => {
+            const newDocRef = doc(collection(db, "documents"));
+            batch.set(newDocRef, nd);
+            
+            const newDocLog = { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now };
+            const logRef2 = doc(collection(db, 'logs'));
+            batch.set(logRef2, newDocLog);
+        });
+        
+        await batch.commit();
+        onClose();
+    } catch(error) {
+        console.error("Error splitting document: ", error);
+    }
   }
 
   return (

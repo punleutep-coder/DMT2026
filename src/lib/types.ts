@@ -12,6 +12,7 @@ export interface SplitHistoryEntry {
 }
 
 export interface Document {
+  firestoreId?: string; // Firestore document ID
   id: string;
   name: string;
   office: string | null;
@@ -36,6 +37,7 @@ export interface Document {
 }
 
 export interface Log {
+  firestoreId?: string; // Firestore document ID
   docId: string;
   oldStatus: string;
   newStatus: string;
@@ -45,6 +47,7 @@ export interface Log {
 }
 
 export interface User {
+  firestoreId?: string; // Firestore document ID
   id: string;
   username: string;
   passwordHash: string;

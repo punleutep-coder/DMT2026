@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { useAppContext } from '@/hooks/use-app-context'
 import { GripVertical, Trash2 } from 'lucide-react'
+import { doc, setDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 interface ManageDepartmentsModalProps {
   isOpen: boolean
@@ -12,7 +14,7 @@ interface ManageDepartmentsModalProps {
 }
 
 export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepartmentsModalProps) {
-  const { state, dispatch } = useAppContext()
+  const { state } = useAppContext()
   const [departments, setDepartments] = useState([...state.departments])
   const [newDepartment, setNewDepartment] = useState('')
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
@@ -28,9 +30,13 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
     setDepartments(departments.filter((_, i) => i !== index))
   }
 
-  const handleSave = () => {
-    dispatch({ type: 'UPDATE_DEPARTMENTS', payload: departments })
-    onClose()
+  const handleSave = async () => {
+    try {
+        await setDoc(doc(db, "app-config", "departments"), { list: departments });
+        onClose();
+    } catch (error) {
+        console.error("Error saving departments:", error);
+    }
   }
 
   const handleDragStart = (index: number) => {

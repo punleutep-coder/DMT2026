@@ -9,10 +9,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useAppContext } from '@/hooks/use-app-context'
-import type { Document } from '@/lib/types'
 import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   releaseDate: z.date({
@@ -28,8 +29,8 @@ interface DelayDocumentModalProps {
 }
 
 export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocumentModalProps) {
-  const { state, dispatch } = useAppContext()
-  const doc = state.documents.find(d => d.id === docId)
+  const { state } = useAppContext()
+  const docToUpdate = state.documents.find(d => d.id === docId)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,32 +40,44 @@ export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocu
     },
   })
 
-  if (!doc) return null
+  if (!docToUpdate) return null
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!docToUpdate.firestoreId) {
+        console.error("Document is missing Firestore ID");
+        return;
+    }
     const now = new Date().toISOString()
-    const updatedDocs = state.documents.map(d => {
-      if (d.id === docId) {
-        return {
-          ...d,
-          isDelayed: true,
-          releaseDate: values.releaseDate.toISOString(),
-          lastUpdate: now,
-        } as Document
-      }
-      return d
-    })
+    const updatedFields = {
+        isDelayed: true,
+        releaseDate: values.releaseDate.toISOString(),
+        lastUpdate: now,
+    }
 
-    dispatch({ type: 'UPDATE_DOCUMENTS', payload: updatedDocs })
-    dispatch({ type: 'UPDATE_LOGS', payload: [{ docId, oldStatus: doc.status, newStatus: 'Delayed', user: state.currentUser!.username, timestamp: now, reason: `Delayed until ${format(values.releaseDate, 'PPP')}. Note: ${values.note}` }, ...state.logs] })
-    onClose()
+    const newLog = { 
+        docId, 
+        oldStatus: docToUpdate.status, 
+        newStatus: 'Delayed', 
+        user: state.currentUser!.username, 
+        timestamp: now, 
+        reason: `Delayed until ${format(values.releaseDate, 'PPP')}. Note: ${values.note}` 
+    };
+
+    try {
+        const docRef = doc(db, "documents", docToUpdate.firestoreId);
+        await updateDoc(docRef, updatedFields);
+        await addDoc(collection(db, "logs"), newLog);
+        onClose();
+    } catch(error) {
+        console.error("Error delaying document: ", error);
+    }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Delay Document: {doc.id}</DialogTitle>
+          <DialogTitle>Delay Document: {docToUpdate.id}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

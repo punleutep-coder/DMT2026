@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useAppContext } from '@/hooks/use-app-context'
-import type { Document } from '@/lib/types'
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   status: z.enum(['Completed (Success)', 'Completed (Unsuccess)'], {
@@ -24,8 +25,8 @@ interface CompleteDocumentModalProps {
 }
 
 export default function CompleteDocumentModal({ isOpen, onClose, docId }: CompleteDocumentModalProps) {
-  const { state, dispatch } = useAppContext()
-  const doc = state.documents.find(d => d.id === docId)
+  const { state } = useAppContext()
+  const docToUpdate = state.documents.find(d => d.id === docId)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,40 +36,54 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId }: Comple
     },
   })
 
-  if (!doc) return null
+  if (!docToUpdate) return null
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const now = new Date().toISOString()
-    const updatedDocs = state.documents.map(d => {
-      if (d.id === docId) {
-        const newHistory = [...d.history]
-        const lastEntry = newHistory[newHistory.length - 1]
-        if (lastEntry) {
-          lastEntry.end = now
-          if (values.note) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!docToUpdate.firestoreId) {
+        console.error("Document is missing Firestore ID");
+        return;
+    }
+
+    const now = new Date().toISOString();
+    const newHistory = [...docToUpdate.history];
+    const lastEntry = newHistory[newHistory.length - 1];
+    if (lastEntry) {
+        lastEntry.end = now;
+        if (values.note) {
             lastEntry.note = `${lastEntry.note}\nCompletion Note: ${values.note}`;
-          }
         }
-        return {
-          ...d,
-          status: values.status,
-          lastUpdate: now,
-          history: newHistory,
-        } as Document
-      }
-      return d
-    })
+    }
 
-    dispatch({ type: 'UPDATE_DOCUMENTS', payload: updatedDocs })
-    dispatch({ type: 'UPDATE_LOGS', payload: [{ docId, oldStatus: doc.status, newStatus: values.status, user: state.currentUser!.username, timestamp: now, reason: values.note }, ...state.logs] })
-    onClose()
+    const updatedFields = {
+        status: values.status,
+        lastUpdate: now,
+        history: newHistory,
+    };
+
+    const newLog = { 
+        docId, 
+        oldStatus: docToUpdate.status, 
+        newStatus: values.status, 
+        user: state.currentUser!.username, 
+        timestamp: now, 
+        reason: values.note 
+    };
+
+    try {
+        const docRef = doc(db, "documents", docToUpdate.firestoreId);
+        await updateDoc(docRef, updatedFields);
+        await addDoc(collection(db, "logs"), newLog);
+        onClose();
+    } catch(error) {
+        console.error("Error completing document: ", error);
+    }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Complete Document: {doc.id}</DialogTitle>
+          <DialogTitle>Complete Document: {docToUpdate.id}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

@@ -10,6 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -32,62 +34,65 @@ interface EditDocumentModalProps {
 }
 
 export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocumentModalProps) {
-  const { state, dispatch } = useAppContext()
-  const doc = state.documents.find(d => d.id === docId)
+  const { state } = useAppContext()
+  const docToUpdate = state.documents.find(d => d.id === docId)
   const { currentUser } = state
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: doc?.id || '',
-      name: doc?.name || '',
-      office: doc?.office || '',
-      secondaryId: doc?.secondaryId || '',
-      tertiaryId: doc?.tertiaryId || '',
-      quaternaryId: doc?.quaternaryId || '',
-      documentLink1: Array.isArray(doc?.documentLink) ? doc?.documentLink[0] || '' : '',
-      documentLink2: Array.isArray(doc?.documentLink) ? doc?.documentLink[1] || '' : '',
-      documentLink3: Array.isArray(doc?.documentLink) ? doc?.documentLink[2] || '' : '',
-      documentLink4: Array.isArray(doc?.documentLink) ? doc?.documentLink[3] || '' : '',
-      assignedDepartment: doc?.assignedDepartment || '',
+      id: docToUpdate?.id || '',
+      name: docToUpdate?.name || '',
+      office: docToUpdate?.office || '',
+      secondaryId: docToUpdate?.secondaryId || '',
+      tertiaryId: docToUpdate?.tertiaryId || '',
+      quaternaryId: docToUpdate?.quaternaryId || '',
+      documentLink1: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[0] || '' : '',
+      documentLink2: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[1] || '' : '',
+      documentLink3: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[2] || '' : '',
+      documentLink4: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[3] || '' : '',
+      assignedDepartment: docToUpdate?.assignedDepartment || '',
     },
   })
 
-  if (!doc) return null
+  if (!docToUpdate) return null
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (values.id !== doc.id && state.documents.some(d => d.id === values.id)) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (values.id !== docToUpdate.id && state.documents.some(d => d.id === values.id)) {
         form.setError('id', { message: 'This Document ID already exists.' });
         return;
     }
+    if (!docToUpdate.firestoreId) {
+        console.error("Document is missing Firestore ID");
+        return;
+    }
+    
+    const updatedFields = {
+        id: values.id,
+        name: values.name,
+        office: values.office || null,
+        secondaryId: values.secondaryId || null,
+        tertiaryId: values.tertiaryId || null,
+        quaternaryId: values.quaternaryId || null,
+        documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
+        assignedDepartment: values.assignedDepartment || null,
+        lastUpdate: new Date().toISOString(),
+    }
 
-    const updatedDocs = state.documents.map(d => {
-      if (d.id === docId) {
-        return {
-          ...d,
-          id: values.id,
-          name: values.name,
-          office: values.office || null,
-          secondaryId: values.secondaryId || null,
-          tertiaryId: values.tertiaryId || null,
-          quaternaryId: values.quaternaryId || null,
-          documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
-          assignedDepartment: values.assignedDepartment || null,
-          lastUpdate: new Date().toISOString(),
-        } as Document
-      }
-      return d
-    })
-
-    dispatch({ type: 'UPDATE_DOCUMENTS', payload: updatedDocs })
-    onClose()
+    try {
+        const docRef = doc(db, "documents", docToUpdate.firestoreId);
+        await updateDoc(docRef, updatedFields);
+        onClose();
+    } catch(error) {
+        console.error("Error updating document: ", error);
+    }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Edit Document: {doc.id}</DialogTitle>
+          <DialogTitle>Edit Document: {docToUpdate.id}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

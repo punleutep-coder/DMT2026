@@ -15,6 +15,9 @@ import { PERMISSIONS_CONFIG } from '@/lib/initial-data'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion'
 import { Checkbox } from '../ui/checkbox'
 import { Pencil, Trash2 } from 'lucide-react'
+import { addDoc, collection, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import type { User } from '@/lib/types'
 
 const permissionsSchema = z.record(z.boolean()).default({});
 
@@ -81,25 +84,35 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   const role = form.watch('role');
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const passwordHash = values.password ? await hashPassword(values.password) : userToEdit?.passwordHash;
+    let passwordHash = userToEdit?.passwordHash;
+    if (values.password) {
+        passwordHash = await hashPassword(values.password);
+    }
+    
     if (!passwordHash && !isEditing) {
         form.setError("password", { message: "Password is required for new users." });
         return;
     }
 
     if (isEditing) {
-      const updatedUsers = state.users.map(u =>
-        u.id === editingUserId
-          ? { ...u, username: values.username, passwordHash, role: values.role, permissions: values.permissions, departmentPermissions: values.departmentPermissions }
-          : u
-      )
-      dispatch({ type: 'UPDATE_USERS', payload: updatedUsers })
+      if (!userToEdit?.firestoreId) {
+        console.error("User to edit is missing firestoreId");
+        return;
+      }
+      const userRef = doc(db, "users", userToEdit.firestoreId);
+      await updateDoc(userRef, {
+        username: values.username,
+        passwordHash,
+        role: values.role,
+        permissions: values.permissions,
+        departmentPermissions: values.departmentPermissions
+      });
     } else {
       if (state.users.some(u => u.username === values.username)) {
         form.setError('username', { message: 'This username is already taken.' })
         return
       }
-      const newUser = {
+      const newUser: Omit<User, 'firestoreId'> = {
         id: `user-${Date.now()}`,
         username: values.username,
         passwordHash: passwordHash!,
@@ -107,14 +120,14 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         permissions: values.role === 'Admin' ? {} : values.permissions,
         departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions
       }
-      dispatch({ type: 'UPDATE_USERS', payload: [...state.users, newUser] })
+      await addDoc(collection(db, "users"), newUser);
     }
     setEditingUserId(undefined) // Reset form to "Add New" state
     form.reset()
   }
 
-  const handleDeleteUser = (userId: string) => {
-    if (state.currentUser?.id === userId) {
+  const handleDeleteUser = (user: User) => {
+    if (state.currentUser?.id === user.id) {
         dispatch({ type: 'SET_DIALOG', payload: { isOpen: true, title: 'Error', message: 'You cannot delete your own account.', isAlert: true }})
         return;
     }
@@ -125,9 +138,10 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             title: 'Delete User',
             message: 'Are you sure you want to delete this user? This action cannot be undone.',
             confirmText: 'Delete',
-            onConfirm: () => {
-                const updatedUsers = state.users.filter(u => u.id !== userId);
-                dispatch({ type: 'UPDATE_USERS', payload: updatedUsers });
+            onConfirm: async () => {
+                if (user.firestoreId) {
+                    await deleteDoc(doc(db, "users", user.firestoreId));
+                }
             }
         }
     })
@@ -177,7 +191,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingUserId(user.id)}>
                                     <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteUser(user.id)}>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteUser(user)}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>

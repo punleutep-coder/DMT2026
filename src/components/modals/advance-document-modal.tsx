@@ -10,6 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   nextDepartment: z.string().min(1, 'Please select a department.'),
@@ -41,30 +43,37 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
   const currentDeptIndex = state.departments.indexOf(doc.status)
   const availableNextDepts = state.departments.slice(currentDeptIndex + 1)
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const now = new Date().toISOString()
-    const updatedDocs = state.documents.map(d => {
-      if (d.id === docId) {
-        const newHistory = [...d.history]
-        const lastEntry = newHistory[newHistory.length - 1]
-        if (lastEntry) {
-          lastEntry.end = now
-        }
-        newHistory.push({ department: values.nextDepartment, start: now, end: null, receiver: values.receiver, note: values.note || '' })
-        
-        return {
-          ...d,
-          status: values.nextDepartment,
-          lastUpdate: now,
-          history: newHistory,
-        } as Document
-      }
-      return d
-    })
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!doc.firestoreId) {
+      console.error("Document is missing Firestore ID");
+      return;
+    }
 
-    dispatch({ type: 'UPDATE_DOCUMENTS', payload: updatedDocs })
-    dispatch({ type: 'UPDATE_LOGS', payload: [{ docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now }, ...state.logs] })
-    onClose()
+    const now = new Date().toISOString()
+    
+    const newHistory = [...doc.history]
+    const lastEntry = newHistory[newHistory.length - 1]
+    if (lastEntry) {
+      lastEntry.end = now
+    }
+    newHistory.push({ department: values.nextDepartment, start: now, end: null, receiver: values.receiver, note: values.note || '' })
+    
+    const updatedFields = {
+      status: values.nextDepartment,
+      lastUpdate: now,
+      history: newHistory,
+    }
+
+    const newLog = { docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now };
+
+    try {
+        const docRef = doc(db, "documents", doc.firestoreId);
+        await updateDoc(docRef, updatedFields);
+        await addDoc(collection(db, "logs"), newLog);
+        onClose();
+    } catch(error) {
+        console.error("Error advancing document: ", error);
+    }
   }
 
   return (

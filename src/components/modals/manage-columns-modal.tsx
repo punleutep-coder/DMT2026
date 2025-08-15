@@ -5,6 +5,8 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useAppContext } from '@/hooks/use-app-context'
 import { COLUMN_CONFIG } from '@/lib/initial-data'
+import { doc, setDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 interface ManageColumnsModalProps {
   isOpen: boolean
@@ -15,9 +17,14 @@ export default function ManageColumnsModal({ isOpen, onClose }: ManageColumnsMod
   const { state, dispatch } = useAppContext()
   const { columnVisibility } = state
 
-  const handleToggle = (key: string) => {
+  const handleToggle = async (key: string) => {
     const newVisibility = { ...columnVisibility, [key]: !columnVisibility[key] };
-    dispatch({ type: 'UPDATE_COLUMN_VISIBILITY', payload: newVisibility });
+    dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: newVisibility });
+    try {
+        await setDoc(doc(db, "app-config", "columnVisibility"), newVisibility);
+    } catch (error) {
+        console.error("Error updating column visibility:", error);
+    }
   }
 
   return (
@@ -33,7 +40,7 @@ export default function ManageColumnsModal({ isOpen, onClose }: ManageColumnsMod
                     <Label htmlFor={`column-${key}`} className="flex-grow">{name}</Label>
                     <Switch
                         id={`column-${key}`}
-                        checked={columnVisibility[key]}
+                        checked={!!columnVisibility[key]}
                         onCheckedChange={() => handleToggle(key)}
                         disabled={key === 'documentId'}
                     />
