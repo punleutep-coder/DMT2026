@@ -7,7 +7,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
 } from '@/components/ui/sidebar'
 import {
   Home,
@@ -19,6 +18,7 @@ import {
   FileText,
   Combine,
   Columns,
+  PlayCircle,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 
@@ -32,6 +32,13 @@ export default function DashboardSidebar() {
 
   const openUserManagement = () => {
     dispatch({ type: 'SET_MODAL', payload: { type: 'addUser' } })
+  }
+
+  const handleReleaseFilter = () => {
+    dispatch({
+      type: 'SET_FILTER',
+      payload: { mainFilter: 'Release Date Reached', departmentSpecificFilter: 'All' },
+    })
   }
   
   if (!currentUser) return null;
@@ -47,9 +54,23 @@ export default function DashboardSidebar() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Dashboard" isActive>
+            <SidebarMenuButton 
+              tooltip="Dashboard" 
+              isActive={state.filter.mainFilter === 'All' && state.filter.departmentSpecificFilter === 'All'}
+              onClick={() => dispatch({ type: 'SET_FILTER', payload: { mainFilter: 'All', departmentSpecificFilter: 'All' } })}
+            >
               <Home />
               <span>Dashboard</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Release Document"
+              onClick={handleReleaseFilter}
+              isActive={state.filter.mainFilter === 'Release Date Reached'}
+            >
+              <PlayCircle />
+              <span>Release Document</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           {currentUser.role === 'Admin' && (
