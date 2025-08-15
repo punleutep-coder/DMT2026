@@ -4,7 +4,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
@@ -20,10 +19,36 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '../ui/button'
-import { ListFilter } from 'lucide-react'
+import { ListFilter, SearchX } from 'lucide-react'
 import type { Document } from '@/lib/types'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 
+const EmptyState = () => {
+    const { dispatch } = useAppContext();
+    const handleClearFilter = () => {
+        dispatch({ type: 'SET_FILTER', payload: {
+            mainFilter: 'All',
+            departmentSpecificFilter: 'All',
+            search: '',
+            startDate: null,
+            endDate: null,
+            assignedDepartment: 'All',
+        }});
+    }
+
+    return (
+        <TableRow>
+            <TableCell colSpan={8} className="h-48 text-center">
+                <div className="flex flex-col items-center justify-center gap-4">
+                    <SearchX className="h-16 w-16 text-muted-foreground/50" />
+                    <h3 className="text-xl font-semibold text-foreground">No Documents Found</h3>
+                    <p className="text-muted-foreground">Your current filter settings returned no results.</p>
+                    <Button variant="outline" onClick={handleClearFilter}>Clear All Filters</Button>
+                </div>
+            </TableCell>
+        </TableRow>
+    )
+}
 
 export default function DocumentTable() {
   const { state, dispatch } = useAppContext()
@@ -178,11 +203,7 @@ export default function DocumentTable() {
             <DocumentTableRow key={doc.id} doc={doc} index={index} />
           ))
         ) : (
-          <TableRow>
-            <TableCell colSpan={columns.filter(c => columnVisibility[c.key]).length} className="h-24 text-center text-muted-foreground">
-              No documents found for the current filter.
-            </TableCell>
-          </TableRow>
+          <EmptyState />
         )}
       </TableBody>
     </Table>
