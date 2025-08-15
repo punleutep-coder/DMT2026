@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['PT Sans', 'sans-serif'],
-        headline: ['PT Sans', 'sans-serif'],
+        body: ['Roboto', '"Khmer OS Battambang"', 'sans-serif'],
+        headline: ['Roboto', '"Khmer OS Battambang"', 'sans-serif'],
         code: ['Source Code Pro', 'monospace'],
       },
       colors: {
