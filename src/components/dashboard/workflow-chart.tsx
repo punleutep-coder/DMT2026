@@ -14,11 +14,11 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { useMemo } from 'react'
 
 export default function WorkflowChart() {
-  const { state, dispatch, filteredDocs } = useAppContext()
-  const { departments } = state
+  const { state, dispatch } = useAppContext()
+  const { departments, documents } = state
 
   const chartData = useMemo(() => {
-    let baseDocsForChart = filteredDocs;
+    let baseDocsForChart = documents;
 
     const counts = departments.map(dept => ({
       name: dept.replace('Department ', ''),
@@ -28,7 +28,7 @@ export default function WorkflowChart() {
 
     return counts;
 
-  }, [filteredDocs, departments])
+  }, [documents, departments])
 
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
