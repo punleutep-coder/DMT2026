@@ -3,7 +3,6 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMemo } from 'react'
 import { Clock } from 'lucide-react'
-import type { Document } from '@/lib/types';
 import { isDocumentExceedingPeriod } from '@/lib/document-utils';
 
 const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary' }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; }) => {
@@ -33,22 +32,10 @@ const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primar
 }
 
 export default function Metrics() {
-  const { state } = useAppContext()
+  const { state, filteredDocs } = useAppContext()
 
   const metrics = useMemo(() => {
-    let docs = state.documents;
-    if (state.filter.startDate && state.filter.endDate) {
-        docs = docs.filter(doc => {
-            if (!doc.history || doc.history.length === 0) return false;
-            for (const entry of doc.history) {
-                const entryStart = new Date(entry.start);
-                const entryEnd = entry.end ? new Date(entry.end) : new Date();
-                const overlap = entryStart <= state.filter.endDate! && entryEnd >= state.filter.startDate!;
-                if (overlap) return true;
-            }
-            return false;
-        });
-    }
+    const docs = filteredDocs;
 
     const activeDocs = docs.filter(d => d.status !== 'Combined' && d.status !== 'Split')
     const inProgress = activeDocs.filter(d => !d.isDelayed && !d.status.startsWith('Completed')).length
@@ -60,7 +47,6 @@ export default function Metrics() {
 
     const exceedingCount = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit)).length;
 
-
     return {
       total: activeDocs.length,
       inProgress,
@@ -71,10 +57,10 @@ export default function Metrics() {
       completedUnsuccess,
       exceeding: exceedingCount,
     }
-  }, [state.documents, state.filter])
+  }, [filteredDocs, state.filter.periodValue, state.filter.periodUnit])
 
   const metricItems = [
-    { title: 'Total Documents', value: metrics.total, filter: 'All', valueColorClass: 'text-teal-400' },
+    { title: 'Total Documents', value: metrics.total, filter: 'All', valueColorClass: 'text-blue-400' },
     { title: 'In Progress', value: metrics.inProgress, filter: 'In Progress', valueColorClass: 'text-yellow-400' },
     { title: 'Delayed', value: metrics.delayed, filter: 'Delayed', valueColorClass: 'text-yellow-400' },
     { title: 'Release Date Reached', value: metrics.releaseReached, filter: 'Release Date Reached', valueColorClass: 'text-red-500' },

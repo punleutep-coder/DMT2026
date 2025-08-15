@@ -16,7 +16,7 @@ import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 
 export default function DocumentManagement() {
-  const { state, dispatch } = useAppContext()
+  const { state, dispatch, filteredDocs } = useAppContext()
   const { currentUser } = state
 
   const openModal = (type: any, docId?: string) => {
@@ -95,33 +95,41 @@ export default function DocumentManagement() {
     }
   }
 
+  const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All';
 
   return (
     <section className="glassmorphic-card space-y-6">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <h2 className="text-2xl font-bold text-foreground">
-          Document Management
-        </h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold text-foreground">
+            Document Management
+          </h2>
+          {isFiltered && (
+            <span className="text-sm text-muted-foreground font-medium">
+              ({filteredDocs.length} result{filteredDocs.length !== 1 ? 's' : ''})
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
         {hasPermission(currentUser, 'canAddDocument') && (
-          <Button onClick={() => openModal('addDocument')} className="bg-[#14a39a] hover:bg-[#14a39a]/90 text-white">
+          <Button onClick={() => openModal('addDocument')} className="bg-primary/80 hover:bg-primary/90 text-white">
             <FilePlus /> Add New Document
           </Button>
         )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
-          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-[#2c6e63] hover:bg-[#2c6e63]/90 text-white">
+          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-blue-800 hover:bg-blue-800/90 text-white">
             <Combine /> Combine Selected
           </Button>
         )}
         {currentUser?.role === 'Admin' && (
-            <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-[#3b5998] hover:bg-[#3b5998]/90 text-white">
+            <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white">
                 <Library /> Manage Departments
             </Button>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (
-            <Button variant="secondary" onClick={() => openModal('manageColumns')} className="bg-[#8a4baf] hover:bg-[#8a4baf]/90 text-white">
+            <Button variant="secondary" onClick={() => openModal('manageColumns')} className="bg-purple-800 hover:bg-purple-800/90 text-white">
                 <Columns /> Manage Columns
             </Button>
         )}

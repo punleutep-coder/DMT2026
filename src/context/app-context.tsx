@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react'
+import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import type { AppState, User, Document, Log } from '@/lib/types'
 import {
   LS_USERS_KEY,
@@ -14,6 +14,8 @@ import {
   initialColumnVisibility,
   PERMISSIONS_CONFIG,
 } from '@/lib/initial-data'
+import { isDocumentExceedingPeriod } from '@/lib/document-utils'
+import { hasDepartmentPermission } from '@/lib/permissions'
 
 type Action =
   | { type: 'INITIALIZE_STATE'; payload: Partial<AppState> }
@@ -100,12 +102,16 @@ const appReducer = (state: AppState, action: Action): AppState => {
   }
 }
 
-export const AppContext = createContext<{
-  state: AppState
-  dispatch: Dispatch<Action>
-}>({
+interface AppContextValue {
+  state: AppState;
+  dispatch: Dispatch<Action>;
+  filteredDocs: Document[];
+}
+
+export const AppContext = createContext<AppContextValue>({
   state: initialState,
   dispatch: () => null,
+  filteredDocs: [],
 })
 
 const hashPassword = async (password: string): Promise<string> => {
@@ -165,6 +171,77 @@ const loadStateFromLocalStorage = (): Partial<AppState> => {
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, initialState)
+  
+  const filteredDocs = useMemo(() => {
+    let docs = state.documents
+
+    docs = docs.filter(doc => {
+      const searchLower = state.filter.search.toLowerCase()
+      const searchMatch =
+        !searchLower ||
+        doc.id.toLowerCase().includes(searchLower) ||
+        doc.name.toLowerCase().includes(searchLower) ||
+        (doc.office && doc.office.toLowerCase().includes(searchLower)) ||
+        (doc.secondaryId && doc.secondaryId.toLowerCase().includes(searchLower)) ||
+        (doc.tertiaryId && doc.tertiaryId.toLowerCase().includes(searchLower)) ||
+        (doc.quaternaryId && doc.quaternaryId.toLowerCase().includes(searchLower)) ||
+        (doc.assignedDepartment && doc.assignedDepartment.toLowerCase().includes(searchLower)) ||
+        (doc.keywords && doc.keywords.toLowerCase().includes(searchLower)) ||
+        doc.tags.join(', ').toLowerCase().includes(searchLower)
+
+      let dateMatch = true
+      if (state.filter.startDate && state.filter.endDate) {
+        dateMatch = false
+        if (doc.history && Array.isArray(doc.history)) {
+          for (const entry of doc.history) {
+            const entryStart = new Date(entry.start)
+            const entryEnd = entry.end ? new Date(entry.end) : new Date()
+            const overlap =
+              entryStart <= state.filter.endDate! && entryEnd >= state.filter.startDate!
+            if (overlap) {
+              dateMatch = true
+              break
+            }
+          }
+        }
+      }
+
+      const assignedDeptMatch =
+        state.filter.assignedDepartment === 'All' ||
+        doc.assignedDepartment === state.filter.assignedDepartment
+      
+      return searchMatch && dateMatch && assignedDeptMatch
+    })
+
+    if (state.filter.mainFilter !== 'All') {
+        if (state.filter.mainFilter === 'Exceeding Period') {
+            docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit));
+        } else if (state.filter.mainFilter === 'In Progress') {
+            docs = docs.filter(d => !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
+        } else if (state.filter.mainFilter === 'Delayed') {
+            docs = docs.filter(d => d.isDelayed && !d.releaseDateReached);
+        } else if (state.filter.mainFilter === 'Release Date Reached') {
+            docs = docs.filter(d => d.releaseDateReached === true);
+        } else if (state.filter.mainFilter === 'Completed') {
+            docs = docs.filter(d => d.status.startsWith('Completed'));
+        } else if (state.filter.mainFilter.startsWith('Completed (')) {
+            docs = docs.filter(d => d.status === state.filter.mainFilter);
+        } else if (state.filter.mainFilter === 'Combined' || state.filter.mainFilter === 'Split') {
+            docs = docs.filter(d => d.status === state.filter.mainFilter);
+        }
+    } else {
+        docs = docs.filter(doc => doc.status !== 'Combined' && doc.status !== 'Split');
+    }
+
+    if (state.filter.departmentSpecificFilter !== 'All') {
+        docs = docs.filter(doc => doc.status === state.filter.departmentSpecificFilter);
+    }
+    
+    docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status))
+
+    return docs
+  }, [state.documents, state.filter, state.currentUser])
+
 
   useEffect(() => {
     const loadedState = loadStateFromLocalStorage();
@@ -220,7 +297,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [state.isInitialized]);
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch, filteredDocs }}>
       {children}
     </AppContext.Provider>
   )
