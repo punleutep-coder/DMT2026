@@ -2,7 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
-import { format, formatDistanceToNowStrict } from 'date-fns'
+import { format } from 'date-fns'
 
 interface LogModalProps {
   isOpen: boolean
@@ -14,13 +14,21 @@ const formatDuration = (start: string, end: string | null) => {
     if (!start) return 'N/A';
     const startDate = new Date(start);
     const endDate = end ? new Date(end) : new Date();
-    return formatDistanceToNowStrict(startDate, {
-        unit: 'minute',
-        addSuffix: false,
-        roundingMethod: 'floor'
-    }).replace('minutes', 'minutes').replace('minute', 'minute')
-     .replace('hours', 'hours').replace('hour', 'hour')
-     .replace('days', 'days').replace('day', 'day');
+    
+    let seconds = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
+    
+    const days = Math.floor(seconds / (3600 * 24));
+    seconds -= days * 3600 * 24;
+    const hours = Math.floor(seconds / 3600);
+    seconds -= hours * 3600;
+    const minutes = Math.floor(seconds / 60);
+
+    const parts = [];
+    if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+    if (minutes > 0 || (days === 0 && hours === 0)) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+    
+    return parts.join(', ') || '0 minutes';
 };
 
 
