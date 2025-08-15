@@ -9,6 +9,7 @@ export default function AnimatedBackground() {
     if (!mountRef.current) return
 
     const currentMount = mountRef.current
+    let isMobile = window.innerWidth < 768
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(
@@ -17,12 +18,12 @@ export default function AnimatedBackground() {
       0.1,
       1000
     )
-    const renderer = new THREE.WebGLRenderer({ alpha: true })
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(currentMount.clientWidth, currentMount.clientHeight)
-    renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1)
     currentMount.appendChild(renderer.domElement)
 
-    const particlesCount = 5000
+    const particlesCount = isMobile ? 1500 : 5000
     const positions = new Float32Array(particlesCount * 3)
 
     for (let i = 0; i < particlesCount * 3; i++) {
@@ -36,8 +37,8 @@ export default function AnimatedBackground() {
     )
 
     const particlesMaterial = new THREE.PointsMaterial({
-      color: 0x2dd4bf,
-      size: 0.02,
+      color: 0x60e4ac, // Emerald green
+      size: isMobile ? 0.025 : 0.02,
       transparent: true,
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true,
@@ -53,7 +54,10 @@ export default function AnimatedBackground() {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
     }
-    window.addEventListener('mousemove', handleMouseMove)
+    
+    if (!isMobile) {
+        window.addEventListener('mousemove', handleMouseMove)
+    }
 
     const clock = new THREE.Clock()
 
@@ -65,8 +69,10 @@ export default function AnimatedBackground() {
       particleSystem.rotation.y = elapsedTime * 0.05
       particleSystem.rotation.x = elapsedTime * 0.02
 
-      camera.position.x += (mouse.x * 2 - camera.position.x) * 0.02
-      camera.position.y += (mouse.y * 2 - camera.position.y) * 0.02
+      if(!isMobile) {
+        camera.position.x += (mouse.x * 2 - camera.position.x) * 0.02
+        camera.position.y += (mouse.y * 2 - camera.position.y) * 0.02
+      }
       camera.lookAt(scene.position)
 
       renderer.render(scene, camera)
@@ -74,6 +80,7 @@ export default function AnimatedBackground() {
     animate()
 
     const handleResize = () => {
+      isMobile = window.innerWidth < 768
       camera.aspect = currentMount.clientWidth / currentMount.clientHeight
       camera.updateProjectionMatrix()
       renderer.setSize(currentMount.clientWidth, currentMount.clientHeight)
@@ -82,7 +89,9 @@ export default function AnimatedBackground() {
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      window.removeEventListener('mousemove', handleMouseMove)
+      if (!isMobile) {
+        window.removeEventListener('mousemove', handleMouseMove)
+      }
       currentMount.removeChild(renderer.domElement)
     }
   }, [])
@@ -90,7 +99,7 @@ export default function AnimatedBackground() {
   return (
     <div
       ref={mountRef}
-      className="fixed top-0 left-0 w-full h-full -z-10"
+      className="fixed top-0 left-0 w-full h-full -z-10 bg-[#232b38]"
     />
   )
 }
