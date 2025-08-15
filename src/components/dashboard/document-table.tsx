@@ -22,27 +22,8 @@ import {
 import { Button } from '../ui/button'
 import { ListFilter } from 'lucide-react'
 import type { Document } from '@/lib/types'
+import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 
-const isDocumentExceedingPeriod = (doc: Document, value: number, unit: string) => {
-    let thresholdInMs = 0;
-    switch (unit) {
-        case 'minutes': thresholdInMs = value * 60 * 1000; break;
-        case 'hours': thresholdInMs = value * 60 * 60 * 1000; break;
-        case 'days': thresholdInMs = value * 24 * 60 * 60 * 1000; break;
-        default: return false;
-    }
-  
-    const now = new Date().getTime();
-    if (!doc.status.startsWith('Completed') && doc.status !== 'Combined' && doc.status !== 'Split' && !doc.isDelayed) {
-        const lastHistoryEntry = doc.history[doc.history.length - 1];
-        if (lastHistoryEntry && lastHistoryEntry.end === null) {
-            const startTime = new Date(lastHistoryEntry.start).getTime();
-            const duration = now - startTime;
-            return duration > thresholdInMs;
-        }
-    }
-    return false;
-  }
 
 export default function DocumentTable() {
   const { state, dispatch } = useAppContext()
@@ -91,7 +72,7 @@ export default function DocumentTable() {
 
     if (state.filter.mainFilter !== 'All') {
         if (state.filter.mainFilter === 'Exceeding Period') {
-            docs = docs.filter(doc => isDocumentExceedingPeriod(doc, 3, 'days'));
+            docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit));
         } else if (state.filter.mainFilter === 'In Progress') {
             docs = docs.filter(d => !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
         } else if (state.filter.mainFilter === 'Delayed') {

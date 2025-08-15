@@ -3,27 +3,8 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMemo } from 'react'
 import { Clock } from 'lucide-react'
-
-const isDocumentExceedingPeriod = (doc: any, value: number, unit: string) => {
-  let thresholdInMs = 0;
-  switch (unit) {
-      case 'minutes': thresholdInMs = value * 60 * 1000; break;
-      case 'hours': thresholdInMs = value * 60 * 60 * 1000; break;
-      case 'days': thresholdInMs = value * 24 * 60 * 60 * 1000; break;
-      default: return false;
-  }
-
-  const now = new Date().getTime();
-  if (!doc.status.startsWith('Completed') && doc.status !== 'Combined' && doc.status !== 'Split' && !doc.isDelayed) {
-      const lastHistoryEntry = doc.history[doc.history.length - 1];
-      if (lastHistoryEntry && lastHistoryEntry.end === null) {
-          const startTime = new Date(lastHistoryEntry.start).getTime();
-          const duration = now - startTime;
-          return duration > thresholdInMs;
-      }
-  }
-  return false;
-}
+import type { Document } from '@/lib/types';
+import { isDocumentExceedingPeriod } from '@/lib/document-utils';
 
 const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary' }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; }) => {
   const { state, dispatch } = useAppContext()
@@ -55,7 +36,21 @@ export default function Metrics() {
   const { state } = useAppContext()
 
   const metrics = useMemo(() => {
-    const activeDocs = state.documents.filter(d => d.status !== 'Combined' && d.status !== 'Split')
+    let docs = state.documents;
+    if (state.filter.startDate && state.filter.endDate) {
+        docs = docs.filter(doc => {
+            if (!doc.history || doc.history.length === 0) return false;
+            for (const entry of doc.history) {
+                const entryStart = new Date(entry.start);
+                const entryEnd = entry.end ? new Date(entry.end) : new Date();
+                const overlap = entryStart <= state.filter.endDate! && entryEnd >= state.filter.startDate!;
+                if (overlap) return true;
+            }
+            return false;
+        });
+    }
+
+    const activeDocs = docs.filter(d => d.status !== 'Combined' && d.status !== 'Split')
     const inProgress = activeDocs.filter(d => !d.isDelayed && !d.status.startsWith('Completed')).length
     const delayed = activeDocs.filter(d => d.isDelayed && !d.releaseDateReached).length
     const releaseReached = activeDocs.filter(d => d.releaseDateReached).length
@@ -63,8 +58,7 @@ export default function Metrics() {
     const completedUnsuccess = activeDocs.filter(d => d.status === 'Completed (Unsuccess)').length
     const totalCompleted = completedSuccess + completedUnsuccess
 
-    // Exceeding period calculation is always global for its metric box
-    const exceedingCount = state.documents.filter(doc => isDocumentExceedingPeriod(doc, 3, 'days')).length;
+    const exceedingCount = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit)).length;
 
 
     return {
@@ -77,7 +71,7 @@ export default function Metrics() {
       completedUnsuccess,
       exceeding: exceedingCount,
     }
-  }, [state.documents])
+  }, [state.documents, state.filter])
 
   const metricItems = [
     { title: 'Total Documents', value: metrics.total, filter: 'All', valueColorClass: 'text-teal-400' },

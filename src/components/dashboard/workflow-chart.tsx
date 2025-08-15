@@ -12,27 +12,7 @@ import {
 import { CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { useAppContext } from '@/hooks/use-app-context'
 import { useMemo } from 'react'
-
-const isDocumentExceedingPeriod = (doc: any, value: number, unit: string) => {
-    let thresholdInMs = 0;
-    switch (unit) {
-        case 'minutes': thresholdInMs = value * 60 * 1000; break;
-        case 'hours': thresholdInMs = value * 60 * 60 * 1000; break;
-        case 'days': thresholdInMs = value * 24 * 60 * 60 * 1000; break;
-        default: return false;
-    }
-  
-    const now = new Date().getTime();
-    if (!doc.status.startsWith('Completed') && doc.status !== 'Combined' && doc.status !== 'Split' && !doc.isDelayed) {
-        const lastHistoryEntry = doc.history[doc.history.length - 1];
-        if (lastHistoryEntry && lastHistoryEntry.end === null) {
-            const startTime = new Date(lastHistoryEntry.start).getTime();
-            const duration = now - startTime;
-            return duration > thresholdInMs;
-        }
-    }
-    return false;
-  }
+import { isDocumentExceedingPeriod } from '@/lib/document-utils';
 
 export default function WorkflowChart() {
   const { state, dispatch } = useAppContext()
@@ -40,9 +20,24 @@ export default function WorkflowChart() {
 
   const chartData = useMemo(() => {
     let baseDocsForChart = documents;
+
+    // Apply date filter
+    if (filter.startDate && filter.endDate) {
+        baseDocsForChart = baseDocsForChart.filter(doc => {
+            if (!doc.history || doc.history.length === 0) return false;
+            for (const entry of doc.history) {
+                const entryStart = new Date(entry.start);
+                const entryEnd = entry.end ? new Date(entry.end) : new Date();
+                const overlap = entryStart <= filter.endDate! && entryEnd >= filter.startDate!;
+                if (overlap) return true;
+            }
+            return false;
+        });
+    }
+
     if (filter.mainFilter !== 'All') {
         if (filter.mainFilter === 'Exceeding Period') {
-            baseDocsForChart = baseDocsForChart.filter(doc => isDocumentExceedingPeriod(doc, 3, 'days'));
+            baseDocsForChart = baseDocsForChart.filter(doc => isDocumentExceedingPeriod(doc, filter.periodValue, filter.periodUnit));
         } else if (filter.mainFilter === 'In Progress') {
             baseDocsForChart = baseDocsForChart.filter(d => !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
         } else if (filter.mainFilter === 'Delayed') {

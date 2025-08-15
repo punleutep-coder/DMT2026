@@ -44,6 +44,8 @@ const initialState: AppState = {
     startDate: null,
     endDate: null,
     assignedDepartment: 'All',
+    periodValue: 3,
+    periodUnit: 'days',
   },
   columnVisibility: initialColumnVisibility,
   selectedDocIds: [],

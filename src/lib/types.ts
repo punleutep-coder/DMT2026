@@ -66,6 +66,8 @@ export interface AppState {
     startDate: Date | null;
     endDate: Date | null;
     assignedDepartment: string;
+    periodValue: number;
+    periodUnit: 'days' | 'hours' | 'minutes';
   };
   columnVisibility: { [key: string]: boolean };
   selectedDocIds: string[];

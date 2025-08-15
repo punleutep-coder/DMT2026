@@ -5,14 +5,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { format } from 'date-fns';
+
 
 export default function SearchAndFilter() {
   const { state, dispatch } = useAppContext()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [periodValue, setPeriodValue] = useState(3)
-  const [periodUnit, setPeriodUnit] = useState('days')
+  const [periodValue, setPeriodValue] = useState(state.filter.periodValue);
+  const [periodUnit, setPeriodUnit] = useState(state.filter.periodUnit);
+
+  useEffect(() => {
+    setDateFrom(state.filter.startDate ? format(state.filter.startDate, 'yyyy-MM-dd') : '');
+    setDateTo(state.filter.endDate ? format(state.filter.endDate, 'yyyy-MM-dd') : '');
+    setPeriodValue(state.filter.periodValue);
+    setPeriodUnit(state.filter.periodUnit);
+  }, [state.filter]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: 'SET_FILTER', payload: { search: e.target.value } })
@@ -35,12 +44,7 @@ export default function SearchAndFilter() {
   }
   
   const handleCalculatePeriod = () => {
-    // This is mainly for updating the "Exceeding Period" metric box.
-    // The actual filtering logic will use these values when the filter is active.
-    // We can dispatch an action to trigger a re-calculation if needed.
-    if (state.filter.mainFilter === 'Exceeding Period') {
-        dispatch({ type: 'SET_FILTER', payload: { ...state.filter } }) // Re-trigger filter
-    }
+    dispatch({ type: 'SET_FILTER', payload: { periodValue, periodUnit, mainFilter: 'Exceeding Period' } })
   }
 
   return (
