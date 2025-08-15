@@ -128,7 +128,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 </>
             ) : null}
 
-            {doc.documentLink.map((link, i) => (
+            {doc.documentLink?.map((link, i) => (
                 hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ?
                 <Button key={i} asChild variant="ghost" size="icon" title={`Open Link ${i + 1}`}>
                     <a href={link} target="_blank" rel="noopener noreferrer"><FileSymlink className="h-4 w-4"/></a>
