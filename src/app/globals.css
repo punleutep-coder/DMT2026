@@ -108,7 +108,7 @@
 
 @layer components {
   .glassmorphic-card {
-    @apply bg-card/90 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
+    @apply bg-card/20 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
   }
 }
 
