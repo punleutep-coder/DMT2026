@@ -31,7 +31,7 @@ export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl glassmorphic-card">
+      <DialogContent className="max-w-3xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>History for {document?.id} / {document?.name}</DialogTitle>
           <DialogDescription>
