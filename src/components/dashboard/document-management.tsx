@@ -14,10 +14,14 @@ import {
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
+import { db } from '@/lib/firebase'
+import { collection, doc, writeBatch } from 'firebase/firestore'
+import { useToast } from '@/hooks/use-toast'
 
 export default function DocumentManagement() {
   const { state, dispatch } = useAppContext()
-  const { currentUser } = state
+  const { currentUser, filteredDocs } = state
+  const { toast } = useToast()
 
   const openModal = (type: any, docId?: string) => {
     dispatch({ type: 'SET_MODAL', payload: { type, docId } })
@@ -33,23 +37,59 @@ export default function DocumentManagement() {
   const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    // TODO: show confirm dialog
+  
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         try {
             const result = e.target?.result;
             if (typeof result === 'string') {
                 const importedData = JSON.parse(result);
-                if (importedData.departments) dispatch({ type: 'UPDATE_DEPARTMENTS', payload: importedData.departments });
-                if (importedData.documents) dispatch({ type: 'UPDATE_DOCUMENTS', payload: importedData.documents });
-                if (importedData.logs) dispatch({ type: 'UPDATE_LOGS', payload: importedData.logs });
-                if (importedData.users) dispatch({ type: 'UPDATE_USERS', payload: importedData.users });
-                if (importedData.columnVisibility) dispatch({ type: 'UPDATE_COLUMN_VISIBILITY', payload: importedData.columnVisibility });
+                
+                dispatch({
+                    type: 'SET_DIALOG',
+                    payload: {
+                        isOpen: true,
+                        title: 'Confirm Import',
+                        message: 'This will overwrite existing data. Are you sure you want to proceed?',
+                        onConfirm: async () => {
+                            try {
+                                const batch = writeBatch(db);
+                                if (importedData.documents) {
+                                    importedData.documents.forEach((document: any) => {
+                                        const docRef = doc(collection(db, "documents"));
+                                        batch.set(docRef, document);
+                                    });
+                                }
+                                if (importedData.logs) {
+                                    importedData.logs.forEach((log: any) => {
+                                        const logRef = doc(collection(db, "logs"));
+                                        batch.set(logRef, log);
+                                    });
+                                }
+                                if (importedData.users) {
+                                    importedData.users.forEach((user: any) => {
+                                      // Note: Passwords cannot be imported this way, only user structures.
+                                      // Passwords must be reset manually if needed.
+                                      const userRef = doc(collection(db, "users"));
+                                      batch.set(userRef, { ...user, passwordHash: 'imported-user-placeholder' });
+                                    });
+                                }
+                                // We don't batch write departments or columns, as those are single-doc configs.
+                                // These should be managed via their modals.
+
+                                await batch.commit();
+                                toast({ title: "Success", description: "Data imported successfully." });
+                            } catch(e) {
+                                console.error("Error importing data to Firestore: ", e);
+                                toast({ title: "Error", description: "Failed to import data.", variant: 'destructive' });
+                            }
+                        }
+                    }
+                })
             }
         } catch (error) {
             console.error(error);
-            // TODO: show error toast
+            toast({ title: "Error", description: "Failed to parse JSON file.", variant: 'destructive' });
         } finally {
             event.target.value = '';
         }
@@ -94,13 +134,16 @@ export default function DocumentManagement() {
         dispatch({ type: 'SET_FILTER', payload: { mainFilter: 'All', departmentSpecificFilter: filterValue }})
     }
   }
+  
+  const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All';
 
   return (
     <section className="glassmorphic-card space-y-6">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold text-foreground">
-            Document Management
+            Document Management 
+            {isFiltered && <span className="text-base font-normal text-muted-foreground ml-2">({filteredDocs.length} results)</span>}
           </h2>
         </div>
       </div>
