@@ -32,6 +32,7 @@ export default function ModalManager() {
         case 'viewLog':
             return <LogModal isOpen={true} onClose={handleClose} docId={docId!} />
         case 'addUser':
+            return <UserManagementModal isOpen={true} onClose={handleClose} />
         case 'editUser':
             return <UserManagementModal isOpen={true} onClose={handleClose} userId={userId} />
         case 'manageDepartments':
