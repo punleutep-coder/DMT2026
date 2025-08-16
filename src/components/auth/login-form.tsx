@@ -60,7 +60,7 @@ export default function LoginForm() {
         return
       }
     }
-    setError('Invalid username or password. If this is a new setup, try username "admin" and password "admin".')
+    setError('Invalid username or password.')
   }
 
   return (

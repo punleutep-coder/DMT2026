@@ -322,7 +322,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const usersQuery = collection(db, 'users');
         const usersSnapshot = await getDocs(usersQuery);
         const users = usersSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
-        dispatch({ type: 'SET_DATA', payload: { users } });
 
         unsubscribers = [
             onSnapshot(collection(db, 'documents'), (snapshot) => {
