@@ -3,7 +3,6 @@ import { initializeApp, getApps, getApp } from 'firebase/app'
 import {
   getFirestore,
   connectFirestoreEmulator,
-  enableMultiTabIndexedDbPersistence,
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
@@ -29,8 +28,12 @@ const db = initializeFirestore(app, {
 
 // Check for emulator environment
 if (process.env.NEXT_PUBLIC_USE_EMULATOR === 'true') {
-  console.log('Connecting to Firestore emulator')
-  connectFirestoreEmulator(db, 'localhost', 8080)
+  try {
+    connectFirestoreEmulator(db, 'localhost', 8080)
+    console.log('Connecting to Firestore emulator')
+  } catch (e) {
+    console.error('Error connecting to Firestore emulator', e)
+  }
 }
 
 export { app, db }
