@@ -66,7 +66,13 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: newSelectedIds })
   }
 
-  const handleAction = async (type: any, docId: string) => {
+  const handleAction = async (type: string, docId: string) => {
+    if (!doc.firestoreId) {
+      console.error("Action attempted on document without a firestoreId:", doc.id);
+      // Optionally, show a toast to the user
+      return;
+    }
+
     if (type === 'deleteDocument') {
         dispatch({
             type: 'SET_DIALOG',
@@ -76,11 +82,9 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
                 confirmText: 'Delete',
                 onConfirm: async () => {
-                    if (!doc.firestoreId) return; // <-- FIX: Guard against missing firestoreId
+                    if (!doc.firestoreId) return;
                     const batch = writeBatch(db);
-                    // Delete the document
                     batch.delete(doc(db, 'documents', doc.firestoreId));
-                    // Delete associated logs
                     const logsQuery = query(collection(db, 'logs'), where('docId', '==', doc.id));
                     const logsSnapshot = await getDocs(logsQuery);
                     logsSnapshot.forEach(logDoc => batch.delete(logDoc.ref));
@@ -89,7 +93,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
             }
         });
     } else if (type === 'releaseDocument') {
-        if (!doc.firestoreId) return;
         const updatedDoc = {
             isDelayed: false,
             releaseDate: null,
@@ -102,7 +105,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         await addDoc(collection(db, 'logs'), newLog);
 
     } else if (type === 'back') {
-      if (!doc.firestoreId) return;
       const currentDeptIndex = state.departments.indexOf(doc.status)
       if (currentDeptIndex > 0 || doc.status.startsWith('Completed')) {
         const newHistory = [...doc.history]
