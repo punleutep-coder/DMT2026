@@ -76,9 +76,10 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
                 confirmText: 'Delete',
                 onConfirm: async () => {
+                    if (!doc.firestoreId) return; // <-- FIX: Guard against missing firestoreId
                     const batch = writeBatch(db);
                     // Delete the document
-                    if(doc.firestoreId) batch.delete(doc(db, 'documents', doc.firestoreId));
+                    batch.delete(doc(db, 'documents', doc.firestoreId));
                     // Delete associated logs
                     const logsQuery = query(collection(db, 'logs'), where('docId', '==', doc.id));
                     const logsSnapshot = await getDocs(logsQuery);
