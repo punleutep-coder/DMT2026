@@ -242,9 +242,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   
   useEffect(() => {
     const setup = async () => {
-      dispatch({ type: 'SET_INITIAL_LOADING', payload: true });
+      // Step 1: Ensure default data exists.
       await seedInitialData();
 
+      // Step 2: Set up live listeners for all data collections.
       const unsubscribers = [
         onSnapshot(collection(db, 'documents'), (snapshot) => {
           const documents = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
@@ -275,16 +276,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setup();
   }, []);
 
+  // Step 3: Wait for users to be loaded, then restore session and finish initialization.
   useEffect(() => {
-    if (state.users.length > 0) {
+    if (state.users.length > 0 && !state.isInitialized) {
       const savedUser = sessionStorage.getItem('currentUser');
       if (savedUser) {
-        dispatch({ type: 'LOGIN', payload: JSON.parse(savedUser) });
+        const parsedUser = JSON.parse(savedUser);
+        // Ensure the user from session storage still exists in the main user list
+        if (state.users.some(u => u.id === parsedUser.id)) {
+            dispatch({ type: 'LOGIN', payload: parsedUser });
+        }
       }
+      // Finally, mark initialization as complete.
       dispatch({ type: 'SET_INITIAL_LOADING', payload: false });
     }
-  }, [state.users]);
+  }, [state.users, state.isInitialized]);
 
+  // Step 4: Periodically check for delayed documents once initialized.
   useEffect(() => {
     if (state.isInitialized) {
       const interval = setInterval(() => {
@@ -353,10 +361,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
     } else {
         docs = docs.filter(doc => doc.status !== 'Combined' && doc.status !== 'Split');
-    }
-
-    if (state.filter.departmentSpecificFilter !== 'All') {
-        docs = docs.filter(doc => doc.status === state.filter.departmentSpecificFilter);
     }
     
     if (state.currentUser?.role !== 'Admin' && state.currentUser?.departmentPermissions?.length > 0) {
