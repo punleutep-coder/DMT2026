@@ -10,7 +10,7 @@ import {
   PERMISSIONS_CONFIG,
 } from '@/lib/initial-data'
 import { db } from '@/lib/firebase'
-import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where } from 'firebase/firestore'
+import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, setDoc } from 'firebase/firestore'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 
@@ -73,16 +73,16 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        state.documents.forEach(doc => {
-            if (doc.isDelayed && doc.releaseDate) {
-                const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
-                if (today >= releaseDate && !doc.releaseDateReached) {
-                    const docRef = doc.firestoreId ? doc(db, 'documents', doc.firestoreId) : null;
+        state.documents.forEach(docEl => {
+            if (docEl.isDelayed && docEl.releaseDate) {
+                const releaseDate = new Date(docEl.releaseDate).setHours(0, 0, 0, 0);
+                if (today >= releaseDate && !docEl.releaseDateReached) {
+                    const docRef = docEl.firestoreId ? doc(db, 'documents', docEl.firestoreId) : null;
                     if(docRef) updateDoc(docRef, { releaseDateReached: true, justReleased: true });
                 }
             }
-             if (doc.justReleased) {
-                const docRef = doc.firestoreId ? doc(db, 'documents', doc.firestoreId) : null;
+             if (docEl.justReleased) {
+                const docRef = docEl.firestoreId ? doc(db, 'documents', docEl.firestoreId) : null;
                 if(docRef) updateDoc(docRef, { justReleased: false });
             }
         });
@@ -122,19 +122,23 @@ const seedInitialData = async () => {
     if (userSnapshot.empty) {
         console.log("No users found. Seeding admin user...");
         const hashedPassword = await hashPassword('admin');
+        const adminId = `user-${Date.now()}`;
         const adminPermissions = Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => {
             acc[key] = true;
             return acc;
         }, {} as {[key: string]: boolean});
-        
-        await addDoc(usersCollection, {
-            id: `user-${Date.now()}`,
+
+        const newAdminUser = {
+            id: adminId,
             username: 'admin',
             passwordHash: hashedPassword,
             role: 'Admin',
             permissions: adminPermissions,
             departmentPermissions: []
-        });
+        };
+        
+        const userDocRef = doc(usersCollection);
+        await setDoc(userDocRef, newAdminUser);
     }
 
     // Check for documents
@@ -164,13 +168,14 @@ const seedInitialData = async () => {
     }
     
     // Check for app_config (departments and column visibility)
-    const configDoc = doc(db, 'app_config', 'main');
-    const configSnapshot = await getDocs(query(collection(db, 'app_config'), where('id', '==', 'main')));
+    const configQuery = query(collection(db, 'app_config'), where('id', '==', 'main'));
+    const configSnapshot = await getDocs(configQuery);
 
     if (configSnapshot.empty) {
         console.log("No app config found. Seeding default departments and columns...");
         const configCollection = collection(db, 'app_config');
-        await addDoc(configCollection, {
+        const newConfigDoc = doc(configCollection, 'main_config');
+        await setDoc(newConfigDoc, {
             id: 'main', // a fixed ID for our singleton config doc
             departments: DEFAULT_DEPARTMENTS,
             columnVisibility: initialColumnVisibility

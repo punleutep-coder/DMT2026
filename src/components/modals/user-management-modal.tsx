@@ -17,7 +17,7 @@ import { Checkbox } from '../ui/checkbox'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { User } from '@/lib/types'
 import { db } from '@/lib/firebase'
-import { doc, addDoc, updateDoc, deleteDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { doc, addDoc, updateDoc, deleteDoc, collection, getDocs, query, where, setDoc } from 'firebase/firestore'
 import { useToast } from '@/hooks/use-toast'
 
 const permissionsSchema = z.record(z.boolean()).default({});
@@ -100,22 +100,22 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
-    const userData: Partial<User> & { username: string, role: 'Admin' | 'User' } = {
+    const userData: Omit<User, 'firestoreId'> = {
         id: userToEdit?.id || `user-${Date.now()}`,
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
-        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions
+        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
+        passwordHash: passwordHash || ''
     }
-
-    if(passwordHash) {
-        userData.passwordHash = passwordHash;
-    }
-
+    
     try {
         if (isEditing && userToEdit.firestoreId) {
           const userRef = doc(db, 'users', userToEdit.firestoreId);
-          await updateDoc(userRef, userData);
+          await updateDoc(userRef, {
+            ...userData,
+            passwordHash: passwordHash || userToEdit.passwordHash // Keep old hash if password is not changed
+          });
           toast({ title: "Success", description: "User updated successfully." });
         } else {
           const existingUserQuery = query(collection(db, 'users'), where('username', '==', values.username));
