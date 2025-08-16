@@ -28,10 +28,14 @@ const formSchema = z.object({
   role: z.enum(['Admin', 'User']),
   permissions: permissionsSchema,
   departmentPermissions: z.array(z.string()).default([]),
-}).refine(data => data.role === 'Admin' || (data.password && data.password.length > 0) || !!(data as any).firestoreId, {
+}).refine(data => {
+    const isNewUser = !(data as any).firestoreId;
+    return !isNewUser || (data.password && data.password.length > 0);
+}, {
   message: "Password is required for new users.",
   path: ["password"],
 });
+
 
 interface UserManagementModalProps {
   isOpen: boolean
@@ -96,13 +100,16 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
-    const userData = {
+    const userData: Partial<User> & { username: string, role: 'Admin' | 'User' } = {
         id: userToEdit?.id || `user-${Date.now()}`,
         username: values.username,
-        passwordHash,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
         departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions
+    }
+
+    if(passwordHash) {
+        userData.passwordHash = passwordHash;
     }
 
     try {

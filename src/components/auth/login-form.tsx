@@ -18,6 +18,8 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import AnimatedBackground from '../ui/animated-background'
 import { Workflow } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
+import { Terminal } from 'lucide-react'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -63,52 +65,60 @@ export default function LoginForm() {
 
   return (
     <>
-    <AnimatedBackground />
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="modal-content w-full max-w-sm p-8 space-y-6 glassmorphic-card">
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full">
-            <Workflow className="w-8 h-8 text-primary" />
+      <AnimatedBackground />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="modal-content w-full max-w-sm p-8 space-y-6 glassmorphic-card">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full">
+              <Workflow className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold text-primary">DocuFlow</h1>
+            <p className="text-muted-foreground">Please sign in to continue</p>
           </div>
-          <h1 className="text-3xl font-bold text-primary">DocuFlow</h1>
-          <p className="text-muted-foreground">Please sign in to continue</p>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="admin" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {error && (
+                <Alert variant="destructive">
+                  <Terminal className="h-4 w-4" />
+                  <AlertTitle>Login Failed</AlertTitle>
+                  <AlertDescription>
+                    {error} Try using username `admin` and password `admin`.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
+              </Button>
+            </form>
+          </Form>
         </div>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="admin" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
-        </Form>
       </div>
-    </div>
     </>
   )
 }
