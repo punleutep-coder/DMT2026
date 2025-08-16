@@ -64,7 +64,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: newSelectedIds })
   }
 
-  const handleAction = (type: string, docId: string) => {
+  const handleAction = (type: string, docId: string, firestoreId: string) => {
     if (type === 'deleteDocument') {
         dispatch({
             type: 'SET_DIALOG',
@@ -74,13 +74,14 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
                 confirmText: 'Delete',
                 onConfirm: () => {
-                    dispatch({ type: 'DELETE_DOCUMENT', payload: docId });
+                    dispatch({ type: 'DELETE_DOCUMENT', payload: { id: docId, firestoreId } });
                 }
             }
         });
     } else if (type === 'releaseDocument') {
         const updatedDoc = {
             id: docId,
+            firestoreId: firestoreId,
             isDelayed: false,
             releaseDate: null,
             releaseDateReached: false,
@@ -103,6 +104,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
 
         const updatedFields = {
           id: docId,
+          firestoreId: firestoreId,
           status: newStatus,
           history: newHistory,
           lastUpdate: new Date().toISOString(),
@@ -114,7 +116,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' } });
       }
     } else {
-        dispatch({ type: 'SET_MODAL', payload: { type, docId }})
+        dispatch({ type: 'SET_MODAL', payload: { type, docId, firestoreId }})
     }
   }
 
@@ -171,8 +173,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {hasPermission(currentUser, 'canViewLog') && <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id)}><FileText className="mr-2 h-4 w-4" />View Log</DropdownMenuItem>}
-                    {hasPermission(currentUser, 'canEditDocumentDetails') && <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id)}><Pencil className="mr-2 h-4 w-4" />Edit Details</DropdownMenuItem>}
+                    {hasPermission(currentUser, 'canViewLog') && <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)}><FileText className="mr-2 h-4 w-4" />View Log</DropdownMenuItem>}
+                    {hasPermission(currentUser, 'canEditDocumentDetails') && <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}><Pencil className="mr-2 h-4 w-4" />Edit Details</DropdownMenuItem>}
                     
                     {Array.isArray(doc.documentLink) && doc.documentLink.map((link, i) => (
                         hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ?
@@ -185,25 +187,25 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
 
                     {doc.isDelayed ? (
                         <>
-                         {hasPermission(currentUser, 'canReleaseDocument') && <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id)}><Play className="mr-2 h-4 w-4 text-yellow-400" />Release Now</DropdownMenuItem>}
+                         {hasPermission(currentUser, 'canReleaseDocument') && <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id, doc.firestoreId)}><Play className="mr-2 h-4 w-4 text-yellow-400" />Release Now</DropdownMenuItem>}
                         </>
                     ) : !isTerminal ? (
                         <>
-                            {hasPermission(currentUser, 'canSplitDocument') && <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id)}><Split className="mr-2 h-4 w-4" />Split Document</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canDelayDocument') && <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id)}><Clock className="mr-2 h-4 w-4" />Delay</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canEditCurrentNote') && <DropdownMenuItem onClick={() => handleAction('editNote', doc.id)}><FileEdit className="mr-2 h-4 w-4" />Edit Current Note</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem disabled={doc.history.length <= 1} onClick={() => handleAction('back', doc.id)}><Undo2 className="mr-2 h-4 w-4" />Move Back</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id)}><Redo2 className="mr-2 h-4 w-4" />Advance</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canCompleteDocument') && <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id)}><CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canSplitDocument') && <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)}><Split className="mr-2 h-4 w-4" />Split Document</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canDelayDocument') && <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id, doc.firestoreId)}><Clock className="mr-2 h-4 w-4" />Delay</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canEditCurrentNote') && <DropdownMenuItem onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}><FileEdit className="mr-2 h-4 w-4" />Edit Current Note</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem disabled={doc.history.length <= 1} onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4" />Move Back</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}><Redo2 className="mr-2 h-4 w-4" />Advance</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canCompleteDocument') && <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}><CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete</DropdownMenuItem>}
                         </>
                     ) : isCompleted ? (
                         <>
-                         {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('back', doc.id)}><Undo2 className="mr-2 h-4 w-4"/>Re-open</DropdownMenuItem>}
+                         {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4"/>Re-open</DropdownMenuItem>}
                         </>
                     ) : null}
 
                     <DropdownMenuSeparator />
-                    {hasPermission(currentUser, 'canDeleteDocument') && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
+                    {hasPermission(currentUser, 'canDeleteDocument') && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
         </TableCell>

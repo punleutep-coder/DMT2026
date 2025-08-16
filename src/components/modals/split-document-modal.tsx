@@ -26,9 +26,10 @@ interface SplitDocumentModalProps {
   isOpen: boolean
   onClose: () => void
   docId: string
+  firestoreId: string
 }
 
-export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocumentModalProps) {
+export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId }: SplitDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToSplit = state.documents.find(d => d.id === docId);
 
@@ -79,12 +80,13 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
         justReleased: false,
         keywords: docToSplit.keywords,
         splitFrom: docId,
+        firestoreId: '', // This will be set by Firestore
     }));
     
     // Update original document
     const splitHistory = docToSplit.splitHistory || [];
     splitHistory.push({ timestamp: now, splitTo: newDocIds });
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docId, status: 'Split', lastUpdate: now, splitHistory } });
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docId, firestoreId, status: 'Split', lastUpdate: now, splitHistory } });
     dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` } });
 
     // Add new documents and their logs

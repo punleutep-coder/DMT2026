@@ -17,9 +17,10 @@ interface EditNoteModalProps {
   isOpen: boolean
   onClose: () => void
   docId: string
+  firestoreId: string
 }
 
-export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalProps) {
+export default function EditNoteModal({ isOpen, onClose, docId, firestoreId }: EditNoteModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
   const currentNote = docToUpdate?.history[docToUpdate.history.length - 1]?.note || ''
@@ -44,8 +45,9 @@ export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalP
         lastEntry.note = values.note;
     }
 
-    const updatedFields: Partial<Document> & {id: string} = { 
+    const updatedFields: Partial<Document> & {id: string, firestoreId: string} = { 
         id: docId,
+        firestoreId,
         history: newHistory, 
         lastUpdate: now 
     };

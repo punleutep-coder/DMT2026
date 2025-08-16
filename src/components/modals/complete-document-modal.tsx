@@ -20,9 +20,10 @@ interface CompleteDocumentModalProps {
   isOpen: boolean
   onClose: () => void
   docId: string
+  firestoreId: string
 }
 
-export default function CompleteDocumentModal({ isOpen, onClose, docId }: CompleteDocumentModalProps) {
+export default function CompleteDocumentModal({ isOpen, onClose, docId, firestoreId }: CompleteDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
 
@@ -49,6 +50,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId }: Comple
 
     const updatedFields = {
         id: docId,
+        firestoreId,
         status: values.status,
         lastUpdate: now,
         history: newHistory,

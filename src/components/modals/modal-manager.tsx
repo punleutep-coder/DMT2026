@@ -16,7 +16,7 @@ import CompleteDocumentModal from "./complete-document-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
-    const { type, docId, userId } = state.modal;
+    const { type, docId, userId, firestoreId } = state.modal;
 
     if (!type) return null;
 
@@ -28,9 +28,9 @@ export default function ModalManager() {
         case 'addDocument':
             return <AddDocumentModal isOpen={true} onClose={handleClose} />
         case 'editDocument':
-            return <EditDocumentModal isOpen={true} onClose={handleClose} docId={docId!} />
+            return <EditDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'viewLog':
-            return <LogModal isOpen={true} onClose={handleClose} docId={docId!} />
+            return <LogModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'addUser':
             return <UserManagementModal isOpen={true} onClose={handleClose} />
         case 'editUser':
@@ -42,15 +42,15 @@ export default function ModalManager() {
         case 'combineDocuments':
             return <CombineDocumentsModal isOpen={true} onClose={handleClose} />
         case 'splitDocument':
-            return <SplitDocumentModal isOpen={true} onClose={handleClose} docId={docId!} />
+            return <SplitDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'delayDocument':
-            return <DelayDocumentModal isOpen={true} onClose={handleClose} docId={docId!} />
+            return <DelayDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'editNote':
-            return <EditNoteModal isOpen={true} onClose={handleClose} docId={docId!} />
+            return <EditNoteModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'advanceDocument':
-            return <AdvanceDocumentModal isOpen={true} onClose={handleClose} docId={docId!} />
+            return <AdvanceDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'completeDocument':
-            return <CompleteDocumentModal isOpen={true} onClose={handleClose} docId={docId!} />
+            return <CompleteDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         default:
             return null;
     }

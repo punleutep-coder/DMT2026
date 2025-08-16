@@ -101,6 +101,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
 
     const userData: User = {
         id: isEditing ? userToEdit.id : `user-${uuidv4()}`,
+        firestoreId: isEditing ? userToEdit.firestoreId : `user-${uuidv4()}`,
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
@@ -136,7 +137,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             message: 'Are you sure you want to delete this user? This action cannot be undone.',
             confirmText: 'Delete',
             onConfirm: () => {
-                dispatch({ type: 'DELETE_USER', payload: user.id });
+                dispatch({ type: 'DELETE_USER', payload: user });
                 toast({ title: "User Deleted", description: `User ${user.username} has been removed.` });
             }
         }

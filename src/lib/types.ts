@@ -13,6 +13,7 @@ export interface SplitHistoryEntry {
 
 export interface Document {
   id: string;
+  firestoreId: string;
   name: string;
   office: string | null;
   status: string;
@@ -37,6 +38,7 @@ export interface Document {
 
 export interface Log {
   id: string;
+  firestoreId: string;
   docId: string;
   oldStatus: string;
   newStatus: string;
@@ -47,6 +49,7 @@ export interface Log {
 
 export interface User {
   id: string;
+  firestoreId: string;
   username: string;
   passwordHash: string;
   role: 'Admin' | 'User';
@@ -108,4 +111,5 @@ export interface ModalState {
   type: ModalType;
   docId?: string;
   userId?: string;
+  firestoreId?: string;
 }

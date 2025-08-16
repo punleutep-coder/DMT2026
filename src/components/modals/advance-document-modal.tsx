@@ -21,9 +21,10 @@ interface AdvanceDocumentModalProps {
   isOpen: boolean
   onClose: () => void
   docId: string
+  firestoreId: string
 }
 
-export default function AdvanceDocumentModal({ isOpen, onClose, docId }: AdvanceDocumentModalProps) {
+export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestoreId }: AdvanceDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const doc = state.documents.find(d => d.id === docId)
 
@@ -51,8 +52,9 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
     }
     newHistory.push({ department: values.nextDepartment, start: now, end: null, receiver: values.receiver, note: values.note || '' })
     
-    const updatedFields: Partial<Document> & { id: string } = {
+    const updatedFields: Partial<Document> & { id: string; firestoreId: string } = {
       id: docId,
+      firestoreId,
       status: values.nextDepartment,
       lastUpdate: now,
       history: newHistory,

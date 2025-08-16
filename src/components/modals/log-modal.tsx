@@ -8,6 +8,7 @@ interface LogModalProps {
   isOpen: boolean
   onClose: () => void
   docId: string
+  firestoreId: string
 }
 
 const formatDuration = (start: string, end: string | null) => {
@@ -34,7 +35,7 @@ const formatDuration = (start: string, end: string | null) => {
 };
 
 
-export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
+export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogModalProps) {
   const { state, dispatch } = useAppContext()
   const docLogs = state.logs.filter(log => log.docId === docId).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   const document = state.documents.find(doc => doc.id === docId)
@@ -43,8 +44,8 @@ export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
     ? document.combinedFrom.map(id => state.documents.find(d => d.id === id)).filter(Boolean)
     : [];
 
-  const handleSourceDocClick = (sourceDocId: string) => {
-    dispatch({ type: 'SET_MODAL', payload: { type: 'viewLog', docId: sourceDocId }});
+  const handleSourceDocClick = (sourceDocId: string, sourceFirestoreId: string) => {
+    dispatch({ type: 'SET_MODAL', payload: { type: 'viewLog', docId: sourceDocId, firestoreId: sourceFirestoreId }});
   }
 
   return (
@@ -63,7 +64,7 @@ export default function LogModal({ isOpen, onClose, docId }: LogModalProps) {
                 <div className="space-y-4">
                     {sourceDocuments.map(sourceDoc => sourceDoc && (
                         <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4 border-green-500">
-                           <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id)}>
+                           <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id, sourceDoc.firestoreId)}>
                              <span className="text-green-400">{sourceDoc.id}</span> - {sourceDoc.name}
                            </h4>
                            <p className="text-sm text-muted-foreground">Department: {sourceDoc.assignedDepartment}</p>

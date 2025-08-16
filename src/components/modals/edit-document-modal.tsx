@@ -30,9 +30,10 @@ interface EditDocumentModalProps {
   isOpen: boolean
   onClose: () => void
   docId: string
+  firestoreId: string
 }
 
-export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocumentModalProps) {
+export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId }: EditDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
   const { currentUser } = state
@@ -63,8 +64,9 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
         return;
     }
     
-    const updatedFields: Partial<Document> & {id: string} = {
+    const updatedFields: Partial<Document> & {id: string, firestoreId: string} = {
         id: docToUpdate.id,
+        firestoreId,
         lastUpdate: new Date().toISOString(),
     }
 

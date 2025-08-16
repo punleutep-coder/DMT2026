@@ -24,9 +24,10 @@ interface DelayDocumentModalProps {
   isOpen: boolean
   onClose: () => void
   docId: string
+  firestoreId: string
 }
 
-export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocumentModalProps) {
+export default function DelayDocumentModal({ isOpen, onClose, docId, firestoreId }: DelayDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
 
@@ -44,6 +45,7 @@ export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocu
     const now = new Date().toISOString()
     const updatedFields = {
         id: docId,
+        firestoreId,
         isDelayed: true,
         releaseDate: values.releaseDate.toISOString(),
         lastUpdate: now,
