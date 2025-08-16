@@ -7,35 +7,34 @@ import {
   DEFAULT_LOGS,
   DEFAULT_DEPARTMENTS,
   initialColumnVisibility,
-  DEFAULT_USERS,
-  LS_USERS_KEY,
-  LS_DOCUMENTS_KEY,
-  LS_LOGS_KEY,
-  LS_DEPARTMENTS_KEY,
-  LS_COLUMNS_KEY,
+  PERMISSIONS_CONFIG,
 } from '@/lib/initial-data'
+import { db } from '@/lib/firebase'
+import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, setDoc } from 'firebase/firestore'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 
 type Action =
-  | { type: 'INITIALIZE_STATE'; payload: Partial<AppState> }
+  | { type: 'SET_INITIAL_LOADING'; payload: boolean }
+  | { type: 'SET_DATA'; payload: { documents?: Document[], users?: User[], logs?: Log[], departments?: string[], columnVisibility?: { [key: string]: boolean } } }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
-  | { type: 'ADD_DOCUMENT'; payload: Document }
-  | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
-  | { type: 'DELETE_DOCUMENT'; payload: {id: string} }
-  | { type: 'ADD_USER'; payload: User }
-  | { type: 'UPDATE_USER'; payload: User }
-  | { type: 'DELETE_USER'; payload: User }
-  | { type: 'ADD_LOG'; payload: Log }
-  | { type: 'SET_DEPARTMENTS'; payload: string[] }
-  | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_MODAL'; payload: ModalState }
   | { type: 'SET_DIALOG'; payload: Partial<DialogState> }
   | { type: 'CLOSE_DIALOG' }
   | { type: 'SET_SELECTED_DOC_IDS'; payload: string[] }
   | { type: 'CHECK_DELAYED_DOCUMENTS' }
+  | { type: 'ADD_DOCUMENT'; payload: Document }
+  | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
+  | { type: 'DELETE_DOCUMENT'; payload: { id: string } }
+  | { type: 'ADD_USER'; payload: User }
+  | { type: 'UPDATE_USER'; payload: Partial<User> & { id: string } }
+  | { type: 'DELETE_USER'; payload: { id: string } }
+  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
+  | { type: 'SET_DEPARTMENTS'; payload: string[] }
+  | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
+
 
 const initialState: AppState = {
   users: [],
@@ -55,50 +54,25 @@ const initialState: AppState = {
   },
   columnVisibility: initialColumnVisibility,
   selectedDocIds: [],
-  isInitialized: false,
+  isInitialized: false, // Will be true after initial data load from Firestore
   dialog: { isOpen: false, title: '', message: '' },
   modal: { type: null },
 }
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case 'INITIALIZE_STATE':
-      return { ...state, ...action.payload, isInitialized: true };
+    case 'SET_INITIAL_LOADING':
+      return { ...state, isInitialized: !action.payload };
+    case 'SET_DATA':
+        return { ...state, ...action.payload };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
       return { ...state, currentUser: action.payload };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...state, currentUser: null };
+      return { ...state, currentUser: null, isInitialized: false }; // Force re-initialization on logout
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
-    case 'ADD_DOCUMENT':
-      return { ...state, documents: [...state.documents, action.payload] };
-    case 'UPDATE_DOCUMENT': {
-      const docs = state.documents.map(d => d.id === action.payload.id ? { ...d, ...action.payload } : d);
-      return { ...state, documents: docs };
-    }
-    case 'DELETE_DOCUMENT': {
-      const docs = state.documents.filter(d => d.id !== action.payload.id);
-      const logs = state.logs.filter(l => l.docId !== action.payload.id);
-      return { ...state, documents: docs, logs: logs };
-    }
-    case 'ADD_USER':
-        return { ...state, users: [...state.users, action.payload] };
-    case 'UPDATE_USER': {
-        const users = state.users.map(u => u.id === action.payload.id ? action.payload : u);
-        return { ...state, users };
-    }
-    case 'DELETE_USER': {
-        const users = state.users.filter(u => u.id !== action.payload.id);
-        return { ...state, users };
-    }
-    case 'ADD_LOG':
-      return { ...state, logs: [...state.logs, action.payload] };
-    case 'SET_DEPARTMENTS':
-        return { ...state, departments: action.payload };
-    case 'SET_COLUMN_VISIBILITY':
-        return { ...state, columnVisibility: action.payload };
     case 'SET_MODAL':
       return { ...state, modal: action.payload };
     case 'SET_DIALOG':
@@ -109,20 +83,79 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        const updatedDocs = state.documents.map(doc => {
-            if (doc.isDelayed && doc.releaseDate) {
-                const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
-                if (today >= releaseDate && !doc.releaseDateReached) {
-                    return { ...doc, releaseDateReached: true, justReleased: true };
+        const batch = writeBatch(db);
+        state.documents.forEach(docEl => {
+            if (docEl.isDelayed && docEl.releaseDate) {
+                const releaseDate = new Date(docEl.releaseDate).setHours(0, 0, 0, 0);
+                if (today >= releaseDate && !docEl.releaseDateReached) {
+                    const docRef = doc(db, 'documents', docEl.firestoreId);
+                    batch.update(docRef, { releaseDateReached: true, justReleased: true });
                 }
             }
-            if (doc.justReleased) {
-                return { ...doc, justReleased: false };
+             if (docEl.justReleased) {
+                const docRef = doc(db, 'documents', docEl.firestoreId);
+                batch.update(docRef, { justReleased: false });
             }
-            return doc;
         });
-        return { ...state, documents: updatedDocs };
+        batch.commit().catch(console.error);
+        return state; // No immediate state change, relies on Firestore listener
     }
+     case 'ADD_DOCUMENT': {
+        const { firestoreId, ...docData } = action.payload;
+        addDoc(collection(db, 'documents'), docData).catch(console.error);
+        return state;
+      }
+      case 'UPDATE_DOCUMENT': {
+        const { id, ...docData } = action.payload;
+        const docToUpdate = state.documents.find(d => d.id === id);
+        if (docToUpdate) {
+            updateDoc(doc(db, 'documents', docToUpdate.firestoreId), docData).catch(console.error);
+        }
+        return state;
+      }
+      case 'DELETE_DOCUMENT': {
+        const docToDelete = state.documents.find(d => d.id === action.payload.id);
+        if (docToDelete) {
+            deleteDoc(doc(db, 'documents', docToDelete.firestoreId)).catch(console.error);
+             getDocs(query(collection(db, 'logs'), where('docId', '==', action.payload.id))).then(logSnapshot => {
+                const batch = writeBatch(db);
+                logSnapshot.forEach(logDoc => batch.delete(logDoc.ref));
+                batch.commit();
+            });
+        }
+        return state;
+      }
+      case 'ADD_USER': {
+         const { firestoreId, ...userData } = action.payload;
+         addDoc(collection(db, 'users'), userData).catch(console.error);
+         return state;
+      }
+      case 'UPDATE_USER': {
+        const { id, firestoreId, ...userData } = action.payload;
+        if(firestoreId) {
+            updateDoc(doc(db, 'users', firestoreId), userData).catch(console.error);
+        }
+        return state;
+      }
+      case 'DELETE_USER': {
+        const userToDelete = state.users.find(u => u.id === action.payload.id);
+        if (userToDelete) {
+            deleteDoc(doc(db, 'users', userToDelete.firestoreId)).catch(console.error);
+        }
+        return state;
+      }
+      case 'ADD_LOG': {
+        addDoc(collection(db, 'logs'), action.payload).catch(console.error);
+        return state;
+      }
+      case 'SET_DEPARTMENTS': {
+        setDoc(doc(db, 'app_config', 'main_config'), { departments: action.payload }, { merge: true }).catch(console.error);
+        return state;
+      }
+      case 'SET_COLUMN_VISIBILITY': {
+        setDoc(doc(db, 'app_config', 'main_config'), { columnVisibility: action.payload }, { merge: true }).catch(console.error);
+        return state;
+      }
     default:
       return state
   }
@@ -140,44 +173,126 @@ export const AppContext = createContext<AppContextValue>({
   filteredDocs: [],
 })
 
+const hashPassword = async (password: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+
+// Function to seed initial data if collections are empty
+const seedInitialData = async () => {
+    const usersCollection = collection(db, 'users');
+    const userSnapshot = await getDocs(usersCollection);
+    if (userSnapshot.empty) {
+        console.log("No users found. Seeding admin user...");
+        const hashedPassword = await hashPassword('admin');
+        const newAdminUser = {
+            id: `user-${Date.now()}`,
+            username: 'admin',
+            passwordHash: hashedPassword,
+            role: 'Admin' as 'Admin',
+            permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({...acc, [key]: true}), {}),
+            departmentPermissions: []
+        };
+        await addDoc(collection(db, 'users'), newAdminUser);
+    }
+
+    const documentsCollection = collection(db, 'documents');
+    const docSnapshot = await getDocs(documentsCollection);
+    if (docSnapshot.empty) {
+        console.log("No documents found. Seeding default documents...");
+        const batch = writeBatch(db);
+        DEFAULT_DOCS.forEach(docData => {
+            const { firestoreId, ...rest } = docData;
+            const docRef = doc(collection(db, 'documents'));
+            batch.set(docRef, rest);
+        });
+        await batch.commit();
+    }
+
+    const logsCollection = collection(db, 'logs');
+    const logSnapshot = await getDocs(logsCollection);
+    if (logSnapshot.empty) {
+        console.log("No logs found. Seeding default logs...");
+        const batch = writeBatch(db);
+        DEFAULT_LOGS.forEach(logData => {
+            const { firestoreId, ...rest } = logData;
+            const logRef = doc(collection(db, 'logs'));
+            batch.set(logRef, rest);
+        });
+        await batch.commit();
+    }
+
+    const configRef = doc(db, 'app_config', 'main_config');
+    const configSnapshot = await getDocs(query(collection(db, 'app_config')));
+    if (configSnapshot.empty) {
+        console.log("No app config found. Seeding default departments and columns...");
+        await setDoc(configRef, {
+            departments: DEFAULT_DEPARTMENTS,
+            columnVisibility: initialColumnVisibility
+        });
+    }
+};
+
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  
+  useEffect(() => {
+    const setup = async () => {
+      dispatch({ type: 'SET_INITIAL_LOADING', payload: true });
+      await seedInitialData();
+
+      const unsubscribers = [
+        onSnapshot(collection(db, 'documents'), (snapshot) => {
+          const documents = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
+          dispatch({ type: 'SET_DATA', payload: { documents } });
+        }),
+        onSnapshot(collection(db, 'users'), (snapshot) => {
+          const users = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
+          dispatch({ type: 'SET_DATA', payload: { users } });
+        }),
+        onSnapshot(collection(db, 'logs'), (snapshot) => {
+          const logs = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Log));
+          dispatch({ type: 'SET_DATA', payload: { logs } });
+        }),
+        onSnapshot(doc(db, 'app_config', 'main_config'), (snapshot) => {
+          if (snapshot.exists()) {
+            const configData = snapshot.data();
+            dispatch({ type: 'SET_DATA', payload: {
+              departments: configData.departments || [],
+              columnVisibility: configData.columnVisibility || initialColumnVisibility
+            }});
+          }
+        })
+      ];
+
+      return () => unsubscribers.forEach(unsub => unsub());
+    };
+
+    setup();
+  }, []);
 
   useEffect(() => {
-    try {
-      const users = JSON.parse(localStorage.getItem(LS_USERS_KEY) || JSON.stringify(DEFAULT_USERS));
-      const documents = JSON.parse(localStorage.getItem(LS_DOCUMENTS_KEY) || JSON.stringify(DEFAULT_DOCS));
-      const logs = JSON.parse(localStorage.getItem(LS_LOGS_KEY) || JSON.stringify(DEFAULT_LOGS));
-      const departments = JSON.parse(localStorage.getItem(LS_DEPARTMENTS_KEY) || JSON.stringify(DEFAULT_DEPARTMENTS));
-      const columnVisibility = JSON.parse(localStorage.getItem(LS_COLUMNS_KEY) || JSON.stringify(initialColumnVisibility));
-
-      dispatch({ type: 'INITIALIZE_STATE', payload: { users, documents, logs, departments, columnVisibility } });
-
+    if (state.users.length > 0) {
       const savedUser = sessionStorage.getItem('currentUser');
       if (savedUser) {
         dispatch({ type: 'LOGIN', payload: JSON.parse(savedUser) });
       }
-    } catch (error) {
-      console.error("Failed to initialize state from localStorage", error);
-      dispatch({ type: 'INITIALIZE_STATE', payload: {
-          users: DEFAULT_USERS,
-          documents: DEFAULT_DOCS,
-          logs: DEFAULT_LOGS,
-          departments: DEFAULT_DEPARTMENTS,
-          columnVisibility: initialColumnVisibility
-      }});
+      dispatch({ type: 'SET_INITIAL_LOADING', payload: false });
     }
-  }, []);
+  }, [state.users]);
 
   useEffect(() => {
     if (state.isInitialized) {
-        localStorage.setItem(LS_USERS_KEY, JSON.stringify(state.users));
-        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(state.documents));
-        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(state.logs));
-        localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(state.departments));
-        localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(state.columnVisibility));
+      const interval = setInterval(() => {
+        dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
+      }, 60000); // Check every minute
+      return () => clearInterval(interval);
     }
-  }, [state]);
+  }, [state.isInitialized]);
 
   const filteredDocs = useMemo(() => {
     let docs = state.documents
@@ -250,16 +365,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     return docs
   }, [state.documents, state.filter, state.currentUser])
-  
-   useEffect(() => {
-    if (state.isInitialized) {
-        const interval = setInterval(() => {
-            dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
-        }, 60000); // Check every minute
-        return () => clearInterval(interval);
-    }
-  }, [state.isInitialized]);
-
 
   return (
     <AppContext.Provider value={{ state, dispatch, filteredDocs }}>
