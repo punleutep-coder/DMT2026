@@ -10,7 +10,7 @@ import {
   PERMISSIONS_CONFIG,
 } from '@/lib/initial-data'
 import { db } from '@/lib/firebase'
-import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, setDoc } from 'firebase/firestore'
+import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, setDoc, getDoc } from 'firebase/firestore'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 
@@ -227,8 +227,8 @@ const seedInitialData = async () => {
     }
 
     const configRef = doc(db, 'app_config', 'main_config');
-    const configSnapshot = await getDocs(query(collection(db, 'app_config')));
-    if (configSnapshot.empty) {
+    const configDoc = await getDoc(configRef);
+    if (!configDoc.exists()) {
         console.log("No app config found. Seeding default departments and columns...");
         await setDoc(configRef, {
             departments: DEFAULT_DEPARTMENTS,
@@ -269,6 +269,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           }
         })
       ];
+      
+      // Step 3: Mark initialization as complete.
+      dispatch({ type: 'SET_INITIAL_LOADING', payload: false });
 
       return () => unsubscribers.forEach(unsub => unsub());
     };
@@ -276,9 +279,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setup();
   }, []);
 
-  // Step 3: Wait for users to be loaded, then restore session and finish initialization.
+  // Step 4: Wait for users to be loaded, then restore session.
   useEffect(() => {
-    if (state.users.length > 0 && !state.isInitialized) {
+    if (!state.isInitialized && state.users.length > 0) {
       const savedUser = sessionStorage.getItem('currentUser');
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
@@ -287,12 +290,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             dispatch({ type: 'LOGIN', payload: parsedUser });
         }
       }
-      // Finally, mark initialization as complete.
-      dispatch({ type: 'SET_INITIAL_LOADING', payload: false });
     }
   }, [state.users, state.isInitialized]);
 
-  // Step 4: Periodically check for delayed documents once initialized.
+  // Step 5: Periodically check for delayed documents once initialized.
   useEffect(() => {
     if (state.isInitialized) {
       const interval = setInterval(() => {
