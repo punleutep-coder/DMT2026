@@ -12,7 +12,7 @@ import {
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 import { db } from '@/lib/firebase'
-import { collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, writeBatch, getDocs, setDoc, query } from 'firebase/firestore'
+import { collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, writeBatch, getDocs, setDoc, query, getDoc } from 'firebase/firestore'
 
 
 type Action =
@@ -80,18 +80,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return { ...state, users: action.payload };
     case 'SET_COLUMN_VISIBILITY':
         return { ...state, columnVisibility: action.payload };
-    case 'UPDATE_DOCUMENTS':
-      // This is now handled by Firestore listeners, but we might keep it for optimistic updates or specific cases.
-      // For now, let's make it a no-op to avoid conflicts with Firestore.
-      return state;
-    case 'UPDATE_LOGS':
-       return state;
-    case 'UPDATE_DEPARTMENTS':
-        return { ...state, departments: action.payload };
-    case 'UPDATE_USERS':
-        return { ...state, users: action.payload };
-    case 'UPDATE_COLUMN_VISIBILITY':
-        return { ...state, columnVisibility: action.payload };
     case 'SET_SELECTED_DOC_IDS':
         return { ...state, selectedDocIds: action.payload }
     case 'CHECK_DELAYED_DOCUMENTS': {
@@ -107,9 +95,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
       });
       if (docsToUpdate.length > 0) {
         const batch = writeBatch(db);
-        docsToUpdate.forEach(doc => {
-          const docRef = doc.firestoreId ? docRef(db, "documents", doc.firestoreId) : null;
-          if (docRef) {
+        docsToUpdate.forEach(docToUpdate => {
+          if (docToUpdate.firestoreId) {
+            const docRef = doc(db, "documents", docToUpdate.firestoreId);
             batch.update(docRef, { releaseDateReached: true });
           }
         });
@@ -233,8 +221,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }),
         onSnapshot(doc(db, "app-config", "departments"), (doc) => {
             const data = doc.data();
-            if (data && data.list) {
+            if (data && data.list && data.list.length > 0) {
                 dispatch({ type: 'SET_DEPARTMENTS', payload: data.list });
+            } else {
+                dispatch({ type: 'SET_DEPARTMENTS', payload: DEFAULT_DEPARTMENTS });
             }
         }),
         onSnapshot(doc(db, "app-config", "columnVisibility"), (doc) => {
@@ -245,37 +235,50 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }),
     ];
     
-    // Seed initial data if collections are empty
     const seedInitialData = async () => {
-      const usersQuery = query(collection(db, "users"));
-      const usersSnapshot = await getDocs(usersQuery);
-      if (usersSnapshot.empty) {
-        const hashedPassword = await hashPassword('admin');
-        const adminUser: Omit<User, 'firestoreId'> = {
-          id: `user-${Date.now()}`,
-          username: 'admin',
-          passwordHash: hashedPassword,
-          role: 'Admin',
-          permissions: {},
-          departmentPermissions: []
-        };
-        await addDoc(collection(db, "users"), adminUser);
+      try {
+        const usersQuery = query(collection(db, "users"));
+        const usersSnapshot = await getDocs(usersQuery);
+        if (usersSnapshot.empty) {
+          const hashedPassword = await hashPassword('admin');
+          const adminUser: Omit<User, 'firestoreId'> = {
+            id: `user-${Date.now()}`,
+            username: 'admin',
+            passwordHash: hashedPassword,
+            role: 'Admin',
+            permissions: {},
+            departmentPermissions: []
+          };
+          await addDoc(collection(db, "users"), adminUser);
 
-        const batch = writeBatch(db);
-        DEFAULT_DOCS.forEach(d => {
-            const docRef = doc(collection(db, "documents"));
-            batch.set(docRef, d);
-        });
-        DEFAULT_LOGS.forEach(l => {
-            const logRef = doc(collection(db, "logs"));
-            batch.set(logRef, l);
-        });
-        await batch.commit();
+          const batch = writeBatch(db);
+          DEFAULT_DOCS.forEach(d => {
+              const docRef = doc(collection(db, "documents"));
+              batch.set(docRef, d);
+          });
+          DEFAULT_LOGS.forEach(l => {
+              const logRef = doc(collection(db, "logs"));
+              batch.set(logRef, l);
+          });
+          await batch.commit();
+        }
 
-        await setDoc(doc(db, "app-config", "departments"), { list: DEFAULT_DEPARTMENTS });
-        await setDoc(doc(db, "app-config", "columnVisibility"), initialColumnVisibility);
+        const departmentsDocRef = doc(db, "app-config", "departments");
+        const departmentsDoc = await getDoc(departmentsDocRef);
+        if (!departmentsDoc.exists() || !departmentsDoc.data()?.list?.length) {
+            await setDoc(departmentsDocRef, { list: DEFAULT_DEPARTMENTS });
+        }
+
+        const columnsDocRef = doc(db, "app-config", "columnVisibility");
+        const columnsDoc = await getDoc(columnsDocRef);
+        if (!columnsDoc.exists()) {
+            await setDoc(columnsDocRef, initialColumnVisibility);
+        }
+      } catch (error) {
+        console.error("Error seeding initial data:", error);
+      } finally {
+        dispatch({ type: 'INITIALIZE_STATE', payload: {} });
       }
-      dispatch({ type: 'INITIALIZE_STATE', payload: {} });
     };
 
     seedInitialData();

@@ -33,7 +33,7 @@ export default function WorkflowChart() {
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const department = data.activePayload[0].payload.fullName
-      dispatch({ type: 'SET_FILTER', payload: { ...state.filter, departmentSpecificFilter: department }})
+      dispatch({ type: 'SET_FILTER', payload: { ...state.filter, mainFilter: 'All', departmentSpecificFilter: department }})
     }
   }
 
