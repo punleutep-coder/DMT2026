@@ -15,7 +15,7 @@ import {
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { collection, doc, writeBatch } from 'firebase/firestore'
+import { collection, doc, writeBatch, setDoc } from 'firebase/firestore'
 import { useToast } from '@/hooks/use-toast'
 
 export default function DocumentManagement() {
@@ -50,38 +50,52 @@ export default function DocumentManagement() {
                     payload: {
                         isOpen: true,
                         title: 'Confirm Import',
-                        message: 'This will overwrite existing data. Are you sure you want to proceed?',
+                        message: 'This will overwrite existing data with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
                         onConfirm: async () => {
                             try {
                                 const batch = writeBatch(db);
-                                if (importedData.documents) {
+                                // Note: This is a destructive import. We don't delete old data, but new data will get new IDs.
+                                // For a true "overwrite", you'd need to delete all existing documents first, which is risky.
+                                
+                                if (importedData.documents && Array.isArray(importedData.documents)) {
                                     importedData.documents.forEach((document: any) => {
+                                        const { firestoreId, ...docData } = document; // Exclude old firestoreId
                                         const docRef = doc(collection(db, "documents"));
-                                        batch.set(docRef, document);
+                                        batch.set(docRef, docData);
                                     });
                                 }
-                                if (importedData.logs) {
+                                if (importedData.logs && Array.isArray(importedData.logs)) {
                                     importedData.logs.forEach((log: any) => {
+                                        const { firestoreId, ...logData } = log;
                                         const logRef = doc(collection(db, "logs"));
-                                        batch.set(logRef, log);
+                                        batch.set(logRef, logData);
                                     });
                                 }
-                                if (importedData.users) {
+                                if (importedData.users && Array.isArray(importedData.users)) {
                                     importedData.users.forEach((user: any) => {
-                                      // Note: Passwords cannot be imported this way, only user structures.
-                                      // Passwords must be reset manually if needed.
+                                      // Security: Passwords cannot be imported this way.
+                                      // We import the user structure, but an admin must reset the password.
+                                      const { firestoreId, passwordHash, ...userData } = user;
                                       const userRef = doc(collection(db, "users"));
-                                      batch.set(userRef, { ...user, passwordHash: 'imported-user-placeholder' });
+                                      batch.set(userRef, { ...userData, passwordHash: 'imported-user-requires-reset' });
                                     });
                                 }
-                                // We don't batch write departments or columns, as those are single-doc configs.
-                                // These should be managed via their modals.
-
+                                
                                 await batch.commit();
-                                toast({ title: "Success", description: "Data imported successfully." });
+
+                                // Non-batched writes for single-doc configs
+                                if (importedData.departments && Array.isArray(importedData.departments)) {
+                                    await setDoc(doc(db, "app-config", "departments"), { list: importedData.departments });
+                                }
+                                if (importedData.columnVisibility && typeof importedData.columnVisibility === 'object') {
+                                    await setDoc(doc(db, "app-config", "columnVisibility"), importedData.columnVisibility);
+                                }
+
+
+                                toast({ title: "Success", description: "Data imported successfully from JSON file." });
                             } catch(e) {
                                 console.error("Error importing data to Firestore: ", e);
-                                toast({ title: "Error", description: "Failed to import data.", variant: 'destructive' });
+                                toast({ title: "Error", description: "Failed to import data. Check the console for details.", variant: 'destructive' });
                             }
                         }
                     }
