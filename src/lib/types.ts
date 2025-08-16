@@ -28,7 +28,7 @@ export interface Document {
   tags: string[];
   isDelayed: boolean;
   releaseDate: string | null;
-  keywords: string;
+  keywords?: string;
   releaseDateReached?: boolean;
   justReleased?: boolean;
   combinedFrom?: string[];

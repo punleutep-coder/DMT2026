@@ -67,18 +67,22 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
         return;
     }
     
-    const updatedFields = {
-        id: values.id,
-        name: values.name,
-        office: values.office || null,
-        secondaryId: values.secondaryId || null,
-        tertiaryId: values.tertiaryId || null,
-        quaternaryId: values.quaternaryId || null,
-        documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
-        assignedDepartment: values.assignedDepartment || null,
+    const updatedFields: Partial<Document> = {
         lastUpdate: new Date().toISOString(),
     }
 
+    // Only add fields to update if the user has permission and the value has changed
+    if (hasPermission(currentUser, 'canEditDocumentId') && values.id !== docToUpdate.id) updatedFields.id = values.id;
+    if (hasPermission(currentUser, 'canEditDocumentName') && values.name !== docToUpdate.name) updatedFields.name = values.name;
+    if (hasPermission(currentUser, 'canEditOffice') && values.office !== docToUpdate.office) updatedFields.office = values.office || null;
+    if (hasPermission(currentUser, 'canEditAssignedDepartment') && values.assignedDepartment !== docToUpdate.assignedDepartment) updatedFields.assignedDepartment = values.assignedDepartment || null;
+    if (hasPermission(currentUser, 'canEditSecondaryId') && values.secondaryId !== docToUpdate.secondaryId) updatedFields.secondaryId = values.secondaryId || null;
+    if (hasPermission(currentUser, 'canEditTertiaryId') && values.tertiaryId !== docToUpdate.tertiaryId) updatedFields.tertiaryId = values.tertiaryId || null;
+    if (hasPermission(currentUser, 'canEditQuaternaryId') && values.quaternaryId !== docToUpdate.quaternaryId) updatedFields.quaternaryId = values.quaternaryId || null;
+    
+    const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
+    updatedFields.documentLink = newLinks;
+    
     try {
         const docRef = doc(db, "documents", docToUpdate.firestoreId);
         await updateDoc(docRef, updatedFields);

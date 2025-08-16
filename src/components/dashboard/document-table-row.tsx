@@ -29,6 +29,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, writeBatch, collection, addDoc, deleteDoc } from 'firebase/firestore'
 
 interface DocumentTableRowProps {
   doc: Document
@@ -64,8 +66,66 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: newSelectedIds })
   }
 
-  const handleAction = (type: any, docId: string) => {
-    dispatch({ type: 'SET_MODAL', payload: { type, docId }})
+  const handleAction = async (type: any, docId: string) => {
+    if (type === 'deleteDocument') {
+        dispatch({
+            type: 'SET_DIALOG',
+            payload: {
+                isOpen: true,
+                title: 'Delete Document',
+                message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
+                confirmText: 'Delete',
+                onConfirm: async () => {
+                    if (doc.firestoreId) {
+                        await deleteDoc(doc(db, "documents", doc.firestoreId));
+                        // Optional: Add logic to delete associated logs if needed
+                    }
+                }
+            }
+        });
+    } else if (type === 'releaseDocument') {
+        if (doc.firestoreId) {
+            const docRef = doc(db, 'documents', doc.firestoreId);
+            await updateDoc(docRef, {
+                isDelayed: false,
+                releaseDate: null,
+                releaseDateReached: false,
+                lastUpdate: new Date().toISOString()
+            });
+            const newLog = { docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' };
+            await addDoc(collection(db, "logs"), newLog);
+        }
+    } else if (type === 'back') {
+      if (!doc.firestoreId) return;
+
+      const currentDeptIndex = state.departments.indexOf(doc.status)
+      if (currentDeptIndex > 0 || doc.status.startsWith('Completed')) {
+        const newHistory = [...doc.history]
+        newHistory.pop() // Remove current step
+        const prevHistoryEntry = newHistory[newHistory.length - 1]
+        if (prevHistoryEntry) {
+            prevHistoryEntry.end = null
+        }
+        
+        const newStatus = prevHistoryEntry ? prevHistoryEntry.department : state.departments[0];
+
+        const updatedFields = {
+          status: newStatus,
+          history: newHistory,
+          lastUpdate: new Date().toISOString(),
+          isDelayed: false, 
+          releaseDate: null, 
+          releaseDateReached: false
+        }
+        const docRef = doc(db, 'documents', doc.firestoreId);
+        await updateDoc(docRef, updatedFields);
+        
+        const newLog = { docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' };
+        await addDoc(collection(db, "logs"), newLog);
+      }
+    } else {
+        dispatch({ type: 'SET_MODAL', payload: { type, docId }})
+    }
   }
 
   const isCompleted = doc.status.startsWith('Completed');

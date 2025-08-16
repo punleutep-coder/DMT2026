@@ -4,6 +4,11 @@ import { PERMISSIONS_CONFIG } from './initial-data';
 export const hasPermission = (user: User | null, permissionKey: keyof typeof PERMISSIONS_CONFIG): boolean => {
   if (!user) return false;
   if (user.role === 'Admin') return true;
+  
+  if (permissionKey === 'canEditDocumentDetails') {
+    return Object.keys(user.permissions).some(p => p.startsWith('canEdit') && user.permissions[p]);
+  }
+
   return user.permissions?.[permissionKey] === true;
 };
 
