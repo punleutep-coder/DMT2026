@@ -7,16 +7,15 @@ import {
   DEFAULT_LOGS,
   DEFAULT_DEPARTMENTS,
   initialColumnVisibility,
-  PERMISSIONS_CONFIG,
 } from '@/lib/initial-data'
 import { db } from '@/lib/firebase'
-import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, setDoc } from 'firebase/firestore'
+import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, setDoc, getDoc } from 'firebase/firestore'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 import { v4 as uuidv4 } from 'uuid';
 
 type Action =
-  | { type: 'SET_INITIAL_LOADING'; payload: boolean }
+  | { type: 'SET_INITIALIZED'; payload: boolean }
   | { type: 'SET_DATA'; payload: { documents?: Document[], users?: User[], logs?: Log[], departments?: string[], columnVisibility?: { [key: string]: boolean } } }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
@@ -27,7 +26,7 @@ type Action =
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: User }
-  | { type: 'ADD_LOG'; payload: Omit<Log, 'id'> }
+  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_MODAL'; payload: ModalState }
@@ -74,7 +73,7 @@ const deleteDocumentFromFirestore = async (docId: string, firestoreId: string) =
 const addUserToFirestore = async (userData: User) => await setDoc(doc(db, 'users', userData.id), userData);
 const updateUserInFirestore = async (userData: User) => await setDoc(doc(db, 'users', userData.id), userData, { merge: true });
 const deleteUserFromFirestore = async (userId: string) => await deleteDoc(doc(db, 'users', userId));
-const addLogToFirestore = async (logData: Omit<Log, 'id'>) => await addDoc(collection(db, 'logs'), logData);
+const addLogToFirestore = async (logData: Omit<Log, 'id' | 'firestoreId'>) => await addDoc(collection(db, 'logs'), logData);
 
 const updateConfigInFirestore = async (data: { departments?: string[], columnVisibility?: { [key: string]: boolean } }) => {
     const configRef = doc(db, 'app_config', 'main_config');
@@ -84,8 +83,8 @@ const updateConfigInFirestore = async (data: { departments?: string[], columnVis
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case 'SET_INITIAL_LOADING':
-      return { ...state, isInitialized: !action.payload };
+    case 'SET_INITIALIZED':
+      return { ...state, isInitialized: action.payload };
     case 'SET_DATA':
         return { ...state, ...action.payload };
     case 'LOGIN':
@@ -223,15 +222,9 @@ const seedInitialData = async () => {
     
     // Check for app_config (departments and column visibility)
     const configRef = doc(db, 'app_config', 'main_config');
-    const configSnapshot = await getDocs(collection(db, 'app_config'));
-    let configDocExists = false;
-    configSnapshot.forEach(doc => {
-      if (doc.id === 'main_config') {
-        configDocExists = true;
-      }
-    });
+    const configDoc = await getDoc(configRef);
 
-    if (!configDocExists) {
+    if (!configDoc.exists()) {
         console.log("No app config found. Seeding default departments and columns...");
         await setDoc(configRef, {
             id: 'main_config', // a fixed ID for our singleton config doc
@@ -319,12 +312,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 
   useEffect(() => {
+    let unsubscribers: (() => void)[] = [];
+
     const setup = async () => {
-        dispatch({ type: 'SET_INITIAL_LOADING', payload: true });
+        dispatch({ type: 'SET_INITIALIZED', payload: false });
 
         await seedInitialData();
 
-        const unsubscribers = [
+        const usersQuery = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersQuery);
+        const users = usersSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
+        dispatch({ type: 'SET_DATA', payload: { users } });
+
+        unsubscribers = [
             onSnapshot(collection(db, 'documents'), (snapshot) => {
                 const documents = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
                 dispatch({ type: 'SET_DATA', payload: { documents } });
@@ -348,15 +348,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             })
         ];
 
-        // Restore logged in user from session storage
+        // Restore logged in user from session storage AFTER users have been loaded
         const savedUser = sessionStorage.getItem('currentUser');
         if (savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
-                 // Re-fetch user data from state to ensure it's up-to-date
-                const userFromState = state.users.find(u => u.id === parsedUser.id);
+                 // Re-fetch user data from the just-loaded state to ensure it's up-to-date
+                const userFromState = users.find(u => u.id === parsedUser.id);
                 if (userFromState) {
                     dispatch({ type: 'LOGIN', payload: userFromState });
+                } else {
+                    // If user in session storage is not in the DB, clear it
+                    sessionStorage.removeItem('currentUser');
                 }
             } catch (e) {
                 console.error("Failed to parse user from session storage", e);
@@ -364,16 +367,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             }
         }
 
-        dispatch({ type: 'SET_INITIAL_LOADING', payload: false });
-
-        return () => unsubscribers.forEach(unsub => unsub());
+        dispatch({ type: 'SET_INITIALIZED', payload: true });
     };
 
     setup();
-  }, [state.users]);
+    
+    return () => unsubscribers.forEach(unsub => unsub());
+  }, []);
   
   useEffect(() => {
-    if (!state.isInitialized) {
+    if (state.isInitialized) {
         const interval = setInterval(() => {
             dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
         }, 60000); // Check every minute
