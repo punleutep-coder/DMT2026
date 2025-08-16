@@ -14,6 +14,7 @@ import { suggestTagsAction } from '@/app/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { useToast } from '@/hooks/use-toast'
 
 const formSchema = z.object({
   docId: z.string().min(1, 'Document ID is required.'),
@@ -41,6 +42,7 @@ interface AddDocumentModalProps {
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const [isSuggesting, setIsSuggesting] = useState(false)
+  const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -88,8 +90,11 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     
     const initialDepartment = state.departments.length > 0 ? state.departments[0] : null
     if (!initialDepartment) {
-        // Show error, maybe with a toast
-        console.error("No departments defined.");
+        toast({
+            title: 'Error: No Departments',
+            description: 'Please define at least one department in "Manage Departments" before adding a document.',
+            variant: 'destructive',
+        })
         return;
     }
 
@@ -121,7 +126,11 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         onClose();
     } catch (error) {
         console.error("Error adding document to Firestore: ", error);
-        // Optionally show an error toast to the user
+        toast({
+            title: 'Error',
+            description: 'Could not add document to the database.',
+            variant: 'destructive'
+        })
     }
   }
 
