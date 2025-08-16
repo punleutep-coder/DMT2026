@@ -3,9 +3,6 @@ import { initializeApp, getApps, getApp } from 'firebase/app'
 import {
   getFirestore,
   connectFirestoreEmulator,
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -19,12 +16,8 @@ const firebaseConfig = {
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
 
-// Initialize Firestore with robust persistence handling.
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
-  }),
-})
+// Initialize Firestore without persistence to avoid IndexedDB errors.
+const db = getFirestore(app);
 
 // Check for emulator environment
 if (process.env.NEXT_PUBLIC_USE_EMULATOR === 'true') {
