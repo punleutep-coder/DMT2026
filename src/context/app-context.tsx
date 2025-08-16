@@ -128,7 +128,7 @@ const seedInitialData = async () => {
             return acc;
         }, {} as {[key: string]: boolean});
 
-        const newAdminUser = {
+        const newAdminUser: Omit<User, 'firestoreId'> = {
             id: adminId,
             username: 'admin',
             passwordHash: hashedPassword,
@@ -137,7 +137,7 @@ const seedInitialData = async () => {
             departmentPermissions: []
         };
         
-        const userDocRef = doc(usersCollection);
+        const userDocRef = doc(usersCollection, newAdminUser.id);
         await setDoc(userDocRef, newAdminUser);
     }
 

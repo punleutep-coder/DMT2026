@@ -124,7 +124,8 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             form.setError('username', { message: 'This username is already taken.' })
             return
           }
-          await addDoc(collection(db, 'users'), userData);
+          const userRef = doc(collection(db, 'users'), userData.id);
+          await setDoc(userRef, userData);
           toast({ title: "Success", description: "User created successfully." });
         }
         setEditingUserId(undefined) // Reset form to "Add New" state
