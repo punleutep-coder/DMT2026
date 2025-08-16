@@ -317,47 +317,46 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const setup = async () => {
         dispatch({ type: 'SET_INITIALIZED', payload: false });
 
+        // 1. Seed data if necessary, to ensure admin user exists before any data is loaded.
         await seedInitialData();
 
+        // 2. Perform a one-time fetch of all data to ensure we have a stable state.
         const usersQuery = collection(db, 'users');
         const usersSnapshot = await getDocs(usersQuery);
         const users = usersSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
+        
+        const docsQuery = collection(db, 'documents');
+        const docsSnapshot = await getDocs(docsQuery);
+        const documents = docsSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
 
-        unsubscribers = [
-            onSnapshot(collection(db, 'documents'), (snapshot) => {
-                const documents = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
-                dispatch({ type: 'SET_DATA', payload: { documents } });
-            }),
-            onSnapshot(collection(db, 'users'), (snapshot) => {
-                const users = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
-                dispatch({ type: 'SET_DATA', payload: { users } });
-            }),
-            onSnapshot(collection(db, 'logs'), (snapshot) => {
-                const logs = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Log));
-                dispatch({ type: 'SET_DATA', payload: { logs } });
-            }),
-            onSnapshot(doc(db, 'app_config', 'main_config'), (snapshot) => {
-                if (snapshot.exists()) {
-                    const configData = snapshot.data();
-                    dispatch({ type: 'SET_DATA', payload: { 
-                        departments: configData.departments || [],
-                        columnVisibility: configData.columnVisibility || initialColumnVisibility
-                    }});
-                }
-            })
-        ];
+        const logsQuery = collection(db, 'logs');
+        const logsSnapshot = await getDocs(logsQuery);
+        const logs = logsSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Log));
 
-        // Restore logged in user from session storage AFTER users have been loaded
+        const configDoc = await getDoc(doc(db, 'app_config', 'main_config'));
+        const configData = configDoc.exists() ? configDoc.data() : {};
+
+        // 3. Set all fetched data into state at once.
+        dispatch({
+            type: 'SET_DATA',
+            payload: {
+                users,
+                documents,
+                logs,
+                departments: configData.departments || [],
+                columnVisibility: configData.columnVisibility || initialColumnVisibility,
+            }
+        });
+
+        // 4. Now that users are loaded, attempt to restore the session.
         const savedUser = sessionStorage.getItem('currentUser');
         if (savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
-                 // Re-fetch user data from the just-loaded state to ensure it's up-to-date
                 const userFromState = users.find(u => u.id === parsedUser.id);
                 if (userFromState) {
                     dispatch({ type: 'LOGIN', payload: userFromState });
                 } else {
-                    // If user in session storage is not in the DB, clear it
                     sessionStorage.removeItem('currentUser');
                 }
             } catch (e) {
@@ -365,8 +364,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 sessionStorage.removeItem('currentUser');
             }
         }
-
+        
+        // 5. Mark initialization as complete.
         dispatch({ type: 'SET_INITIALIZED', payload: true });
+
+        // 6. Now, set up the real-time listeners to catch any subsequent changes.
+        unsubscribers.push(onSnapshot(collection(db, 'documents'), (snapshot) => {
+            const documents = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
+            dispatch({ type: 'SET_DATA', payload: { documents } });
+        }));
+        unsubscribers.push(onSnapshot(collection(db, 'users'), (snapshot) => {
+            const users = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
+            dispatch({ type: 'SET_DATA', payload: { users } });
+        }));
+        unsubscribers.push(onSnapshot(collection(db, 'logs'), (snapshot) => {
+            const logs = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Log));
+            dispatch({ type: 'SET_DATA', payload: { logs } });
+        }));
+        unsubscribers.push(onSnapshot(doc(db, 'app_config', 'main_config'), (snapshot) => {
+            if (snapshot.exists()) {
+                const configData = snapshot.data();
+                dispatch({ type: 'SET_DATA', payload: { 
+                    departments: configData.departments || [],
+                    columnVisibility: configData.columnVisibility || initialColumnVisibility
+                }});
+            }
+        }));
     };
 
     setup();

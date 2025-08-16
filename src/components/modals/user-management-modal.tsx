@@ -99,9 +99,10 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
+    const newUserId = isEditing ? userToEdit.id : `user-${uuidv4()}`;
     const userData: User = {
-        id: isEditing ? userToEdit.id : `user-${uuidv4()}`,
-        firestoreId: isEditing ? userToEdit.firestoreId : `user-${uuidv4()}`,
+        id: newUserId,
+        firestoreId: newUserId, // Ensure firestoreId matches the user id
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,

@@ -112,8 +112,8 @@ export default function LoginForm() {
                   </AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting || !state.isInitialized}>
+                {form.formState.isSubmitting || !state.isInitialized ? 'Initializing...' : 'Login'}
               </Button>
             </form>
           </Form>

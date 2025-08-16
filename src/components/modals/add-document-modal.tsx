@@ -98,8 +98,10 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
 
     const now = new Date().toISOString()
+    const newDocId = uuidv4();
     const newDoc = {
         id: values.docId,
+        firestoreId: newDocId, // Use a new UUID for Firestore
         name: values.docName,
         office: values.office || null,
         status: initialDepartment,
@@ -170,7 +172,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
             </ScrollArea>
             <DialogFooter className="pt-4">
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button type="submit">Add Document</Button>
+              <Button type="submit" disabled={!state.isInitialized}>Add Document</Button>
             </DialogFooter>
           </form>
         </Form>
