@@ -313,14 +313,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let unsubscribers: (() => void)[] = [];
-
-    const setup = async () => {
-      dispatch({ type: 'SET_INITIALIZED', payload: false });
   
-      // 1. Seed data if necessary, to ensure database is ready.
+    const setup = async () => {
       await seedInitialData();
   
-      // 2. Set up real-time listeners. The app will react to data changes.
       unsubscribers.push(
         onSnapshot(collection(db, 'documents'), (snapshot) => {
           const documents = snapshot.docs.map((doc) => ({ ...doc.data(), firestoreId: doc.id } as Document));
@@ -332,23 +328,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         onSnapshot(collection(db, 'users'), (snapshot) => {
           const users = snapshot.docs.map((doc) => ({ ...doc.data(), firestoreId: doc.id } as User));
           dispatch({ type: 'SET_DATA', payload: { users } });
-
-          // After users are loaded, try to restore session
-          const savedUser = sessionStorage.getItem('currentUser');
-          if (savedUser) {
-              try {
-                  const parsedUser = JSON.parse(savedUser);
-                  const userFromState = users.find(u => u.id === parsedUser.id);
-                  if (userFromState) {
-                      dispatch({ type: 'LOGIN', payload: userFromState });
-                  } else {
-                      sessionStorage.removeItem('currentUser');
-                  }
-              } catch (e) {
-                  console.error("Failed to parse user from session storage", e);
-                  sessionStorage.removeItem('currentUser');
-              }
-          }
         })
       );
   
@@ -373,9 +352,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           }
         })
       );
-  
-      // 3. Mark initialization as complete.
-      dispatch({ type: 'SET_INITIALIZED', payload: true });
     };
   
     setup();
@@ -383,6 +359,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribers.forEach((unsub) => unsub());
   }, []);
   
+  // This effect now specifically handles restoring the user session
+  // and marking the app as initialized.
+  useEffect(() => {
+    // Only run this after the first load of users, and only once.
+    if (state.users.length > 0 && !state.isInitialized) {
+      const savedUser = sessionStorage.getItem('currentUser');
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          // Verify the user from session storage still exists in the fresh user list
+          const userFromState = state.users.find(u => u.id === parsedUser.id);
+          if (userFromState) {
+            dispatch({ type: 'LOGIN', payload: userFromState });
+          } else {
+            // User from session doesn't exist anymore, clear it
+            sessionStorage.removeItem('currentUser');
+          }
+        } catch (e) {
+          console.error("Failed to parse user from session storage", e);
+          sessionStorage.removeItem('currentUser');
+        }
+      }
+      // Mark as initialized after attempting to restore session.
+      dispatch({ type: 'SET_INITIALIZED', payload: true });
+    }
+  }, [state.users, state.isInitialized]);
+
+
   useEffect(() => {
     if (state.isInitialized) {
         const interval = setInterval(() => {
