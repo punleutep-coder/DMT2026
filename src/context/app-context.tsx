@@ -315,86 +315,72 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let unsubscribers: (() => void)[] = [];
 
     const setup = async () => {
-        dispatch({ type: 'SET_INITIALIZED', payload: false });
+      dispatch({ type: 'SET_INITIALIZED', payload: false });
+  
+      // 1. Seed data if necessary, to ensure database is ready.
+      await seedInitialData();
+  
+      // 2. Set up real-time listeners. The app will react to data changes.
+      unsubscribers.push(
+        onSnapshot(collection(db, 'documents'), (snapshot) => {
+          const documents = snapshot.docs.map((doc) => ({ ...doc.data(), firestoreId: doc.id } as Document));
+          dispatch({ type: 'SET_DATA', payload: { documents } });
+        })
+      );
+  
+      unsubscribers.push(
+        onSnapshot(collection(db, 'users'), (snapshot) => {
+          const users = snapshot.docs.map((doc) => ({ ...doc.data(), firestoreId: doc.id } as User));
+          dispatch({ type: 'SET_DATA', payload: { users } });
 
-        // 1. Seed data if necessary, to ensure admin user exists before any data is loaded.
-        await seedInitialData();
-
-        // 2. Perform a one-time fetch of all data to ensure we have a stable state.
-        const usersQuery = collection(db, 'users');
-        const usersSnapshot = await getDocs(usersQuery);
-        const users = usersSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
-        
-        const docsQuery = collection(db, 'documents');
-        const docsSnapshot = await getDocs(docsQuery);
-        const documents = docsSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
-
-        const logsQuery = collection(db, 'logs');
-        const logsSnapshot = await getDocs(logsQuery);
-        const logs = logsSnapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Log));
-
-        const configDoc = await getDoc(doc(db, 'app_config', 'main_config'));
-        const configData = configDoc.exists() ? configDoc.data() : {};
-
-        // 3. Set all fetched data into state at once.
-        dispatch({
-            type: 'SET_DATA',
-            payload: {
-                users,
-                documents,
-                logs,
+          // After users are loaded, try to restore session
+          const savedUser = sessionStorage.getItem('currentUser');
+          if (savedUser) {
+              try {
+                  const parsedUser = JSON.parse(savedUser);
+                  const userFromState = users.find(u => u.id === parsedUser.id);
+                  if (userFromState) {
+                      dispatch({ type: 'LOGIN', payload: userFromState });
+                  } else {
+                      sessionStorage.removeItem('currentUser');
+                  }
+              } catch (e) {
+                  console.error("Failed to parse user from session storage", e);
+                  sessionStorage.removeItem('currentUser');
+              }
+          }
+        })
+      );
+  
+      unsubscribers.push(
+        onSnapshot(collection(db, 'logs'), (snapshot) => {
+          const logs = snapshot.docs.map((doc) => ({ ...doc.data(), firestoreId: doc.id } as Log));
+          dispatch({ type: 'SET_DATA', payload: { logs } });
+        })
+      );
+  
+      unsubscribers.push(
+        onSnapshot(doc(db, 'app_config', 'main_config'), (snapshot) => {
+          if (snapshot.exists()) {
+            const configData = snapshot.data();
+            dispatch({
+              type: 'SET_DATA',
+              payload: {
                 departments: configData.departments || [],
                 columnVisibility: configData.columnVisibility || initialColumnVisibility,
-            }
-        });
-
-        // 4. Now that users are loaded, attempt to restore the session.
-        const savedUser = sessionStorage.getItem('currentUser');
-        if (savedUser) {
-            try {
-                const parsedUser = JSON.parse(savedUser);
-                const userFromState = users.find(u => u.id === parsedUser.id);
-                if (userFromState) {
-                    dispatch({ type: 'LOGIN', payload: userFromState });
-                } else {
-                    sessionStorage.removeItem('currentUser');
-                }
-            } catch (e) {
-                console.error("Failed to parse user from session storage", e);
-                sessionStorage.removeItem('currentUser');
-            }
-        }
-        
-        // 5. Mark initialization as complete.
-        dispatch({ type: 'SET_INITIALIZED', payload: true });
-
-        // 6. Now, set up the real-time listeners to catch any subsequent changes.
-        unsubscribers.push(onSnapshot(collection(db, 'documents'), (snapshot) => {
-            const documents = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
-            dispatch({ type: 'SET_DATA', payload: { documents } });
-        }));
-        unsubscribers.push(onSnapshot(collection(db, 'users'), (snapshot) => {
-            const users = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
-            dispatch({ type: 'SET_DATA', payload: { users } });
-        }));
-        unsubscribers.push(onSnapshot(collection(db, 'logs'), (snapshot) => {
-            const logs = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Log));
-            dispatch({ type: 'SET_DATA', payload: { logs } });
-        }));
-        unsubscribers.push(onSnapshot(doc(db, 'app_config', 'main_config'), (snapshot) => {
-            if (snapshot.exists()) {
-                const configData = snapshot.data();
-                dispatch({ type: 'SET_DATA', payload: { 
-                    departments: configData.departments || [],
-                    columnVisibility: configData.columnVisibility || initialColumnVisibility
-                }});
-            }
-        }));
+              },
+            });
+          }
+        })
+      );
+  
+      // 3. Mark initialization as complete.
+      dispatch({ type: 'SET_INITIALIZED', payload: true });
     };
-
+  
     setup();
-    
-    return () => unsubscribers.forEach(unsub => unsub());
+  
+    return () => unsubscribers.forEach((unsub) => unsub());
   }, []);
   
   useEffect(() => {
