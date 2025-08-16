@@ -7,19 +7,30 @@ import {
   DEFAULT_LOGS,
   DEFAULT_DEPARTMENTS,
   initialColumnVisibility,
-  PERMISSIONS_CONFIG,
+  LS_USERS_KEY,
+  LS_DOCUMENTS_KEY,
+  LS_LOGS_KEY,
+  LS_DEPARTMENTS_KEY,
+  LS_COLUMNS_KEY,
+  DEFAULT_USERS,
 } from '@/lib/initial-data'
-import { db } from '@/lib/firebase'
-import { collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, query, where, setDoc } from 'firebase/firestore'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 
 type Action =
-  | { type: 'SET_INITIAL_LOADING'; payload: boolean }
-  | { type: 'SET_DATA'; payload: { documents?: Document[], users?: User[], logs?: Log[], departments?: string[], columnVisibility?: { [key: string]: boolean } } }
+  | { type: 'SET_INITIALIZED' }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
+  | { type: 'ADD_DOCUMENT'; payload: Document }
+  | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
+  | { type: 'DELETE_DOCUMENT'; payload: string }
+  | { type: 'ADD_USER'; payload: User }
+  | { type: 'UPDATE_USER'; payload: User }
+  | { type: 'DELETE_USER'; payload: string }
+  | { type: 'ADD_LOG'; payload: Omit<Log, 'id'> }
+  | { type: 'SET_DEPARTMENTS'; payload: string[] }
+  | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_MODAL'; payload: ModalState }
   | { type: 'SET_DIALOG'; payload: Partial<DialogState> }
   | { type: 'CLOSE_DIALOG' }
@@ -44,49 +55,88 @@ const initialState: AppState = {
   },
   columnVisibility: initialColumnVisibility,
   selectedDocIds: [],
-  isInitialized: false, // Will be true after initial data load from Firestore
+  isInitialized: false,
   dialog: { isOpen: false, title: '', message: '' },
   modal: { type: null },
 }
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case 'SET_INITIAL_LOADING':
-      return { ...state, isInitialized: !action.payload };
-    case 'SET_DATA':
-        return { ...state, ...action.payload };
+    case 'SET_INITIALIZED':
+      return { ...state, isInitialized: true };
     case 'LOGIN':
-      sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
       return { ...state, currentUser: action.payload };
     case 'LOGOUT':
-      sessionStorage.removeItem('currentUser');
       return { ...state, currentUser: null };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
+    case 'ADD_DOCUMENT':
+      return { ...state, documents: [...state.documents, action.payload] };
+    case 'UPDATE_DOCUMENT': {
+      const index = state.documents.findIndex(d => d.id === action.payload.id);
+      if (index === -1) return state;
+      const newDocuments = [...state.documents];
+      newDocuments[index] = { ...newDocuments[index], ...action.payload };
+      return { ...state, documents: newDocuments };
+    }
+    case 'DELETE_DOCUMENT':
+      return {
+        ...state,
+        documents: state.documents.filter(d => d.id !== action.payload),
+        logs: state.logs.filter(l => l.docId !== action.payload)
+      };
+    case 'ADD_USER':
+      return { ...state, users: [...state.users, action.payload] };
+    case 'UPDATE_USER': {
+      const userIndex = state.users.findIndex(u => u.id === action.payload.id);
+      if (userIndex === -1) return state;
+      const newUsers = [...state.users];
+      newUsers[userIndex] = action.payload;
+      return { ...state, users: newUsers };
+    }
+    case 'DELETE_USER':
+      return { ...state, users: state.users.filter(u => u.id !== action.payload) };
+    case 'ADD_LOG': {
+        const newLog: Log = {
+            ...action.payload,
+            id: `log-${Date.now()}`
+        };
+        return { ...state, logs: [...state.logs, newLog] };
+    }
+    case 'SET_DEPARTMENTS':
+      return { ...state, departments: action.payload };
+    case 'SET_COLUMN_VISIBILITY':
+        return { ...state, columnVisibility: action.payload };
     case 'SET_MODAL':
-      return { ...state, modal: action.payload };
+        return { ...state, modal: action.payload };
     case 'SET_DIALOG':
-      return { ...state, dialog: { ...initialState.dialog, ...action.payload, isOpen: true } };
+        return { ...state, dialog: { ...initialState.dialog, ...action.payload, isOpen: true } };
     case 'CLOSE_DIALOG':
-      return { ...state, dialog: { ...state.dialog, isOpen: false } };
+        return { ...state, dialog: { ...state.dialog, isOpen: false } };
     case 'SET_SELECTED_DOC_IDS':
-      return { ...state, selectedDocIds: action.payload };
+        return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        state.documents.forEach(docEl => {
-            if (docEl.isDelayed && docEl.releaseDate) {
-                const releaseDate = new Date(docEl.releaseDate).setHours(0, 0, 0, 0);
-                if (today >= releaseDate && !docEl.releaseDateReached) {
-                    const docRef = docEl.firestoreId ? doc(db, 'documents', docEl.firestoreId) : null;
-                    if(docRef) updateDoc(docRef, { releaseDateReached: true, justReleased: true });
+        let changed = false;
+        const newDocuments = state.documents.map(doc => {
+            let releaseDateReached = doc.releaseDateReached;
+            let justReleased = doc.justReleased;
+
+            if (doc.isDelayed && doc.releaseDate) {
+                const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
+                if (today >= releaseDate && !doc.releaseDateReached) {
+                    releaseDateReached = true;
+                    justReleased = true;
+                    changed = true;
                 }
+            } else if (doc.justReleased) {
+                justReleased = false;
+                changed = true;
             }
-             if (docEl.justReleased) {
-                const docRef = docEl.firestoreId ? doc(db, 'documents', docEl.firestoreId) : null;
-                if(docRef) updateDoc(docRef, { justReleased: false });
-            }
+            return { ...doc, releaseDateReached, justReleased };
         });
-        return state; // No immediate state change, relies on Firestore listener
+        
+        return changed ? { ...state, documents: newDocuments } : state;
     }
     default:
       return state
@@ -105,88 +155,9 @@ export const AppContext = createContext<AppContextValue>({
   filteredDocs: [],
 })
 
-const hashPassword = async (password: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-
-// Function to seed initial data if collections are empty
-const seedInitialData = async () => {
-    // Check for users
-    const usersCollection = collection(db, 'users');
-    const userSnapshot = await getDocs(usersCollection);
-    if (userSnapshot.empty) {
-        console.log("No users found. Seeding admin user...");
-        const hashedPassword = await hashPassword('admin');
-        const adminId = `user-${Date.now()}`;
-        const adminPermissions = Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => {
-            acc[key] = true;
-            return acc;
-        }, {} as {[key: string]: boolean});
-
-        const newAdminUser: Omit<User, 'firestoreId'> = {
-            id: adminId,
-            username: 'admin',
-            passwordHash: hashedPassword,
-            role: 'Admin',
-            permissions: adminPermissions,
-            departmentPermissions: []
-        };
-        
-        const userDocRef = doc(usersCollection, newAdminUser.id);
-        await setDoc(userDocRef, newAdminUser);
-    }
-
-    // Check for documents
-    const documentsCollection = collection(db, 'documents');
-    const docSnapshot = await getDocs(documentsCollection);
-    if (docSnapshot.empty) {
-        console.log("No documents found. Seeding default documents...");
-        const batch = writeBatch(db);
-        DEFAULT_DOCS.forEach(docData => {
-            const docRef = doc(collection(db, 'documents'));
-            batch.set(docRef, docData);
-        });
-        await batch.commit();
-    }
-
-    // Check for logs
-    const logsCollection = collection(db, 'logs');
-    const logSnapshot = await getDocs(logsCollection);
-    if (logSnapshot.empty) {
-        console.log("No logs found. Seeding default logs...");
-        const batch = writeBatch(db);
-        DEFAULT_LOGS.forEach(logData => {
-            const logRef = doc(collection(db, 'logs'));
-            batch.set(logRef, logData);
-        });
-        await batch.commit();
-    }
-    
-    // Check for app_config (departments and column visibility)
-    const configQuery = query(collection(db, 'app_config'), where('id', '==', 'main'));
-    const configSnapshot = await getDocs(configQuery);
-
-    if (configSnapshot.empty) {
-        console.log("No app config found. Seeding default departments and columns...");
-        const configCollection = collection(db, 'app_config');
-        const newConfigDoc = doc(configCollection, 'main_config');
-        await setDoc(newConfigDoc, {
-            id: 'main', // a fixed ID for our singleton config doc
-            departments: DEFAULT_DEPARTMENTS,
-            columnVisibility: initialColumnVisibility
-        });
-    }
-};
-
-
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, initialState)
-  
+
   const filteredDocs = useMemo(() => {
     let docs = state.documents
 
@@ -257,53 +228,54 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return docs
   }, [state.documents, state.filter, state.currentUser])
 
-
+  // Effect to load data from localStorage on mount
   useEffect(() => {
-    const setup = async () => {
-        dispatch({ type: 'SET_INITIAL_LOADING', payload: true });
+    try {
+      const users = JSON.parse(localStorage.getItem(LS_USERS_KEY) || JSON.stringify(DEFAULT_USERS))
+      const documents = JSON.parse(localStorage.getItem(LS_DOCUMENTS_KEY) || JSON.stringify(DEFAULT_DOCS))
+      const logs = JSON.parse(localStorage.getItem(LS_LOGS_KEY) || JSON.stringify(DEFAULT_LOGS))
+      const departments = JSON.parse(localStorage.getItem(LS_DEPARTMENTS_KEY) || JSON.stringify(DEFAULT_DEPARTMENTS))
+      const columnVisibility = JSON.parse(localStorage.getItem(LS_COLUMNS_KEY) || JSON.stringify(initialColumnVisibility))
+      
+      dispatch({ type: 'ADD_USER', payload: users[0] });
+      documents.forEach((doc: Document) => dispatch({ type: 'ADD_DOCUMENT', payload: doc }));
+      logs.forEach((log: Log) => dispatch({ type: 'ADD_LOG', payload: log }));
+      dispatch({ type: 'SET_DEPARTMENTS', payload: departments });
+      dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: columnVisibility });
 
-        await seedInitialData();
-
-        const unsubscribers = [
-            onSnapshot(collection(db, 'documents'), (snapshot) => {
-                const documents = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Document));
-                dispatch({ type: 'SET_DATA', payload: { documents } });
-            }),
-            onSnapshot(collection(db, 'users'), (snapshot) => {
-                const users = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as User));
-                dispatch({ type: 'SET_DATA', payload: { users } });
-            }),
-            onSnapshot(collection(db, 'logs'), (snapshot) => {
-                const logs = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id } as Log));
-                dispatch({ type: 'SET_DATA', payload: { logs } });
-            }),
-            onSnapshot(collection(db, 'app_config'), (snapshot) => {
-                if (!snapshot.empty) {
-                    const configData = snapshot.docs[0].data();
-                    dispatch({ type: 'SET_DATA', payload: { 
-                        departments: configData.departments || [],
-                        columnVisibility: configData.columnVisibility || initialColumnVisibility
-                    }});
-                }
-            })
-        ];
-
-        // Restore logged in user from session storage
-        const savedUser = sessionStorage.getItem('currentUser');
-        if (savedUser) {
-            dispatch({ type: 'LOGIN', payload: JSON.parse(savedUser) });
-        }
-
-        dispatch({ type: 'SET_INITIAL_LOADING', payload: false });
-
-        return () => unsubscribers.forEach(unsub => unsub());
-    };
-
-    setup();
+      const savedUser = sessionStorage.getItem('currentUser');
+      if (savedUser) {
+        dispatch({ type: 'LOGIN', payload: JSON.parse(savedUser) });
+      }
+    } catch (error) {
+      console.error("Failed to load data from localStorage", error)
+    } finally {
+      dispatch({ type: 'SET_INITIALIZED' });
+    }
   }, []);
-  
+
+  // Effect to save data to localStorage whenever it changes
   useEffect(() => {
-    if (!state.isInitialized) {
+    if (state.isInitialized) {
+      localStorage.setItem(LS_USERS_KEY, JSON.stringify(state.users));
+      localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(state.documents));
+      localStorage.setItem(LS_LOGS_KEY, JSON.stringify(state.logs));
+      localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(state.departments));
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(state.columnVisibility));
+      
+      const savedUser = sessionStorage.getItem('currentUser');
+      if (savedUser) {
+          const user = JSON.parse(savedUser);
+          if (user) {
+             dispatch({ type: 'LOGIN', payload: user });
+          }
+      }
+    }
+  }, [state.users, state.documents, state.logs, state.departments, state.columnVisibility, state.isInitialized]);
+
+  // Effect to check for delayed documents periodically
+  useEffect(() => {
+    if (state.isInitialized) {
         const interval = setInterval(() => {
             dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
         }, 60000); // Check every minute

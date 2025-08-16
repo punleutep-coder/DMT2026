@@ -29,8 +29,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { db } from '@/lib/firebase'
-import { doc, updateDoc, deleteDoc, addDoc, collection, writeBatch, getDocs, query, where } from 'firebase/firestore'
 
 interface DocumentTableRowProps {
   doc: Document
@@ -66,13 +64,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: newSelectedIds })
   }
 
-  const handleAction = async (type: string, docId: string) => {
-    if (!doc.firestoreId) {
-      console.error("Action attempted on document without a firestoreId:", doc.id);
-      // Optionally, show a toast to the user
-      return;
-    }
-
+  const handleAction = (type: string, docId: string) => {
     if (type === 'deleteDocument') {
         dispatch({
             type: 'SET_DIALOG',
@@ -81,28 +73,21 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 title: 'Delete Document',
                 message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
                 confirmText: 'Delete',
-                onConfirm: async () => {
-                    if (!doc.firestoreId) return;
-                    const batch = writeBatch(db);
-                    batch.delete(doc(db, 'documents', doc.firestoreId));
-                    const logsQuery = query(collection(db, 'logs'), where('docId', '==', doc.id));
-                    const logsSnapshot = await getDocs(logsQuery);
-                    logsSnapshot.forEach(logDoc => batch.delete(logDoc.ref));
-                    await batch.commit();
+                onConfirm: () => {
+                    dispatch({ type: 'DELETE_DOCUMENT', payload: docId });
                 }
             }
         });
     } else if (type === 'releaseDocument') {
         const updatedDoc = {
+            id: docId,
             isDelayed: false,
             releaseDate: null,
             releaseDateReached: false,
             lastUpdate: new Date().toISOString()
         };
-        const newLog = { docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' };
-        
-        await updateDoc(doc(db, 'documents', doc.firestoreId), updatedDoc);
-        await addDoc(collection(db, 'logs'), newLog);
+        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedDoc });
+        dispatch({ type: 'ADD_LOG', payload: { docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' } });
 
     } else if (type === 'back') {
       const currentDeptIndex = state.departments.indexOf(doc.status)
@@ -117,6 +102,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         const newStatus = prevHistoryEntry ? prevHistoryEntry.department : state.departments[0];
 
         const updatedFields = {
+          id: docId,
           status: newStatus,
           history: newHistory,
           lastUpdate: new Date().toISOString(),
@@ -124,10 +110,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
           releaseDate: null, 
           releaseDateReached: false
         }
-        const newLog = { docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' };
-        
-        await updateDoc(doc(db, 'documents', doc.firestoreId), updatedFields);
-        await addDoc(collection(db, 'logs'), newLog);
+        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+        dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' } });
       }
     } else {
         dispatch({ type: 'SET_MODAL', payload: { type, docId }})

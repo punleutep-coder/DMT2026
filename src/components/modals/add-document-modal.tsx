@@ -13,8 +13,7 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { db } from '@/lib/firebase'
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { v4 as uuidv4 } from 'uuid';
 
 const formSchema = z.object({
   docId: z.string().min(1, 'Document ID is required.'),
@@ -83,9 +82,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const existingDocQuery = query(collection(db, 'documents'), where('id', '==', values.docId));
-    const existingDocSnapshot = await getDocs(existingDocQuery);
-    if (!existingDocSnapshot.empty) {
+    if (state.documents.some(d => d.id === values.docId)) {
         form.setError('docId', { message: 'This Document ID already exists.' });
         return;
     }
@@ -122,17 +119,11 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         keywords: values.keywords || ''
     }
 
-    const newLog = { docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now };
-
-    try {
-        await addDoc(collection(db, 'documents'), newDoc);
-        await addDoc(collection(db, 'logs'), newLog);
-        toast({ title: "Success", description: "Document added successfully." });
-        onClose();
-    } catch (error) {
-        console.error("Error adding document to Firestore:", error);
-        toast({ title: "Error", description: "Failed to add document.", variant: "destructive" });
-    }
+    dispatch({ type: 'ADD_DOCUMENT', payload: newDoc });
+    dispatch({ type: 'ADD_LOG', payload: { docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now } });
+    
+    toast({ title: "Success", description: "Document added successfully." });
+    onClose();
   }
 
   return (
@@ -156,10 +147,10 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                     <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel>Initial Receiver Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" placeholder="https://" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" placeholder="https://" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>Document Link 3</FormLabel><FormControl><Input type="url" placeholder="https://" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>Document Link 4</FormLabel><FormControl><Input type="url" placeholder="https://" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>Document Link 3</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>Document Link 4</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel>Keywords</FormLabel><FormControl><Input placeholder="For better search results..." {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <FormField control={form.control} name="docTags" render={({ field }) => (

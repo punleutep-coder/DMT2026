@@ -1,4 +1,4 @@
-import type { Document, Log } from './types';
+import type { Document, Log, User } from './types';
 
 export const LS_USERS_KEY = 'documentWorkflow_users';
 export const LS_DOCUMENTS_KEY = 'documentWorkflow_documents';
@@ -8,7 +8,7 @@ export const LS_COLUMNS_KEY = 'documentWorkflow_columnVisibility';
 
 export const DEFAULT_DEPARTMENTS = ['Department A', 'Department B', 'Department C', 'Department D', 'Department E', 'Department F', 'Department G'];
 
-export const DEFAULT_DOCS: Omit<Document, 'firestoreId'>[] = [
+export const DEFAULT_DOCS: Document[] = [
     { id: 'CON-001', name: 'Contract Review', office: 'Legal Office', status: 'Department C', initialDepartment: 'Department A', assignedDepartment: 'Legal', lastUpdate: '2025-07-16T10:05:00Z', secondaryId: 'SEC-A1', tertiaryId: 'TRT-X1', quaternaryId: null, documentLink: ['https://example.com/contract-review-con001'], history: [{'department':'Department A', start: '2025-07-16T09:00:00Z', end: '2025-07-16T09:30:00Z', receiver: 'Alice Smith', note: 'Initial legal review.'}, {'department': 'Department B', start: '2025-07-16T09:30:00Z', end: '2025-07-16T10:05:00Z', receiver: 'Bob Johnson', note: 'Finance approval pending.'}, {'department':'Department C', start: '2025-07-16T10:05:00Z', end: null, receiver: 'Charlie Brown', note: 'Awaiting executive sign-off.'}], tags: [], isDelayed: false, releaseDate: null, keywords: 'contract legal' },
     { id: 'INV-002', name: 'Invoice Processing', office: 'Finance Department', status: 'Department A', initialDepartment: 'Department B', assignedDepartment: 'Finance', lastUpdate: '2025-07-16T11:15:00Z', secondaryId: 'SEC-B2', tertiaryId: null, quaternaryId: null, documentLink: ['https://example.com/invoice-inv002', 'https://example.com/invoice-backup-inv002'], history: [{'department':'Department A', start: '2025-07-16T11:15:00Z', end: null, receiver: 'David Lee', note: 'Invoice received and logged.'}], tags: ['Finance'], isDelayed: false, releaseDate: null, keywords: 'invoice finance' },
     { id: 'REQ-003', name: 'Purchase Requisition', office: 'Procurement Office', status: 'Completed (Success)', initialDepartment: 'Department C', assignedDepartment: 'Procurement', lastUpdate: '2025-07-15T14:00:00Z', secondaryId: null, tertiaryId: 'TRT-Y3', quaternaryId: null, documentLink: [], history: [{'department':'Department A', start: '2025-07-13T10:00:00Z', end: '2025-07-13T12:00:00Z', receiver: 'Eve White', note: 'New requisition created.'},{'department':'Department B', start: '2025-07-13T12:00:00Z', end: '2025-07-14T15:30:00Z', receiver: 'Frank Green', note: 'Vendor selection complete.'},{'department':'Department C', start: '2025-07-14T15:30:00Z', end: '2025-07-14T16:00:00Z', receiver: 'Grace Hall', note: 'Budget verified.'},{'department':'Department D', start: '2025-07-14T16:00:00Z', end: '2025-07-15T11:00:00Z', receiver: 'Henry King', note: 'Final review by manager.'},{'department':'Department E', start: '2025-07-15T11:00:00Z', end: '2025-07-15T12:30:00Z', receiver: 'Ivy Liu', note: 'Approved for purchase.'},{'department':'Department F', start: '2025-07-15T12:30:00Z', end: '2025-07-15T13:45:00Z', receiver: 'Jack Chen', note: 'Order placed.'},{'department':'Department G', start: '2025-07-15T13:45:00Z', end: '2025-07-15T14:00:00Z', receiver: 'Kelly Wu', note: 'Received and closed.'}], tags: ['Procurement', 'Finance'], isDelayed: false, releaseDate: null, keywords: 'purchase procurement' },
@@ -16,10 +16,24 @@ export const DEFAULT_DOCS: Omit<Document, 'firestoreId'>[] = [
     { id: 'IT-005', name: 'Server Patch Request', office: 'IT Operations', status: 'Department B', initialDepartment: 'Department A', assignedDepartment: 'IT', lastUpdate: '2025-07-16T12:00:00Z', secondaryId: null, tertiaryId: null, quaternaryId: null, documentLink: [], history: [{'department':'Department A', start: '2025-07-16T11:45:00Z', end: '2025-07-16T12:00:00Z', receiver: 'Rachel Davis', note: 'Request logged by IT support.'}, {'department':'Department B', start: '2025-07-16T12:00:00Z', end: null, receiver: 'Sam Wilson', note: 'Awaiting patch schedule review.'}], tags: ['IT', 'Server', 'Maintenance'], isDelayed: false, releaseDate: null, keywords: 'it server maintenance' },
 ];
 
-export const DEFAULT_LOGS:  Omit<Log, 'firestoreId'>[] = [
-    { docId: 'CON-001', oldStatus: 'Department B', newStatus: 'Department C', user: 'user@example.com', timestamp: '2025-07-16T10:05:00Z' },
-    { docId: 'CON-001', oldStatus: 'Department A', newStatus: 'Department B', user: 'user@example.com', timestamp: '2025-07-16T09:30:00Z' },
-    { docId: 'REQ-003', oldStatus: 'Department G', newStatus: 'Completed (Success)', user: 'user@example.com', timestamp: '2025-07-15T14:00:00Z' }
+export const DEFAULT_LOGS: Log[] = [
+    { id: 'log-1', docId: 'CON-001', oldStatus: 'Department B', newStatus: 'Department C', user: 'user@example.com', timestamp: '2025-07-16T10:05:00Z' },
+    { id: 'log-2', docId: 'CON-001', oldStatus: 'Department A', newStatus: 'Department B', user: 'user@example.com', timestamp: '2025-07-16T09:30:00Z' },
+    { id: 'log-3', docId: 'REQ-003', oldStatus: 'Department G', newStatus: 'Completed (Success)', user: 'user@example.com', timestamp: '2025-07-15T14:00:00Z' }
+];
+
+const adminPermissions = {
+    canAddDocument: true, canCombineDocuments: true, canManageColumns: true, canExportData: true,
+    canSplitDocument: true, canDelayDocument: true, canMoveDocument: true, canCompleteDocument: true,
+    canDeleteDocument: true, canEditDocumentDetails: true, canReleaseDocument: true, canEditCurrentNote: true,
+    canViewLog: true, canOpenDocumentLink1: true, canOpenDocumentLink2: true, canOpenDocumentLink3: true,
+    canOpenDocumentLink4: true, canEditDocumentId: true, canEditDocumentName: true, canEditOffice: true,
+    canEditSecondaryId: true, canEditTertiaryId: true, canEditQuaternaryId: true, canEditDocumentLink1: true,
+    canEditDocumentLink2: true, canEditDocumentLink3: true, canEditDocumentLink4: true, canEditAssignedDepartment: true,
+};
+
+export const DEFAULT_USERS: User[] = [
+    { id: 'user-1', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: adminPermissions, departmentPermissions: [] }
 ];
 
 export const COLUMN_CONFIG: { [key: string]: { name: string } } = {
@@ -62,9 +76,5 @@ export const PERMISSIONS_CONFIG = {
     canEditSecondaryId: 'Edit Secondary ID',
     canEditTertiaryId: 'Edit Tertiary ID',
     canEditQuaternaryId: 'Edit Quaternary ID',
-    canEditDocumentLink1: 'Edit Document Link 1',
-    canEditDocumentLink2: 'Edit Document Link 2',
-    canEditDocumentLink3: 'Edit Document Link 3',
-    canEditDocumentLink4: 'Edit Document Link 4',
     canEditAssignedDepartment: 'Edit Assigned Department'
 };

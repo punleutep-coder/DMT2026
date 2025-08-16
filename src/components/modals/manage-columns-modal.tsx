@@ -5,9 +5,6 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useAppContext } from '@/hooks/use-app-context'
 import { COLUMN_CONFIG } from '@/lib/initial-data'
-import { db } from '@/lib/firebase'
-import { doc, updateDoc, collection, getDocs } from 'firebase/firestore'
-import { useToast } from '@/hooks/use-toast'
 
 interface ManageColumnsModalProps {
   isOpen: boolean
@@ -17,23 +14,12 @@ interface ManageColumnsModalProps {
 export default function ManageColumnsModal({ isOpen, onClose }: ManageColumnsModalProps) {
   const { state, dispatch } = useAppContext()
   const { columnVisibility } = state
-  const { toast } = useToast()
 
-  const handleToggle = async (key: string) => {
-    const newVisibility = { ...columnVisibility, [key]: !columnVisibility[key] };
-    
-    try {
-      const configCollection = collection(db, 'app_config');
-      const snapshot = await getDocs(configCollection);
-      if (!snapshot.empty) {
-        const configDocRef = snapshot.docs[0].ref;
-        await updateDoc(configDocRef, { columnVisibility: newVisibility });
-      }
-       // The local state will update automatically via the Firestore listener
-    } catch (error) {
-      console.error("Error updating column visibility:", error);
-      toast({ title: "Error", description: "Could not save column preference.", variant: "destructive" });
-    }
+  const handleToggle = (key: string) => {
+    dispatch({
+      type: 'SET_COLUMN_VISIBILITY',
+      payload: { ...columnVisibility, [key]: !columnVisibility[key] },
+    })
   }
 
   return (

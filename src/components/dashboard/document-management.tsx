@@ -15,9 +15,6 @@ import {
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
-import { db } from '@/lib/firebase'
-import { collection, doc, getDocs, writeBatch } from 'firebase/firestore'
-import type { Document, Log, User } from '@/lib/types'
 
 export default function DocumentManagement() {
   const { state, dispatch, filteredDocs } = useAppContext()
@@ -53,64 +50,42 @@ export default function DocumentManagement() {
               title: 'Confirm Import',
               message:
                 'This will ERASE all current data and replace it with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
-              onConfirm: async () => {
+              onConfirm: () => {
                 try {
                   toast({ title: "Importing...", description: "Please wait while we import your data." });
                   
-                  // Nuke existing data
-                  const batchDelete = writeBatch(db)
-                  const collections = ['documents', 'logs', 'users', 'app_config']
-                  for (const coll of collections) {
-                    const snapshot = await getDocs(collection(db, coll))
-                    snapshot.docs.forEach((doc) => batchDelete.delete(doc.ref))
-                  }
-                  await batchDelete.commit()
-
-                  // Batch write new data
-                  const batchWrite = writeBatch(db)
-
                   if (importedData.documents && Array.isArray(importedData.documents)) {
-                    importedData.documents.forEach((docData: Document) => {
-                      const { firestoreId, ...rest } = docData
-                      const newDocRef = doc(collection(db, 'documents'))
-                      batchWrite.set(newDocRef, rest)
+                    importedData.documents.forEach((docData: any) => {
+                        dispatch({type: 'ADD_DOCUMENT', payload: docData})
                     })
                   }
                   
                   if (importedData.logs && Array.isArray(importedData.logs)) {
-                     importedData.logs.forEach((logData: Log) => {
-                      const { firestoreId, ...rest } = logData
-                      const newLogRef = doc(collection(db, 'logs'))
-                      batchWrite.set(newLogRef, rest)
+                     importedData.logs.forEach((logData: any) => {
+                        dispatch({type: 'ADD_LOG', payload: logData})
                     })
                   }
 
                    if (importedData.users && Array.isArray(importedData.users)) {
-                     importedData.users.forEach((userData: User) => {
-                      const { firestoreId, ...rest } = userData
-                      // IMPORTANT: For security, we don't import password hashes.
-                      // They are set to a known "please reset" value.
-                      rest.passwordHash = 'imported_user_please_reset'
-                      const newUserRef = doc(collection(db, 'users'))
-                      batchWrite.set(newUserRef, rest)
+                     importedData.users.forEach((userData: any) => {
+                      dispatch({type: 'ADD_USER', payload: userData})
                     })
                   }
 
-                  // Handle app_config (departments & columns)
-                  const configRef = doc(db, 'app_config', 'main_config')
-                  batchWrite.set(configRef, {
-                    departments: importedData.departments || [],
-                    columnVisibility: importedData.columnVisibility || {},
-                    id: 'main'
-                  })
+                  if (importedData.departments) {
+                    dispatch({type: 'SET_DEPARTMENTS', payload: importedData.departments})
+                  }
 
-                  await batchWrite.commit();
+                  if(importedData.columnVisibility) {
+                    dispatch({type: 'SET_COLUMN_VISIBILITY', payload: importedData.columnVisibility})
+                  }
+
                   toast({ title: 'Success', description: 'Data imported successfully.' })
                 } catch (error) {
-                  console.error('Error during Firestore import:', error)
+                  console.error('Error during import:', error)
                   toast({
                     title: 'Import Error',
-                    description: 'Failed to import data to Firestore.',
+                    description: 'Failed to import data.',
                     variant: 'destructive',
                   })
                 }
@@ -134,28 +109,17 @@ export default function DocumentManagement() {
 
   const handleExport = async () => {
      try {
-      toast({ title: "Exporting...", description: "Gathering data from the database." });
-
-      const [docsSnap, logsSnap, usersSnap, configSnap] = await Promise.all([
-        getDocs(collection(db, "documents")),
-        getDocs(collection(db, "logs")),
-        getDocs(collection(db, "users")),
-        getDocs(collection(db, "app_config"))
-      ]);
-      
-      const configData = configSnap.docs[0]?.data() || {};
+      toast({ title: "Exporting...", description: "Gathering data." });
 
       const dataToExport = {
-        documents: docsSnap.docs.map(d => ({ ...d.data(), firestoreId: d.id })),
-        logs: logsSnap.docs.map(l => ({...l.data(), firestoreId: l.id })),
-        users: usersSnap.docs.map(u => {
-          const userData = u.data();
-          // Exclude password hash from export for security
-          const { passwordHash, ...userSafeData } = userData;
-          return { ...userSafeData, firestoreId: u.id };
+        documents: state.documents,
+        logs: state.logs,
+        users: state.users.map(u => {
+          const { passwordHash, ...userSafeData } = u;
+          return userSafeData;
         }),
-        departments: configData.departments || [],
-        columnVisibility: configData.columnVisibility || {},
+        departments: state.departments,
+        columnVisibility: state.columnVisibility,
       };
 
       const jsonString = JSON.stringify(dataToExport, null, 2);
@@ -173,7 +137,7 @@ export default function DocumentManagement() {
 
     } catch (error) {
       console.error("Failed to export data:", error);
-      toast({ title: "Export Error", description: "Could not export data from Firestore.", variant: "destructive" });
+      toast({ title: "Export Error", description: "Could not export data.", variant: "destructive" });
     }
   }
 

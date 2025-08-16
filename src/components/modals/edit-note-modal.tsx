@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
-import { db } from '@/lib/firebase'
-import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
 
 const formSchema = z.object({
   note: z.string().min(1, 'Note cannot be empty.'),
@@ -36,7 +34,7 @@ export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalP
     }
   })
 
-  if (!docToUpdate || !docToUpdate.firestoreId) return null
+  if (!docToUpdate) return null
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString();
@@ -46,23 +44,24 @@ export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalP
         lastEntry.note = values.note;
     }
 
-    const updatedFields: Partial<Document> = { 
+    const updatedFields: Partial<Document> & {id: string} = { 
+        id: docId,
         history: newHistory, 
         lastUpdate: now 
     };
 
-    const newLog = { 
-        docId, 
-        oldStatus: docToUpdate.status, 
-        newStatus: `Note Edited in ${docToUpdate.status}`, 
-        user: state.currentUser!.username, 
-        timestamp: now, 
-        reason: values.note 
-    };
-
-    const docRef = doc(db, 'documents', docToUpdate.firestoreId);
-    await updateDoc(docRef, updatedFields);
-    await addDoc(collection(db, 'logs'), newLog);
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+    dispatch({ 
+        type: 'ADD_LOG', 
+        payload: {
+            docId, 
+            oldStatus: docToUpdate.status, 
+            newStatus: `Note Edited in ${docToUpdate.status}`, 
+            user: state.currentUser!.username, 
+            timestamp: now, 
+            reason: values.note 
+        }
+    });
     onClose();
   }
 

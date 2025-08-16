@@ -11,8 +11,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { PlusCircle, Trash } from 'lucide-react'
 import type { Document } from '@/lib/types'
-import { db } from '@/lib/firebase'
-import { doc, collection, writeBatch, getDocs, query, where, updateDoc } from 'firebase/firestore'
 
 const splitDocumentSchema = z.object({
     id: z.string().min(1, 'Document ID is required'),
@@ -47,15 +45,13 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
     name: "newDocuments"
   });
 
-  if (!docToSplit || !docToSplit.firestoreId) return null;
+  if (!docToSplit) return null;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const newDocIds = values.newDocuments.map(d => d.id);
-    const existingDocsQuery = query(collection(db, 'documents'), where('id', 'in', newDocIds));
-    const existingDocsSnapshot = await getDocs(existingDocsQuery);
+    const existingIds = newDocIds.filter(id => state.documents.some(d => d.id === id));
 
-    if (!existingDocsSnapshot.empty) {
-        const existingIds = existingDocsSnapshot.docs.map(d => d.data().id);
+    if (existingIds.length > 0) {
         form.setError('newDocuments', { message: `The following IDs already exist: ${existingIds.join(', ')}` });
         return;
     }
@@ -63,7 +59,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
     const now = new Date().toISOString();
     const initialDepartment = state.departments.length > 0 ? state.departments[0] : 'N/A';
     
-    const newDocs: Omit<Document, 'firestoreId'>[] = values.newDocuments.map(newDocData => ({
+    const newDocs: Document[] = values.newDocuments.map(newDocData => ({
         id: newDocData.id,
         name: newDocData.name,
         office: docToSplit.office,
@@ -85,26 +81,18 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
         splitFrom: docId,
     }));
     
-    const batch = writeBatch(db);
-
     // Update original document
-    const originalDocRef = doc(db, 'documents', docToSplit.firestoreId);
     const splitHistory = docToSplit.splitHistory || [];
     splitHistory.push({ timestamp: now, splitTo: newDocIds });
-    batch.update(originalDocRef, { status: 'Split', lastUpdate: now, splitHistory });
-
-    const originalLogRef = doc(collection(db, 'logs'));
-    batch.set(originalLogRef, { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` });
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docId, status: 'Split', lastUpdate: now, splitHistory } });
+    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` } });
 
     // Add new documents and their logs
     newDocs.forEach(nd => {
-        const newDocRef = doc(collection(db, 'documents'));
-        batch.set(newDocRef, nd);
-        const newLogRef = doc(collection(db, 'logs'));
-        batch.set(newLogRef, { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now });
+        dispatch({ type: 'ADD_DOCUMENT', payload: nd });
+        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now } });
     });
     
-    await batch.commit();
     onClose();
   }
 

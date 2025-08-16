@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useAppContext } from '@/hooks/use-app-context'
-import { db } from '@/lib/firebase'
-import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
 
 const formSchema = z.object({
   status: z.enum(['Completed (Success)', 'Completed (Unsuccess)'], {
@@ -36,7 +34,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId }: Comple
     },
   })
 
-  if (!docToUpdate || !docToUpdate.firestoreId) return null
+  if (!docToUpdate) return null
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString();
@@ -50,23 +48,24 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId }: Comple
     }
 
     const updatedFields = {
+        id: docId,
         status: values.status,
         lastUpdate: now,
         history: newHistory,
     };
 
-    const newLog = { 
-        docId, 
-        oldStatus: docToUpdate.status, 
-        newStatus: values.status, 
-        user: state.currentUser!.username, 
-        timestamp: now, 
-        reason: values.note 
-    };
-    
-    const docRef = doc(db, 'documents', docToUpdate.firestoreId);
-    await updateDoc(docRef, updatedFields);
-    await addDoc(collection(db, 'logs'), newLog);
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+    dispatch({ 
+        type: 'ADD_LOG', 
+        payload: {
+            docId, 
+            oldStatus: docToUpdate.status, 
+            newStatus: values.status, 
+            user: state.currentUser!.username, 
+            timestamp: now, 
+            reason: values.note 
+        }
+    });
     onClose();
   }
 
