@@ -10,8 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
-import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -34,7 +32,7 @@ interface EditDocumentModalProps {
 }
 
 export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocumentModalProps) {
-  const { state } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
   const { currentUser } = state
 
@@ -57,13 +55,9 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
 
   if (!docToUpdate) return null
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (values.id !== docToUpdate.id && state.documents.some(d => d.id === values.id)) {
         form.setError('id', { message: 'This Document ID already exists.' });
-        return;
-    }
-    if (!docToUpdate.firestoreId) {
-        console.error("Document is missing Firestore ID");
         return;
     }
     
@@ -83,13 +77,9 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
     const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
     updatedFields.documentLink = newLinks;
     
-    try {
-        const docRef = doc(db, "documents", docToUpdate.firestoreId);
-        await updateDoc(docRef, updatedFields);
-        onClose();
-    } catch(error) {
-        console.error("Error updating document: ", error);
-    }
+    // We only need to provide the ID for lookup, and the fields that changed.
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docToUpdate.id, ...updatedFields } });
+    onClose()
   }
 
   return (

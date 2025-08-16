@@ -29,8 +29,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { db } from '@/lib/firebase'
-import { doc, updateDoc, writeBatch, collection, addDoc, deleteDoc } from 'firebase/firestore'
 
 interface DocumentTableRowProps {
   doc: Document
@@ -66,7 +64,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: newSelectedIds })
   }
 
-  const handleAction = async (type: any, docId: string) => {
+  const handleAction = (type: any, docId: string) => {
     if (type === 'deleteDocument') {
         dispatch({
             type: 'SET_DIALOG',
@@ -75,29 +73,24 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 title: 'Delete Document',
                 message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
                 confirmText: 'Delete',
-                onConfirm: async () => {
-                    if (doc.firestoreId) {
-                        await deleteDoc(doc(db, "documents", doc.firestoreId));
-                        // Optional: Add logic to delete associated logs if needed
-                    }
+                onConfirm: () => {
+                    dispatch({ type: 'DELETE_DOCUMENT', payload: docId });
+                    // Optional: Add logic to delete associated logs if needed
                 }
             }
         });
     } else if (type === 'releaseDocument') {
-        if (doc.firestoreId) {
-            const docRef = doc(db, 'documents', doc.firestoreId);
-            await updateDoc(docRef, {
-                isDelayed: false,
-                releaseDate: null,
-                releaseDateReached: false,
-                lastUpdate: new Date().toISOString()
-            });
-            const newLog = { docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' };
-            await addDoc(collection(db, "logs"), newLog);
-        }
+        const updatedDoc = {
+            id: doc.id,
+            isDelayed: false,
+            releaseDate: null,
+            releaseDateReached: false,
+            lastUpdate: new Date().toISOString()
+        };
+        const newLog = { docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' };
+        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedDoc });
+        dispatch({ type: 'ADD_LOG', payload: newLog });
     } else if (type === 'back') {
-      if (!doc.firestoreId) return;
-
       const currentDeptIndex = state.departments.indexOf(doc.status)
       if (currentDeptIndex > 0 || doc.status.startsWith('Completed')) {
         const newHistory = [...doc.history]
@@ -110,6 +103,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         const newStatus = prevHistoryEntry ? prevHistoryEntry.department : state.departments[0];
 
         const updatedFields = {
+          id: doc.id,
           status: newStatus,
           history: newHistory,
           lastUpdate: new Date().toISOString(),
@@ -117,11 +111,10 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
           releaseDate: null, 
           releaseDateReached: false
         }
-        const docRef = doc(db, 'documents', doc.firestoreId);
-        await updateDoc(docRef, updatedFields);
+        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
         
         const newLog = { docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' };
-        await addDoc(collection(db, "logs"), newLog);
+        dispatch({ type: 'ADD_LOG', payload: newLog });
       }
     } else {
         dispatch({ type: 'SET_MODAL', payload: { type, docId }})

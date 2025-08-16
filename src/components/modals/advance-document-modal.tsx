@@ -10,8 +10,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
-import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   nextDepartment: z.string().min(1, 'Please select a department.'),
@@ -43,12 +41,7 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
   const currentDeptIndex = state.departments.indexOf(doc.status)
   const availableNextDepts = state.departments.slice(currentDeptIndex + 1)
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!doc.firestoreId) {
-      console.error("Document is missing Firestore ID");
-      return;
-    }
-
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString()
     
     const newHistory = [...doc.history]
@@ -58,7 +51,8 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
     }
     newHistory.push({ department: values.nextDepartment, start: now, end: null, receiver: values.receiver, note: values.note || '' })
     
-    const updatedFields = {
+    const updatedFields: Partial<Document> = {
+      id: doc.id,
       status: values.nextDepartment,
       lastUpdate: now,
       history: newHistory,
@@ -66,14 +60,10 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
 
     const newLog = { docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now };
 
-    try {
-        const docRef = doc(db, "documents", doc.firestoreId);
-        await updateDoc(docRef, updatedFields);
-        await addDoc(collection(db, "logs"), newLog);
-        onClose();
-    } catch(error) {
-        console.error("Error advancing document: ", error);
-    }
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+    dispatch({type: 'ADD_LOG', payload: newLog });
+
+    onClose()
   }
 
   return (

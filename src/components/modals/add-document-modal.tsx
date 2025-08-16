@@ -12,8 +12,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Sparkles } from 'lucide-react'
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 import { useToast } from '@/hooks/use-toast'
 
 const formSchema = z.object({
@@ -82,7 +80,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
   }
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (state.documents.some(d => d.id === values.docId)) {
         form.setError('docId', { message: 'This Document ID already exists.' });
         return;
@@ -120,18 +118,10 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
 
     const newLog = { docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now };
 
-    try {
-        await addDoc(collection(db, "documents"), newDoc);
-        await addDoc(collection(db, "logs"), newLog);
-        onClose();
-    } catch (error) {
-        console.error("Error adding document to Firestore: ", error);
-        toast({
-            title: 'Error',
-            description: 'Could not add document to the database.',
-            variant: 'destructive'
-        })
-    }
+    dispatch({type: 'ADD_DOCUMENT', payload: newDoc });
+    dispatch({type: 'ADD_LOG', payload: newLog });
+
+    onClose()
   }
 
   return (

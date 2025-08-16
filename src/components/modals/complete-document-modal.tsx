@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useAppContext } from '@/hooks/use-app-context'
-import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   status: z.enum(['Completed (Success)', 'Completed (Unsuccess)'], {
@@ -25,7 +23,7 @@ interface CompleteDocumentModalProps {
 }
 
 export default function CompleteDocumentModal({ isOpen, onClose, docId }: CompleteDocumentModalProps) {
-  const { state } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -38,12 +36,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId }: Comple
 
   if (!docToUpdate) return null
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!docToUpdate.firestoreId) {
-        console.error("Document is missing Firestore ID");
-        return;
-    }
-
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString();
     const newHistory = [...docToUpdate.history];
     const lastEntry = newHistory[newHistory.length - 1];
@@ -55,6 +48,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId }: Comple
     }
 
     const updatedFields = {
+        id: docToUpdate.id,
         status: values.status,
         lastUpdate: now,
         history: newHistory,
@@ -69,14 +63,9 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId }: Comple
         reason: values.note 
     };
 
-    try {
-        const docRef = doc(db, "documents", docToUpdate.firestoreId);
-        await updateDoc(docRef, updatedFields);
-        await addDoc(collection(db, "logs"), newLog);
-        onClose();
-    } catch(error) {
-        console.error("Error completing document: ", error);
-    }
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+    dispatch({ type: 'ADD_LOG', payload: newLog });
+    onClose();
   }
 
   return (

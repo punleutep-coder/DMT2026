@@ -12,8 +12,6 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 const formSchema = z.object({
   releaseDate: z.date({
@@ -29,7 +27,7 @@ interface DelayDocumentModalProps {
 }
 
 export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocumentModalProps) {
-  const { state } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -42,13 +40,10 @@ export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocu
 
   if (!docToUpdate) return null
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!docToUpdate.firestoreId) {
-        console.error("Document is missing Firestore ID");
-        return;
-    }
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString()
     const updatedFields = {
+        id: docToUpdate.id,
         isDelayed: true,
         releaseDate: values.releaseDate.toISOString(),
         lastUpdate: now,
@@ -63,14 +58,9 @@ export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocu
         reason: `Delayed until ${format(values.releaseDate, 'PPP')}. Note: ${values.note}` 
     };
 
-    try {
-        const docRef = doc(db, "documents", docToUpdate.firestoreId);
-        await updateDoc(docRef, updatedFields);
-        await addDoc(collection(db, "logs"), newLog);
-        onClose();
-    } catch(error) {
-        console.error("Error delaying document: ", error);
-    }
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+    dispatch({ type: 'ADD_LOG', payload: newLog });
+    onClose()
   }
 
   return (

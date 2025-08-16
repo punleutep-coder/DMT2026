@@ -15,8 +15,6 @@ import { PERMISSIONS_CONFIG } from '@/lib/initial-data'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion'
 import { Checkbox } from '../ui/checkbox'
 import { Pencil, Trash2 } from 'lucide-react'
-import { addDoc, collection, deleteDoc, doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 import type { User } from '@/lib/types'
 
 const permissionsSchema = z.record(z.boolean()).default({});
@@ -94,33 +92,23 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
-    if (isEditing) {
-      if (!userToEdit?.firestoreId) {
-        console.error("User to edit is missing firestoreId");
-        return;
-      }
-      const userRef = doc(db, "users", userToEdit.firestoreId);
-      await updateDoc(userRef, {
+    const userData = {
+        id: userToEdit?.id || `user-${Date.now()}`,
         username: values.username,
         passwordHash,
         role: values.role,
-        permissions: values.permissions,
-        departmentPermissions: values.departmentPermissions
-      });
+        permissions: values.role === 'Admin' ? {} : values.permissions,
+        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions
+    }
+
+    if (isEditing) {
+      dispatch({ type: 'UPDATE_USER', payload: userData });
     } else {
       if (state.users.some(u => u.username === values.username)) {
         form.setError('username', { message: 'This username is already taken.' })
         return
       }
-      const newUser: Omit<User, 'firestoreId'> = {
-        id: `user-${Date.now()}`,
-        username: values.username,
-        passwordHash: passwordHash!,
-        role: values.role,
-        permissions: values.role === 'Admin' ? {} : values.permissions,
-        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions
-      }
-      await addDoc(collection(db, "users"), newUser);
+      dispatch({ type: 'ADD_USER', payload: userData as User });
     }
     setEditingUserId(undefined) // Reset form to "Add New" state
     form.reset()
@@ -138,11 +126,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             title: 'Delete User',
             message: 'Are you sure you want to delete this user? This action cannot be undone.',
             confirmText: 'Delete',
-            onConfirm: async () => {
-                if (user.firestoreId) {
-                    await deleteDoc(doc(db, "users", user.firestoreId));
-                }
-            }
+            onConfirm: () => dispatch({ type: 'DELETE_USER', payload: user.id })
         }
     })
   }

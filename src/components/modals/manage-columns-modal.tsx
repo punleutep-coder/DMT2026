@@ -5,8 +5,6 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useAppContext } from '@/hooks/use-app-context'
 import { COLUMN_CONFIG } from '@/lib/initial-data'
-import { doc, setDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 interface ManageColumnsModalProps {
   isOpen: boolean
@@ -17,14 +15,11 @@ export default function ManageColumnsModal({ isOpen, onClose }: ManageColumnsMod
   const { state, dispatch } = useAppContext()
   const { columnVisibility } = state
 
-  const handleToggle = async (key: string) => {
-    const newVisibility = { ...columnVisibility, [key]: !columnVisibility[key] };
-    dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: newVisibility });
-    try {
-        await setDoc(doc(db, "app-config", "columnVisibility"), newVisibility);
-    } catch (error) {
-        console.error("Error updating column visibility:", error);
-    }
+  const handleToggle = (key: string) => {
+    dispatch({
+      type: 'SET_COLUMN_VISIBILITY',
+      payload: { ...columnVisibility, [key]: !columnVisibility[key] },
+    })
   }
 
   return (

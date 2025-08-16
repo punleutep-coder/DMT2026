@@ -14,8 +14,6 @@ import {
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
-import { db } from '@/lib/firebase'
-import { collection, doc, writeBatch, setDoc } from 'firebase/firestore'
 import { useToast } from '@/hooks/use-toast'
 
 export default function DocumentManagement() {
@@ -51,52 +49,13 @@ export default function DocumentManagement() {
                         isOpen: true,
                         title: 'Confirm Import',
                         message: 'This will overwrite existing data with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
-                        onConfirm: async () => {
-                            try {
-                                const batch = writeBatch(db);
-                                // Note: This is a destructive import. We don't delete old data, but new data will get new IDs.
-                                // For a true "overwrite", you'd need to delete all existing documents first, which is risky.
-                                
-                                if (importedData.documents && Array.isArray(importedData.documents)) {
-                                    importedData.documents.forEach((document: any) => {
-                                        const { firestoreId, ...docData } = document; // Exclude old firestoreId
-                                        const docRef = doc(collection(db, "documents"));
-                                        batch.set(docRef, docData);
-                                    });
-                                }
-                                if (importedData.logs && Array.isArray(importedData.logs)) {
-                                    importedData.logs.forEach((log: any) => {
-                                        const { firestoreId, ...logData } = log;
-                                        const logRef = doc(collection(db, "logs"));
-                                        batch.set(logRef, logData);
-                                    });
-                                }
-                                if (importedData.users && Array.isArray(importedData.users)) {
-                                    importedData.users.forEach((user: any) => {
-                                      // Security: Passwords cannot be imported this way.
-                                      // We import the user structure, but an admin must reset the password.
-                                      const { firestoreId, passwordHash, ...userData } = user;
-                                      const userRef = doc(collection(db, "users"));
-                                      batch.set(userRef, { ...userData, passwordHash: 'imported-user-requires-reset' });
-                                    });
-                                }
-                                
-                                await batch.commit();
-
-                                // Non-batched writes for single-doc configs
-                                if (importedData.departments && Array.isArray(importedData.departments)) {
-                                    await setDoc(doc(db, "app-config", "departments"), { list: importedData.departments });
-                                }
-                                if (importedData.columnVisibility && typeof importedData.columnVisibility === 'object') {
-                                    await setDoc(doc(db, "app-config", "columnVisibility"), importedData.columnVisibility);
-                                }
-
-
-                                toast({ title: "Success", description: "Data imported successfully from JSON file." });
-                            } catch(e) {
-                                console.error("Error importing data to Firestore: ", e);
-                                toast({ title: "Error", description: "Failed to import data. Check the console for details.", variant: 'destructive' });
-                            }
+                        onConfirm: () => {
+                            if (importedData.documents) dispatch({ type: 'SET_DOCUMENTS', payload: importedData.documents });
+                            if (importedData.logs) dispatch({ type: 'SET_LOGS', payload: importedData.logs });
+                            if (importedData.users) dispatch({ type: 'SET_USERS', payload: importedData.users });
+                            if (importedData.departments) dispatch({ type: 'SET_DEPARTMENTS', payload: importedData.departments });
+                            if (importedData.columnVisibility) dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: importedData.columnVisibility });
+                            toast({ title: "Success", description: "Data imported successfully from JSON file." });
                         }
                     }
                 })
