@@ -29,6 +29,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, deleteDoc, addDoc, collection, writeBatch, getDocs, query, where } from 'firebase/firestore'
 
 interface DocumentTableRowProps {
   doc: Document
@@ -64,7 +66,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: newSelectedIds })
   }
 
-  const handleAction = (type: any, docId: string) => {
+  const handleAction = async (type: any, docId: string) => {
     if (type === 'deleteDocument') {
         dispatch({
             type: 'SET_DIALOG',
@@ -73,24 +75,33 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 title: 'Delete Document',
                 message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
                 confirmText: 'Delete',
-                onConfirm: () => {
-                    dispatch({ type: 'DELETE_DOCUMENT', payload: docId });
-                    // Optional: Add logic to delete associated logs if needed
+                onConfirm: async () => {
+                    const batch = writeBatch(db);
+                    // Delete the document
+                    if(doc.firestoreId) batch.delete(doc(db, 'documents', doc.firestoreId));
+                    // Delete associated logs
+                    const logsQuery = query(collection(db, 'logs'), where('docId', '==', doc.id));
+                    const logsSnapshot = await getDocs(logsQuery);
+                    logsSnapshot.forEach(logDoc => batch.delete(logDoc.ref));
+                    await batch.commit();
                 }
             }
         });
     } else if (type === 'releaseDocument') {
+        if (!doc.firestoreId) return;
         const updatedDoc = {
-            id: doc.id,
             isDelayed: false,
             releaseDate: null,
             releaseDateReached: false,
             lastUpdate: new Date().toISOString()
         };
         const newLog = { docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' };
-        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedDoc });
-        dispatch({ type: 'ADD_LOG', payload: newLog });
+        
+        await updateDoc(doc(db, 'documents', doc.firestoreId), updatedDoc);
+        await addDoc(collection(db, 'logs'), newLog);
+
     } else if (type === 'back') {
+      if (!doc.firestoreId) return;
       const currentDeptIndex = state.departments.indexOf(doc.status)
       if (currentDeptIndex > 0 || doc.status.startsWith('Completed')) {
         const newHistory = [...doc.history]
@@ -103,7 +114,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         const newStatus = prevHistoryEntry ? prevHistoryEntry.department : state.departments[0];
 
         const updatedFields = {
-          id: doc.id,
           status: newStatus,
           history: newHistory,
           lastUpdate: new Date().toISOString(),
@@ -111,10 +121,10 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
           releaseDate: null, 
           releaseDateReached: false
         }
-        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-        
         const newLog = { docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' };
-        dispatch({ type: 'ADD_LOG', payload: newLog });
+        
+        await updateDoc(doc(db, 'documents', doc.firestoreId), updatedFields);
+        await addDoc(collection(db, 'logs'), newLog);
       }
     } else {
         dispatch({ type: 'SET_MODAL', payload: { type, docId }})

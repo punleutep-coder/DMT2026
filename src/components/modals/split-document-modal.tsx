@@ -11,6 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { PlusCircle, Trash } from 'lucide-react'
 import type { Document } from '@/lib/types'
+import { db } from '@/lib/firebase'
+import { doc, collection, writeBatch, getDocs, query, where, updateDoc } from 'firebase/firestore'
 
 const splitDocumentSchema = z.object({
     id: z.string().min(1, 'Document ID is required'),
@@ -45,20 +47,23 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
     name: "newDocuments"
   });
 
-  if (!docToSplit) return null;
+  if (!docToSplit || !docToSplit.firestoreId) return null;
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const allDocIds = new Set(state.documents.map(d => d.id));
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const newDocIds = values.newDocuments.map(d => d.id);
-    if (newDocIds.some(id => allDocIds.has(id))) {
-        form.setError('newDocuments', { message: 'One or more new Document IDs already exist.' });
+    const existingDocsQuery = query(collection(db, 'documents'), where('id', 'in', newDocIds));
+    const existingDocsSnapshot = await getDocs(existingDocsQuery);
+
+    if (!existingDocsSnapshot.empty) {
+        const existingIds = existingDocsSnapshot.docs.map(d => d.data().id);
+        form.setError('newDocuments', { message: `The following IDs already exist: ${existingIds.join(', ')}` });
         return;
     }
 
     const now = new Date().toISOString();
     const initialDepartment = state.departments.length > 0 ? state.departments[0] : 'N/A';
     
-    const newDocs: Document[] = values.newDocuments.map(newDocData => ({
+    const newDocs: Omit<Document, 'firestoreId'>[] = values.newDocuments.map(newDocData => ({
         id: newDocData.id,
         name: newDocData.name,
         office: docToSplit.office,
@@ -74,22 +79,32 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
         tags: [...docToSplit.tags],
         isDelayed: false,
         releaseDate: null,
+        releaseDateReached: false,
+        justReleased: false,
         keywords: docToSplit.keywords,
         splitFrom: docId,
     }));
     
+    const batch = writeBatch(db);
+
     // Update original document
+    const originalDocRef = doc(db, 'documents', docToSplit.firestoreId);
     const splitHistory = docToSplit.splitHistory || [];
     splitHistory.push({ timestamp: now, splitTo: newDocIds });
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docToSplit.id, status: 'Split', lastUpdate: now, splitHistory }})
-    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` } });
+    batch.update(originalDocRef, { status: 'Split', lastUpdate: now, splitHistory });
 
-    // Add new documents
+    const originalLogRef = doc(collection(db, 'logs'));
+    batch.set(originalLogRef, { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` });
+
+    // Add new documents and their logs
     newDocs.forEach(nd => {
-        dispatch({ type: 'ADD_DOCUMENT', payload: nd });
-        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now } });
+        const newDocRef = doc(collection(db, 'documents'));
+        batch.set(newDocRef, nd);
+        const newLogRef = doc(collection(db, 'logs'));
+        batch.set(newLogRef, { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now });
     });
     
+    await batch.commit();
     onClose();
   }
 
@@ -122,7 +137,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId }: SplitDocu
                     <Button type="button" variant="outline" size="sm" onClick={() => append({id: '', name: ''})} className="mt-4">
                         <PlusCircle className="mr-2 h-4 w-4" /> Add New Document
                     </Button>
-                    {form.formState.errors.newDocuments && <p className="text-sm font-medium text-destructive">{form.formState.errors.newDocuments.message}</p>}
+                    {form.formState.errors.newDocuments?.message && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.newDocuments.message}</p>}
                 </div>
                 <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel>Note for Split</FormLabel><FormControl><Textarea placeholder="This note will be added to all new documents." {...field} /></FormControl><FormMessage /></FormItem> )} />
               </div>

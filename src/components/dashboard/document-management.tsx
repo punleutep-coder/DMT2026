@@ -15,6 +15,9 @@ import {
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
+import { db } from '@/lib/firebase'
+import { collection, doc, getDocs, writeBatch } from 'firebase/firestore'
+import type { Document, Log, User } from '@/lib/types'
 
 export default function DocumentManagement() {
   const { state, dispatch, filteredDocs } = useAppContext()
@@ -33,61 +36,145 @@ export default function DocumentManagement() {
   }
 
   const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-  
-    const reader = new FileReader();
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
     reader.onload = async (e) => {
-        try {
-            const result = e.target?.result;
-            if (typeof result === 'string') {
-                const importedData = JSON.parse(result);
-                
-                dispatch({
-                    type: 'SET_DIALOG',
-                    payload: {
-                        isOpen: true,
-                        title: 'Confirm Import',
-                        message: 'This will overwrite existing data with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
-                        onConfirm: () => {
-                            if (importedData.documents) dispatch({ type: 'SET_DOCUMENTS', payload: importedData.documents });
-                            if (importedData.logs) dispatch({ type: 'SET_LOGS', payload: importedData.logs });
-                            if (importedData.users) dispatch({ type: 'SET_USERS', payload: importedData.users });
-                            if (importedData.departments) dispatch({ type: 'SET_DEPARTMENTS', payload: importedData.departments });
-                            if (importedData.columnVisibility) dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: importedData.columnVisibility });
-                            toast({ title: "Success", description: "Data imported successfully from JSON file." });
-                        }
-                    }
-                })
-            }
-        } catch (error) {
-            console.error(error);
-            toast({ title: "Error", description: "Failed to parse JSON file.", variant: 'destructive' });
-        } finally {
-            event.target.value = '';
+      try {
+        const result = e.target?.result
+        if (typeof result === 'string') {
+          const importedData = JSON.parse(result)
+
+          dispatch({
+            type: 'SET_DIALOG',
+            payload: {
+              isOpen: true,
+              title: 'Confirm Import',
+              message:
+                'This will ERASE all current data and replace it with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
+              onConfirm: async () => {
+                try {
+                  toast({ title: "Importing...", description: "Please wait while we import your data." });
+                  
+                  // Nuke existing data
+                  const batchDelete = writeBatch(db)
+                  const collections = ['documents', 'logs', 'users', 'app_config']
+                  for (const coll of collections) {
+                    const snapshot = await getDocs(collection(db, coll))
+                    snapshot.docs.forEach((doc) => batchDelete.delete(doc.ref))
+                  }
+                  await batchDelete.commit()
+
+                  // Batch write new data
+                  const batchWrite = writeBatch(db)
+
+                  if (importedData.documents && Array.isArray(importedData.documents)) {
+                    importedData.documents.forEach((docData: Document) => {
+                      const { firestoreId, ...rest } = docData
+                      const newDocRef = doc(collection(db, 'documents'))
+                      batchWrite.set(newDocRef, rest)
+                    })
+                  }
+                  
+                  if (importedData.logs && Array.isArray(importedData.logs)) {
+                     importedData.logs.forEach((logData: Log) => {
+                      const { firestoreId, ...rest } = logData
+                      const newLogRef = doc(collection(db, 'logs'))
+                      batchWrite.set(newLogRef, rest)
+                    })
+                  }
+
+                   if (importedData.users && Array.isArray(importedData.users)) {
+                     importedData.users.forEach((userData: User) => {
+                      const { firestoreId, ...rest } = userData
+                      // IMPORTANT: For security, we don't import password hashes.
+                      // They are set to a known "please reset" value.
+                      rest.passwordHash = 'imported_user_please_reset'
+                      const newUserRef = doc(collection(db, 'users'))
+                      batchWrite.set(newUserRef, rest)
+                    })
+                  }
+
+                  // Handle app_config (departments & columns)
+                  const configRef = doc(db, 'app_config', 'main_config')
+                  batchWrite.set(configRef, {
+                    departments: importedData.departments || [],
+                    columnVisibility: importedData.columnVisibility || {},
+                    id: 'main'
+                  })
+
+                  await batchWrite.commit();
+                  toast({ title: 'Success', description: 'Data imported successfully.' })
+                } catch (error) {
+                  console.error('Error during Firestore import:', error)
+                  toast({
+                    title: 'Import Error',
+                    description: 'Failed to import data to Firestore.',
+                    variant: 'destructive',
+                  })
+                }
+              },
+            },
+          })
         }
+      } catch (error) {
+        console.error(error)
+        toast({
+          title: 'Error',
+          description: 'Failed to parse JSON file.',
+          variant: 'destructive',
+        })
+      } finally {
+        event.target.value = ''
+      }
     }
-    reader.readAsText(file);
+    reader.readAsText(file)
   }
 
-  const handleExport = () => {
-    const dataToExport = {
-      documents: state.documents,
-      logs: state.logs,
-      departments: state.departments,
-      columnVisibility: state.columnVisibility,
-      users: state.users,
+  const handleExport = async () => {
+     try {
+      toast({ title: "Exporting...", description: "Gathering data from the database." });
+
+      const [docsSnap, logsSnap, usersSnap, configSnap] = await Promise.all([
+        getDocs(collection(db, "documents")),
+        getDocs(collection(db, "logs")),
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "app_config"))
+      ]);
+      
+      const configData = configSnap.docs[0]?.data() || {};
+
+      const dataToExport = {
+        documents: docsSnap.docs.map(d => ({ ...d.data(), firestoreId: d.id })),
+        logs: logsSnap.docs.map(l => ({...l.data(), firestoreId: l.id })),
+        users: usersSnap.docs.map(u => {
+          const userData = u.data();
+          // Exclude password hash from export for security
+          const { passwordHash, ...userSafeData } = userData;
+          return { ...userSafeData, firestoreId: u.id };
+        }),
+        departments: configData.departments || [],
+        columnVisibility: configData.columnVisibility || {},
+      };
+
+      const jsonString = JSON.stringify(dataToExport, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `docuflow_export_${new Date().toISOString()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({ title: "Export Complete", description: "Your data has been downloaded." });
+
+    } catch (error) {
+      console.error("Failed to export data:", error);
+      toast({ title: "Export Error", description: "Could not export data from Firestore.", variant: "destructive" });
     }
-    const jsonString = JSON.stringify(dataToExport, null, 2)
-    const blob = new Blob([jsonString], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'document_workflow_data.json'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
   }
 
   const processFlowButtons = useMemo(() => {

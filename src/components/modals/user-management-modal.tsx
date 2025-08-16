@@ -16,6 +16,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { Checkbox } from '../ui/checkbox'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { User } from '@/lib/types'
+import { db } from '@/lib/firebase'
+import { doc, addDoc, updateDoc, deleteDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { useToast } from '@/hooks/use-toast'
 
 const permissionsSchema = z.record(z.boolean()).default({});
 
@@ -25,7 +28,7 @@ const formSchema = z.object({
   role: z.enum(['Admin', 'User']),
   permissions: permissionsSchema,
   departmentPermissions: z.array(z.string()).default([]),
-}).refine(data => data.role === 'Admin' || (data.password && data.password.length > 0) || !!(data as any).userId, {
+}).refine(data => data.role === 'Admin' || (data.password && data.password.length > 0) || !!(data as any).firestoreId, {
   message: "Password is required for new users.",
   path: ["password"],
 });
@@ -46,15 +49,16 @@ const hashPassword = async (password: string): Promise<string> => {
 
 export default function UserManagementModal({ isOpen, onClose, userId: initialUserId }: UserManagementModalProps) {
   const { state, dispatch } = useAppContext()
+  const { toast } = useToast()
   const [editingUserId, setEditingUserId] = useState<string | undefined>(initialUserId)
   
-  const userToEdit = useMemo(() => state.users.find(u => u.id === editingUserId), [state.users, editingUserId]);
+  const userToEdit = useMemo(() => state.users.find(u => u.firestoreId === editingUserId), [state.users, editingUserId]);
   const isEditing = !!userToEdit
 
-  const form = useForm<z.infer<typeof formSchema> & { userId?: string }>({
+  const form = useForm<z.infer<typeof formSchema> & { firestoreId?: string }>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userId: undefined,
+      firestoreId: undefined,
       username: '',
       password: '',
       role: 'User',
@@ -68,9 +72,9 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   }, [initialUserId]);
 
   useEffect(() => {
-    const user = state.users.find(u => u.id === editingUserId);
+    const user = state.users.find(u => u.firestoreId === editingUserId);
     form.reset({
-        userId: user?.id,
+        firestoreId: user?.firestoreId,
         username: user?.username || '',
         password: '',
         role: user?.role || 'User',
@@ -81,7 +85,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
 
   const role = form.watch('role');
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema> & { firestoreId?: string }) => {
     let passwordHash = userToEdit?.passwordHash;
     if (values.password) {
         passwordHash = await hashPassword(values.password);
@@ -101,17 +105,27 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions
     }
 
-    if (isEditing) {
-      dispatch({ type: 'UPDATE_USER', payload: userData });
-    } else {
-      if (state.users.some(u => u.username === values.username)) {
-        form.setError('username', { message: 'This username is already taken.' })
-        return
-      }
-      dispatch({ type: 'ADD_USER', payload: userData as User });
+    try {
+        if (isEditing && userToEdit.firestoreId) {
+          const userRef = doc(db, 'users', userToEdit.firestoreId);
+          await updateDoc(userRef, userData);
+          toast({ title: "Success", description: "User updated successfully." });
+        } else {
+          const existingUserQuery = query(collection(db, 'users'), where('username', '==', values.username));
+          const existingUserSnapshot = await getDocs(existingUserQuery);
+          if (!existingUserSnapshot.empty) {
+            form.setError('username', { message: 'This username is already taken.' })
+            return
+          }
+          await addDoc(collection(db, 'users'), userData);
+          toast({ title: "Success", description: "User created successfully." });
+        }
+        setEditingUserId(undefined) // Reset form to "Add New" state
+        form.reset()
+    } catch(error) {
+        console.error("Error saving user:", error);
+        toast({ title: "Error", description: "Could not save user data.", variant: "destructive"});
     }
-    setEditingUserId(undefined) // Reset form to "Add New" state
-    form.reset()
   }
 
   const handleDeleteUser = (user: User) => {
@@ -126,7 +140,12 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             title: 'Delete User',
             message: 'Are you sure you want to delete this user? This action cannot be undone.',
             confirmText: 'Delete',
-            onConfirm: () => dispatch({ type: 'DELETE_USER', payload: user.id })
+            onConfirm: async () => {
+                if (user.firestoreId) {
+                    await deleteDoc(doc(db, 'users', user.firestoreId));
+                    toast({ title: "User Deleted", description: `User ${user.username} has been removed.` });
+                }
+            }
         }
     })
   }
@@ -172,7 +191,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                                 <span className="text-sm text-muted-foreground ml-2">({user.role})</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingUserId(user.id)}>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingUserId(user.firestoreId)}>
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteUser(user)}>
@@ -190,7 +209,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                     <DialogHeader>
                         <DialogTitle>{isEditing ? 'Edit User' : 'Add New User'}</DialogTitle>
                         <DialogDescription>
-                            {isEditing ? `Editing user: ${userToEdit.username}` : 'Create a new user and set their role and permissions.'}
+                            {isEditing && userToEdit ? `Editing user: ${userToEdit.username}` : 'Create a new user and set their role and permissions.'}
                         </DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="h-[40vh] p-4 -mx-4">
@@ -236,7 +255,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                                                                 <FormLabel className="text-sm font-normal">{name}</FormLabel>
                                                                 <FormControl>
                                                                 <Switch
-                                                                    checked={field.value}
+                                                                    checked={!!field.value}
                                                                     onCheckedChange={field.onChange}
                                                                 />
                                                                 </FormControl>

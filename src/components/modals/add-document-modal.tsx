@@ -13,6 +13,8 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { db } from '@/lib/firebase'
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore'
 
 const formSchema = z.object({
   docId: z.string().min(1, 'Document ID is required.'),
@@ -80,8 +82,10 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
   }
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (state.documents.some(d => d.id === values.docId)) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const existingDocQuery = query(collection(db, 'documents'), where('id', '==', values.docId));
+    const existingDocSnapshot = await getDocs(existingDocQuery);
+    if (!existingDocSnapshot.empty) {
         form.setError('docId', { message: 'This Document ID already exists.' });
         return;
     }
@@ -113,15 +117,22 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
         isDelayed: false,
         releaseDate: null,
+        releaseDateReached: false,
+        justReleased: false,
         keywords: values.keywords || ''
     }
 
     const newLog = { docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now };
 
-    dispatch({type: 'ADD_DOCUMENT', payload: newDoc });
-    dispatch({type: 'ADD_LOG', payload: newLog });
-
-    onClose()
+    try {
+        await addDoc(collection(db, 'documents'), newDoc);
+        await addDoc(collection(db, 'logs'), newLog);
+        toast({ title: "Success", description: "Document added successfully." });
+        onClose();
+    } catch (error) {
+        console.error("Error adding document to Firestore:", error);
+        toast({ title: "Error", description: "Failed to add document.", variant: "destructive" });
+    }
   }
 
   return (

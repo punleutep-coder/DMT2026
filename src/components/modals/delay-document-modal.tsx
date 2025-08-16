@@ -12,6 +12,8 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
 
 const formSchema = z.object({
   releaseDate: z.date({
@@ -38,12 +40,11 @@ export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocu
     },
   })
 
-  if (!docToUpdate) return null
+  if (!docToUpdate || !docToUpdate.firestoreId) return null
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString()
     const updatedFields = {
-        id: docToUpdate.id,
         isDelayed: true,
         releaseDate: values.releaseDate.toISOString(),
         lastUpdate: now,
@@ -58,8 +59,9 @@ export default function DelayDocumentModal({ isOpen, onClose, docId }: DelayDocu
         reason: `Delayed until ${format(values.releaseDate, 'PPP')}. Note: ${values.note}` 
     };
 
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-    dispatch({ type: 'ADD_LOG', payload: newLog });
+    const docRef = doc(db, 'documents', docToUpdate.firestoreId);
+    await updateDoc(docRef, updatedFields);
+    await addDoc(collection(db, 'logs'), newLog);
     onClose()
   }
 

@@ -40,6 +40,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { cn } from '@/lib/utils'
 import type { Document } from '@/lib/types'
+import { db } from '@/lib/firebase'
+import { doc, collection, writeBatch, getDocs, query, where } from 'firebase/firestore'
 
 const formSchema = z.object({
   newDocId: z.string().min(1, 'New Document ID is required.'),
@@ -81,10 +83,12 @@ export default function CombineDocumentsModal({
     },
   })
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (state.documents.some((d) => d.id === values.newDocId)) {
-      form.setError('newDocId', { message: 'This Document ID already exists.' })
-      return
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const existingDocQuery = query(collection(db, 'documents'), where('id', '==', values.newDocId));
+    const existingDocSnapshot = await getDocs(existingDocQuery);
+    if (!existingDocSnapshot.empty) {
+        form.setError('newDocId', { message: 'This Document ID already exists.' });
+        return;
     }
 
     const now = new Date()
@@ -97,7 +101,7 @@ export default function CombineDocumentsModal({
       doc.keywords?.split(' ').forEach(kw => kw && allKeywords.add(kw));
     });
 
-    const newDoc: Document = {
+    const newDoc: Omit<Document, 'firestoreId'> = {
       id: values.newDocId,
       name: values.newDocName,
       office: values.office || null,
@@ -122,32 +126,46 @@ export default function CombineDocumentsModal({
       tags: Array.from(allTags),
       isDelayed: false,
       releaseDate: null,
+      releaseDateReached: false,
+      justReleased: false,
       keywords: Array.from(allKeywords).join(' '),
       combinedFrom: selectedDocIds,
     }
 
+    const batch = writeBatch(db);
+
     // Create the new combined document
-    dispatch({ type: 'ADD_DOCUMENT', payload: newDoc })
+    const newDocRef = doc(collection(db, 'documents'));
+    batch.set(newDocRef, newDoc);
+    
     // Log the creation
-    dispatch({ type: 'ADD_LOG', payload: {
+    const newDocLogRef = doc(collection(db, 'logs'));
+    batch.set(newDocLogRef, {
         docId: newDoc.id,
         oldStatus: 'N/A',
         newStatus: 'Created via Combination',
         user: currentUser!.username,
         timestamp: now.toISOString(),
-    }})
+    });
 
     // Update the original documents
     docsToCombine.forEach(doc => {
-        dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: doc.id, status: 'Combined', lastUpdate: now.toISOString() }})
-        dispatch({ type: 'ADD_LOG', payload: {
+      if (doc.firestoreId) {
+        const docRef = doc(db, 'documents', doc.firestoreId);
+        batch.update(docRef, { status: 'Combined', lastUpdate: now.toISOString() });
+        
+        const originalDocLogRef = doc(collection(db, 'logs'));
+        batch.set(originalDocLogRef, {
             docId: doc.id,
             oldStatus: doc.status,
             newStatus: 'Combined',
             user: currentUser!.username,
             timestamp: now.toISOString(),
-        }})
-    })
+        });
+      }
+    });
+
+    await batch.commit();
     
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: [] })
     onClose()

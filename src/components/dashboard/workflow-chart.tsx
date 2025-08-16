@@ -15,15 +15,17 @@ import { useMemo } from 'react'
 
 export default function WorkflowChart() {
   const { state, dispatch } = useAppContext()
-  const { departments, documents } = state
+  // IMPORTANT: Use the complete, unfiltered list of documents for the chart
+  const { documents, departments } = state
 
   const chartData = useMemo(() => {
-    let baseDocsForChart = documents;
-
+    // Filter out combined/split documents for a clearer workflow view
+    const activeDocs = documents.filter(d => d.status !== 'Combined' && d.status !== 'Split');
+    
     const counts = departments.map(dept => ({
       name: dept.replace('Department ', ''),
       fullName: dept,
-      total: baseDocsForChart.filter(doc => doc.status === dept).length,
+      total: activeDocs.filter(doc => doc.status === dept).length,
     }));
 
     return counts;
@@ -63,8 +65,7 @@ export default function WorkflowChart() {
               axisLine={false}
               tickFormatter={(value) => `${value}`}
               allowDecimals={false}
-              domain={[0, (dataMax: number) => Math.max(60, dataMax + 5)]}
-              ticks={[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]}
+              domain={[0, (dataMax: number) => Math.max(10, Math.ceil((dataMax * 1.2) / 5) * 5)]} // Dynamic Y-axis
             />
              <Tooltip
                 contentStyle={{

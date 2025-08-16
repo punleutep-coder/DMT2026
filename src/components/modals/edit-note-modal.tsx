@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
 
 const formSchema = z.object({
   note: z.string().min(1, 'Note cannot be empty.'),
@@ -29,11 +31,14 @@ export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalP
     defaultValues: {
       note: currentNote,
     },
+    values: { // Use values to force re-render when currentNote changes
+      note: currentNote,
+    }
   })
 
-  if (!docToUpdate) return null
+  if (!docToUpdate || !docToUpdate.firestoreId) return null
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString();
     const newHistory = [...docToUpdate.history];
     const lastEntry = newHistory[newHistory.length - 1];
@@ -42,7 +47,6 @@ export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalP
     }
 
     const updatedFields: Partial<Document> = { 
-        id: docToUpdate.id,
         history: newHistory, 
         lastUpdate: now 
     };
@@ -56,8 +60,9 @@ export default function EditNoteModal({ isOpen, onClose, docId }: EditNoteModalP
         reason: values.note 
     };
 
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-    dispatch({ type: 'ADD_LOG', payload: newLog });
+    const docRef = doc(db, 'documents', docToUpdate.firestoreId);
+    await updateDoc(docRef, updatedFields);
+    await addDoc(collection(db, 'logs'), newLog);
     onClose();
   }
 

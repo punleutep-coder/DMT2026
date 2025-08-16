@@ -10,6 +10,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { useToast } from '@/hooks/use-toast'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -35,6 +38,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
   const { currentUser } = state
+  const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,12 +57,16 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
     },
   })
 
-  if (!docToUpdate) return null
+  if (!docToUpdate || !docToUpdate.firestoreId) return null
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (values.id !== docToUpdate.id && state.documents.some(d => d.id === values.id)) {
-        form.setError('id', { message: 'This Document ID already exists.' });
-        return;
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (values.id !== docToUpdate.id) {
+        const existingDocQuery = query(collection(db, 'documents'), where('id', '==', values.id));
+        const existingDocSnapshot = await getDocs(existingDocQuery);
+        if (!existingDocSnapshot.empty) {
+            form.setError('id', { message: 'This Document ID already exists.' });
+            return;
+        }
     }
     
     const updatedFields: Partial<Document> = {
@@ -77,9 +85,15 @@ export default function EditDocumentModal({ isOpen, onClose, docId }: EditDocume
     const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
     updatedFields.documentLink = newLinks;
     
-    // We only need to provide the ID for lookup, and the fields that changed.
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docToUpdate.id, ...updatedFields } });
-    onClose()
+    try {
+        const docRef = doc(db, 'documents', docToUpdate.firestoreId);
+        await updateDoc(docRef, updatedFields);
+        toast({ title: "Success", description: "Document details saved." });
+        onClose();
+    } catch (error) {
+        console.error("Error updating document:", error);
+        toast({ title: "Error", description: "Could not save changes.", variant: "destructive" });
+    }
   }
 
   return (

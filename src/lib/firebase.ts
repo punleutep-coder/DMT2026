@@ -1,18 +1,40 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+'use client'
+import { initializeApp, getApps, getApp } from 'firebase/app'
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  enableMultiTabIndexedDbPersistence,
+} from 'firebase/firestore'
 
-// This configuration is now unused as the application has been reverted to use localStorage.
-// You can remove this file and its dependencies if you do not plan to use Firebase in the future.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PULIC_FIREBASE_MESSAGING_SENDER_ID,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+}
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
+const db = getFirestore(app)
 
-export { app, db };
+// This enables offline data persistence and multi-tab synchronization.
+// It's a key part of making the app feel fast and reliable.
+if (typeof window !== 'undefined') {
+    enableMultiTabIndexedDbPersistence(db).catch((err) => {
+        if (err.code == 'failed-precondition') {
+            console.warn("Firestore persistence failed: Multiple tabs open. Some features may not work offline.");
+        } else if (err.code == 'unimplemented') {
+            console.log("Firestore persistence not available in this browser.");
+        }
+    });
+}
+
+// Check for emulator environment
+if (process.env.NEXT_PUBLIC_USE_EMULATOR === 'true') {
+  console.log("Connecting to Firestore emulator");
+  connectFirestoreEmulator(db, 'localhost', 8080);
+}
+
+
+export { app, db }

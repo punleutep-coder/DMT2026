@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { useAppContext } from '@/hooks/use-app-context'
 import { GripVertical, Trash2 } from 'lucide-react'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, collection, getDocs } from 'firebase/firestore'
+import { useToast } from '@/hooks/use-toast'
 
 interface ManageDepartmentsModalProps {
   isOpen: boolean
@@ -13,6 +16,7 @@ interface ManageDepartmentsModalProps {
 
 export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepartmentsModalProps) {
   const { state, dispatch } = useAppContext()
+  const { toast } = useToast()
   const [departments, setDepartments] = useState([...state.departments])
   const [newDepartment, setNewDepartment] = useState('')
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
@@ -28,9 +32,22 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
     setDepartments(departments.filter((_, i) => i !== index))
   }
 
-  const handleSave = () => {
-    dispatch({ type: 'SET_DEPARTMENTS', payload: departments })
-    onClose()
+  const handleSave = async () => {
+     try {
+      const configCollection = collection(db, 'app_config');
+      const snapshot = await getDocs(configCollection);
+      if (!snapshot.empty) {
+        const configDocRef = snapshot.docs[0].ref;
+        await updateDoc(configDocRef, { departments: departments });
+        toast({ title: "Success", description: "Departments updated." });
+        onClose();
+      } else {
+         throw new Error("App config document not found.");
+      }
+    } catch (error) {
+      console.error("Error updating departments:", error);
+      toast({ title: "Error", description: "Could not save departments.", variant: "destructive" });
+    }
   }
 
   const handleDragStart = (index: number) => {

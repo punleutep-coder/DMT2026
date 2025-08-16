@@ -10,6 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
+import { db } from '@/lib/firebase'
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore'
 
 const formSchema = z.object({
   nextDepartment: z.string().min(1, 'Please select a department.'),
@@ -36,12 +38,12 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
     },
   })
 
-  if (!doc) return null
+  if (!doc || !doc.firestoreId) return null
 
   const currentDeptIndex = state.departments.indexOf(doc.status)
   const availableNextDepts = state.departments.slice(currentDeptIndex + 1)
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString()
     
     const newHistory = [...doc.history]
@@ -52,7 +54,6 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
     newHistory.push({ department: values.nextDepartment, start: now, end: null, receiver: values.receiver, note: values.note || '' })
     
     const updatedFields: Partial<Document> = {
-      id: doc.id,
       status: values.nextDepartment,
       lastUpdate: now,
       history: newHistory,
@@ -60,8 +61,9 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId }: Advance
 
     const newLog = { docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now };
 
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-    dispatch({type: 'ADD_LOG', payload: newLog });
+    const docRef = doc(db, 'documents', doc.firestoreId);
+    await updateDoc(docRef, updatedFields);
+    await addDoc(collection(db, 'logs'), newLog);
 
     onClose()
   }
