@@ -52,16 +52,15 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
     }
     newHistory.push({ department: values.nextDepartment, start: now, end: null, receiver: values.receiver, note: values.note || '' })
     
-    const updatedFields: Partial<Document> & { id: string; firestoreId: string } = {
+    const updatedFields: Partial<Document> & { id: string } = {
       id: docId,
-      firestoreId,
       status: values.nextDepartment,
       lastUpdate: now,
       history: newHistory,
     }
 
     dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now } });
+    dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now } });
 
     onClose()
   }

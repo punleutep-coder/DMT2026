@@ -64,9 +64,8 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         return;
     }
     
-    const updatedFields: Partial<Document> & {id: string, firestoreId: string} = {
+    const updatedFields: Partial<Document> & {id: string} = {
         id: docToUpdate.id,
-        firestoreId,
         lastUpdate: new Date().toISOString(),
     }
 

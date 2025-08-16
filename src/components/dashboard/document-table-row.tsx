@@ -74,21 +74,20 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
                 confirmText: 'Delete',
                 onConfirm: () => {
-                    dispatch({ type: 'DELETE_DOCUMENT', payload: { id: docId, firestoreId } });
+                    dispatch({ type: 'DELETE_DOCUMENT', payload: { id: docId } });
                 }
             }
         });
     } else if (type === 'releaseDocument') {
         const updatedDoc = {
             id: docId,
-            firestoreId: firestoreId,
             isDelayed: false,
             releaseDate: null,
             releaseDateReached: false,
             lastUpdate: new Date().toISOString()
         };
         dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedDoc });
-        dispatch({ type: 'ADD_LOG', payload: { docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' } });
+        dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' } });
 
     } else if (type === 'back') {
       const currentDeptIndex = state.departments.indexOf(doc.status)
@@ -104,7 +103,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
 
         const updatedFields = {
           id: docId,
-          firestoreId: firestoreId,
           status: newStatus,
           history: newHistory,
           lastUpdate: new Date().toISOString(),
@@ -113,7 +111,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
           releaseDateReached: false
         }
         dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-        dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' } });
+        dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId, oldStatus: doc.status, newStatus, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Moved back to previous step.' } });
       }
     } else {
         dispatch({ type: 'SET_MODAL', payload: { type, docId, firestoreId }})

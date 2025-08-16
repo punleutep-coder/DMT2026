@@ -62,6 +62,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
     
     const newDocs: Document[] = values.newDocuments.map(newDocData => ({
         id: newDocData.id,
+        firestoreId: `doc-${Date.now()}-${newDocData.id}`,
         name: newDocData.name,
         office: docToSplit.office,
         status: initialDepartment,
@@ -80,19 +81,18 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
         justReleased: false,
         keywords: docToSplit.keywords,
         splitFrom: docId,
-        firestoreId: '', // This will be set by Firestore
     }));
     
     // Update original document
     const splitHistory = docToSplit.splitHistory || [];
     splitHistory.push({ timestamp: now, splitTo: newDocIds });
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docId, firestoreId, status: 'Split', lastUpdate: now, splitHistory } });
-    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` } });
+    dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docId, status: 'Split', lastUpdate: now, splitHistory } });
+    dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}-split`, firestoreId: `log-${Date.now()}-split`, docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` } });
 
     // Add new documents and their logs
     newDocs.forEach(nd => {
         dispatch({ type: 'ADD_DOCUMENT', payload: nd });
-        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now } });
+        dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}-${nd.id}`, firestoreId: `log-${Date.now()}-${nd.id}`, docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now } });
     });
     
     onClose();

@@ -45,9 +45,8 @@ export default function EditNoteModal({ isOpen, onClose, docId, firestoreId }: E
         lastEntry.note = values.note;
     }
 
-    const updatedFields: Partial<Document> & {id: string, firestoreId: string} = { 
+    const updatedFields: Partial<Document> & {id: string} = { 
         id: docId,
-        firestoreId,
         history: newHistory, 
         lastUpdate: now 
     };
@@ -56,6 +55,8 @@ export default function EditNoteModal({ isOpen, onClose, docId, firestoreId }: E
     dispatch({ 
         type: 'ADD_LOG', 
         payload: {
+            id: `log-${Date.now()}`,
+            firestoreId: `log-${Date.now()}`,
             docId, 
             oldStatus: docToUpdate.status, 
             newStatus: `Note Edited in ${docToUpdate.status}`, 

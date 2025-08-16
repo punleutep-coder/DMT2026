@@ -13,7 +13,6 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { v4 as uuidv4 } from 'uuid';
 
 const formSchema = z.object({
   docId: z.string().min(1, 'Document ID is required.'),
@@ -98,10 +97,9 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
 
     const now = new Date().toISOString()
-    const newDocId = uuidv4();
     const newDoc = {
         id: values.docId,
-        firestoreId: newDocId, // Use a new UUID for Firestore
+        firestoreId: `doc-${Date.now()}`,
         name: values.docName,
         office: values.office || null,
         status: initialDepartment,
@@ -122,7 +120,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
 
     dispatch({ type: 'ADD_DOCUMENT', payload: newDoc });
-    dispatch({ type: 'ADD_LOG', payload: { docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now } });
+    dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now } });
     
     toast({ title: "Success", description: "Document added successfully." });
     onClose();

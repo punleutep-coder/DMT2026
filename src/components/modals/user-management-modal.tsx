@@ -17,7 +17,6 @@ import { Checkbox } from '../ui/checkbox'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { User } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
-import { v4 as uuidv4 } from 'uuid';
 
 const permissionsSchema = z.record(z.boolean()).default({});
 
@@ -99,10 +98,9 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
-    const newUserId = isEditing ? userToEdit.id : `user-${uuidv4()}`;
     const userData: User = {
-        id: newUserId,
-        firestoreId: newUserId, // Ensure firestoreId matches the user id
+        id: isEditing ? userToEdit.id : `user-${Date.now()}`,
+        firestoreId: isEditing ? userToEdit.firestoreId : `user-${Date.now()}`,
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,

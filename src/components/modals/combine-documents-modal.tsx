@@ -99,6 +99,7 @@ export default function CombineDocumentsModal({
 
     const newDoc: Document = {
       id: values.newDocId,
+      firestoreId: `doc-${Date.now()}`,
       name: values.newDocName,
       office: values.office || null,
       status: values.targetDepartment,
@@ -132,6 +133,8 @@ export default function CombineDocumentsModal({
     dispatch({
         type: 'ADD_LOG',
         payload: {
+            id: `log-${Date.now()}-combo`,
+            firestoreId: `log-${Date.now()}-combo`,
             docId: newDoc.id,
             oldStatus: 'N/A',
             newStatus: 'Created via Combination',
@@ -145,6 +148,8 @@ export default function CombineDocumentsModal({
         dispatch({
             type: 'ADD_LOG',
             payload: {
+                id: `log-${Date.now()}-${doc.id}`,
+                firestoreId: `log-${Date.now()}-${doc.id}`,
                 docId: doc.id,
                 oldStatus: doc.status,
                 newStatus: 'Combined',

@@ -15,8 +15,6 @@ import {
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
-import { writeBatch, collection, doc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 export default function DocumentManagement() {
   const { state, dispatch, filteredDocs } = useAppContext()
@@ -51,53 +49,35 @@ export default function DocumentManagement() {
               isOpen: true,
               title: 'Confirm Import',
               message:
-                'This will ERASE all current data in Firestore and replace it with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
-              onConfirm: async () => {
+                'This will ERASE all current data and replace it with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
+              onConfirm: () => {
                 try {
                   toast({ title: "Importing...", description: "Please wait while we import your data." });
-                  const batch = writeBatch(db);
-
-                  // Clear existing data (optional, but recommended for a clean import)
-                  const collections = ['documents', 'logs', 'users', 'app_config'];
-                  for (const coll of collections) {
-                      const snapshot = await collection(db, coll).get();
-                      snapshot.docs.forEach(doc => batch.delete(doc.ref));
-                  }
                   
-                  // Import new data
                   if (importedData.documents && Array.isArray(importedData.documents)) {
                     importedData.documents.forEach((docData: any) => {
-                        const { firestoreId, ...rest } = docData;
-                        const docRef = doc(collection(db, 'documents'));
-                        batch.set(docRef, rest);
-                    })
+                      dispatch({ type: 'ADD_DOCUMENT', payload: docData });
+                    });
                   }
                   
                   if (importedData.logs && Array.isArray(importedData.logs)) {
                      importedData.logs.forEach((logData: any) => {
-                        const { firestoreId, ...rest } = logData;
-                        const docRef = doc(collection(db, 'logs'));
-                        batch.set(docRef, rest);
+                        dispatch({ type: 'ADD_LOG', payload: logData });
                     })
                   }
 
                    if (importedData.users && Array.isArray(importedData.users)) {
                      importedData.users.forEach((userData: any) => {
-                      const { firestoreId, ...rest } = userData;
-                      const docRef = doc(db, 'users', rest.id);
-                      batch.set(docRef, rest);
+                       dispatch({ type: 'ADD_USER', payload: userData });
                     })
                   }
 
-                  if (importedData.departments || importedData.columnVisibility) {
-                    const configRef = doc(db, 'app_config', 'main_config');
-                    batch.set(configRef, {
-                        departments: importedData.departments || state.departments,
-                        columnVisibility: importedData.columnVisibility || state.columnVisibility
-                    });
+                  if (importedData.departments) {
+                    dispatch({ type: 'SET_DEPARTMENTS', payload: importedData.departments });
                   }
-
-                  await batch.commit();
+                  if(importedData.columnVisibility) {
+                    dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: importedData.columnVisibility });
+                  }
 
                   toast({ title: 'Success', description: 'Data imported successfully.' })
                 } catch (error) {
@@ -131,9 +111,9 @@ export default function DocumentManagement() {
       toast({ title: "Exporting...", description: "Gathering data." });
 
       const dataToExport = {
-        documents: state.documents.map(({ firestoreId, ...rest }) => rest),
-        logs: state.logs.map(({ firestoreId, ...rest }) => rest),
-        users: state.users.map(({ firestoreId, passwordHash, ...rest }) => rest),
+        documents: state.documents,
+        logs: state.logs,
+        users: state.users,
         departments: state.departments,
         columnVisibility: state.columnVisibility,
       };

@@ -45,7 +45,6 @@ export default function DelayDocumentModal({ isOpen, onClose, docId, firestoreId
     const now = new Date().toISOString()
     const updatedFields = {
         id: docId,
-        firestoreId,
         isDelayed: true,
         releaseDate: values.releaseDate.toISOString(),
         lastUpdate: now,
@@ -55,6 +54,8 @@ export default function DelayDocumentModal({ isOpen, onClose, docId, firestoreId
     dispatch({ 
         type: 'ADD_LOG', 
         payload: {
+            id: `log-${Date.now()}`,
+            firestoreId: `log-${Date.now()}`,
             docId, 
             oldStatus: docToUpdate.status, 
             newStatus: 'Delayed', 

@@ -50,7 +50,6 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
 
     const updatedFields = {
         id: docId,
-        firestoreId,
         status: values.status,
         lastUpdate: now,
         history: newHistory,
@@ -60,6 +59,8 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
     dispatch({ 
         type: 'ADD_LOG', 
         payload: {
+            id: `log-${Date.now()}`,
+            firestoreId: `log-${Date.now()}`,
             docId, 
             oldStatus: docToUpdate.status, 
             newStatus: values.status, 
