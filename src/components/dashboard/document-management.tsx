@@ -17,8 +17,8 @@ import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
 
 export default function DocumentManagement() {
-  const { state, dispatch } = useAppContext()
-  const { currentUser, filteredDocs } = state
+  const { state, dispatch, filteredDocs } = useAppContext()
+  const { currentUser } = state
   const { toast } = useToast()
 
   const openModal = (type: any, docId?: string) => {
