@@ -108,7 +108,7 @@ export default function LoginForm() {
                   <Terminal className="h-4 w-4" />
                   <AlertTitle>Login Failed</AlertTitle>
                   <AlertDescription>
-                    {error} Try using username `admin` and password `admin`.
+                    {error}
                   </AlertDescription>
                 </Alert>
               )}
