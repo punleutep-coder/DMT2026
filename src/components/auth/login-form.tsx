@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState } from 'react'
@@ -41,8 +42,8 @@ export default function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
-      password: '',
+      username: 'admin',
+      password: 'admin',
     },
   })
 
@@ -122,3 +123,5 @@ export default function LoginForm() {
     </>
   )
 }
+
+    

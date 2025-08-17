@@ -1,3 +1,4 @@
+
 import type { Document, Log, User } from './types';
 
 export const LS_USERS_KEY = 'documentWorkflow_users';
@@ -33,7 +34,7 @@ const adminPermissions = {
 };
 
 export const DEFAULT_USERS: User[] = [
-    { id: 'user-1', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: adminPermissions, departmentPermissions: [] }
+    { id: 'user-1', firestoreId: 'user-1', username: 'admin', passwordHash: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', role: 'Admin', permissions: adminPermissions, departmentPermissions: [] }
 ];
 
 export const COLUMN_CONFIG: { [key: string]: { name: string } } = {
@@ -78,3 +79,5 @@ export const PERMISSIONS_CONFIG = {
     canEditQuaternaryId: 'Edit Quaternary ID',
     canEditAssignedDepartment: 'Edit Assigned Department'
 };
+
+    
