@@ -155,7 +155,7 @@ export default function DocumentManagement() {
     }
   }
   
-  const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All';
+  const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All' || state.filter.mainFilter !== 'All' || state.filter.departmentSpecificFilter !== 'All';
 
   return (
     <section className="glassmorphic-card space-y-6">
