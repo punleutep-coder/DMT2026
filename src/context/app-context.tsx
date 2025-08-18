@@ -66,20 +66,33 @@ const getInitialState = (): AppState => ({
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case 'INITIALIZE_STATE': {
-      const storedUsers = JSON.parse(localStorage.getItem(LS_USERS_KEY) || 'null') || DEFAULT_USERS;
-      const storedDocs = JSON.parse(localStorage.getItem(LS_DOCUMENTS_KEY) || 'null') || DEFAULT_DOCS;
-      const storedLogs = JSON.parse(localStorage.getItem(LS_LOGS_KEY) || 'null') || DEFAULT_LOGS;
-      const storedDepts = JSON.parse(localStorage.getItem(LS_DEPARTMENTS_KEY) || 'null') || DEFAULT_DEPARTMENTS;
-      const storedCols = JSON.parse(localStorage.getItem(LS_COLUMNS_KEY) || 'null') || initialColumnVisibility;
+      const storedUsers = localStorage.getItem(LS_USERS_KEY);
+      const storedDocs = localStorage.getItem(LS_DOCUMENTS_KEY);
+      const storedLogs = localStorage.getItem(LS_LOGS_KEY);
+      const storedDepts = localStorage.getItem(LS_DEPARTMENTS_KEY);
+      const storedCols = localStorage.getItem(LS_COLUMNS_KEY);
+      
+      const users = storedUsers ? JSON.parse(storedUsers) : DEFAULT_USERS;
+      const documents = storedDocs ? JSON.parse(storedDocs) : DEFAULT_DOCS;
+      const logs = storedLogs ? JSON.parse(storedLogs) : DEFAULT_LOGS;
+      const departments = storedDepts ? JSON.parse(storedDepts) : DEFAULT_DEPARTMENTS;
+      const columnVisibility = storedCols ? JSON.parse(storedCols) : initialColumnVisibility;
+
+      if (!storedUsers) localStorage.setItem(LS_USERS_KEY, JSON.stringify(users));
+      if (!storedDocs) localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(documents));
+      if (!storedLogs) localStorage.setItem(LS_LOGS_KEY, JSON.stringify(logs));
+      if (!storedDepts) localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(departments));
+      if (!storedCols) localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(columnVisibility));
+
       const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
       
       return { 
           ...state,
-          users: storedUsers,
-          documents: storedDocs,
-          logs: storedLogs,
-          departments: storedDepts,
-          columnVisibility: storedCols,
+          users,
+          documents,
+          logs,
+          departments,
+          columnVisibility,
           currentUser,
           isInitialized: true 
       };
