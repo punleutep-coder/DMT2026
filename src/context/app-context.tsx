@@ -178,10 +178,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    let initialState: Partial<AppState> = {};
     try {
       const storedDocs = localStorage.getItem(LS_DOCUMENTS_KEY);
-      
+      let initialState: Partial<AppState>;
+
       if (storedDocs) {
         // Data exists, load from local storage
         initialState = {
@@ -209,15 +209,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(initialState.columnVisibility));
         sessionStorage.removeItem('currentUser');
       }
+      dispatch({ type: 'INITIALIZE_STATE', payload: initialState });
     } catch (error) {
       console.error("Error managing local storage, resetting to defaults", error);
       
-      // Clear potentially corrupted storage
       localStorage.clear();
       sessionStorage.clear();
       
-      // Set defaults
-      initialState = {
+      const defaultState = {
           users: DEFAULT_USERS,
           documents: DEFAULT_DOCS,
           logs: DEFAULT_LOGS,
@@ -226,14 +225,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           currentUser: null
       };
 
-      // Save defaults to storage
-      localStorage.setItem(LS_USERS_KEY, JSON.stringify(initialState.users));
-      localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(initialState.documents));
-      localStorage.setItem(LS_LOGS_KEY, JSON.stringify(initialState.logs));
-      localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(initialState.departments));
-      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(initialState.columnVisibility));
-    } finally {
-        dispatch({ type: 'INITIALIZE_STATE', payload: initialState });
+      localStorage.setItem(LS_USERS_KEY, JSON.stringify(defaultState.users));
+      localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(defaultState.documents));
+      localStorage.setItem(LS_LOGS_KEY, JSON.stringify(defaultState.logs));
+      localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(defaultState.departments));
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(defaultState.columnVisibility));
+
+      dispatch({ type: 'INITIALIZE_STATE', payload: defaultState });
     }
   }, []);
 
