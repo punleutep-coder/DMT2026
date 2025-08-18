@@ -19,7 +19,7 @@ import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 
 type Action =
-  | { type: 'INITIALIZE_STATE'; payload: AppState }
+  | { type: 'INITIALIZE_STATE'; payload: Partial<AppState> }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
@@ -66,7 +66,7 @@ const getInitialState = (): AppState => ({
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case 'INITIALIZE_STATE':
-      return { ...action.payload, isInitialized: true };
+      return { ...state, ...action.payload, isInitialized: true };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
       return { ...state, currentUser: action.payload };
@@ -178,8 +178,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    let initialState = getInitialState();
-
     try {
         const storedUsers = localStorage.getItem(LS_USERS_KEY);
         const storedDocs = localStorage.getItem(LS_DOCUMENTS_KEY);
@@ -187,10 +185,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const storedDepts = localStorage.getItem(LS_DEPARTMENTS_KEY);
         const storedCols = localStorage.getItem(LS_COLUMNS_KEY);
         const storedCurrentUser = sessionStorage.getItem('currentUser');
+
+        let initialState: Partial<AppState> = {};
         
         if (storedUsers && storedDocs && storedLogs && storedDepts && storedCols) {
             initialState = {
-                ...initialState,
                 users: JSON.parse(storedUsers),
                 documents: JSON.parse(storedDocs),
                 logs: JSON.parse(storedLogs),
@@ -205,33 +204,37 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(DEFAULT_DEPARTMENTS));
             localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(initialColumnVisibility));
             initialState = {
-                ...initialState,
                 users: DEFAULT_USERS,
                 documents: DEFAULT_DOCS,
                 logs: DEFAULT_LOGS,
                 departments: DEFAULT_DEPARTMENTS,
                 columnVisibility: initialColumnVisibility,
+                currentUser: null,
             }
         }
+        dispatch({ type: 'INITIALIZE_STATE', payload: initialState });
     } catch (error) {
-        console.error("Error reading from local storage", error);
-        // Fallback to defaults if parsing fails
-        localStorage.setItem(LS_USERS_KEY, JSON.stringify(DEFAULT_USERS));
-        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(DEFAULT_DOCS));
-        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(DEFAULT_LOGS));
-        localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(DEFAULT_DEPARTMENTS));
-        localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(initialColumnVisibility));
-        initialState = {
-            ...initialState,
+        console.error("Error reading from local storage, resetting to defaults", error);
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        const defaultState = {
             users: DEFAULT_USERS,
             documents: DEFAULT_DOCS,
             logs: DEFAULT_LOGS,
             departments: DEFAULT_DEPARTMENTS,
             columnVisibility: initialColumnVisibility,
-        }
+            currentUser: null
+        };
+
+        localStorage.setItem(LS_USERS_KEY, JSON.stringify(defaultState.users));
+        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(defaultState.documents));
+        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(defaultState.logs));
+        localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(defaultState.departments));
+        localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(defaultState.columnVisibility));
+
+        dispatch({ type: 'INITIALIZE_STATE', payload: defaultState });
     }
-    
-    dispatch({ type: 'INITIALIZE_STATE', payload: initialState });
   }, []);
 
   useEffect(() => {
