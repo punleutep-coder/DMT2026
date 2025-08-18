@@ -16,8 +16,8 @@ import { db } from '@/lib/firebase'
 import { ref, onValue, set, get } from 'firebase/database'
 
 type Action =
-  | { type: 'SET_INITIAL_LOADING'; payload: boolean }
-  | { type: 'SET_DATA'; payload: { documents?: Document[], users?: User[], logs?: Log[], departments?: string[], columnVisibility?: { [key: string]: boolean } } }
+  | { type: 'SET_INITIALIZED'; payload: boolean }
+  | { type: 'SET_DATA'; payload: Partial<Pick<AppState, 'documents' | 'users' | 'logs' | 'departments' | 'columnVisibility'>> }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
@@ -67,8 +67,8 @@ const getInitialState = (): AppState => {
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case 'SET_INITIAL_LOADING':
-      return { ...state, isInitialized: !action.payload };
+    case 'SET_INITIALIZED':
+      return { ...state, isInitialized: action.payload };
     case 'SET_DATA':
         return { ...state, ...action.payload };
     case 'LOGIN':
@@ -76,7 +76,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, currentUser: action.payload };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...state, currentUser: null };
+      return { ...state, currentUser: null, isInitialized: false };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
     case 'SET_MODAL':
@@ -89,40 +89,35 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        let changed = false;
-        const updatedDocs = state.documents.map(docEl => {
-            let docChanged = false;
-            let releaseDateReached = docEl.releaseDateReached;
-            let justReleased = docEl.justReleased;
-
-            if (docEl.isDelayed && docEl.releaseDate) {
-                const releaseDate = new Date(docEl.releaseDate).setHours(0, 0, 0, 0);
-                if (today >= releaseDate && !docEl.releaseDateReached) {
-                    releaseDateReached = true;
-                    justReleased = true;
-                    docChanged = true;
-                }
+        const docsToUpdate = state.documents.filter(doc => {
+            if (doc.isDelayed && doc.releaseDate) {
+                const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
+                return today >= releaseDate && !doc.releaseDateReached;
             }
-             if (docEl.justReleased) {
-                justReleased = false;
-                docChanged = true;
-            }
-            if(docChanged) {
-              changed = true;
-              const updatedDoc = { ...docEl, releaseDateReached, justReleased };
-              set(ref(db, `documents/${docEl.id}`), updatedDoc);
-              return updatedDoc;
-            }
-            return docEl;
+            return false;
         });
 
-        if (changed) {
-            return { ...state, documents: updatedDocs };
+        if (docsToUpdate.length > 0) {
+            docsToUpdate.forEach(doc => {
+                const updatedDoc = { ...doc, releaseDateReached: true, justReleased: true };
+                set(ref(db, `documents/${doc.id}`), updatedDoc);
+            });
         }
+        
+        // Also reset 'justReleased' flag for docs that were just released in the previous check
+        const docsToReset = state.documents.filter(doc => doc.justReleased);
+        if (docsToReset.length > 0) {
+            docsToReset.forEach(doc => {
+                 const updatedDoc = { ...doc, justReleased: false };
+                 set(ref(db, `documents/${doc.id}`), updatedDoc);
+            });
+        }
+
         return state;
     }
      case 'ADD_DOCUMENT': {
         set(ref(db, `documents/${action.payload.id}`), action.payload);
+        // State will update via the onValue listener
         return state;
       }
       case 'UPDATE_DOCUMENT': {
@@ -148,7 +143,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 });
             }
         });
-
         return state;
       }
       case 'ADD_USER': {
@@ -205,22 +199,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const setupInitialData = async () => {
-        const snapshot = await get(ref(db));
-        const data = snapshot.val();
-        if (!data) {
+        const dbRef = ref(db);
+        const snapshot = await get(dbRef);
+        
+        if (!snapshot.exists() || !snapshot.val()) {
+            console.log("Firebase is empty. Populating with default data...");
             // If database is empty, populate with default data
-            await set(ref(db, 'users'), DEFAULT_USERS.reduce((acc, user) => ({ ...acc, [user.id]: user }), {}));
-            await set(ref(db, 'documents'), DEFAULT_DOCS.reduce((acc, doc) => ({ ...acc, [doc.id]: doc }), {}));
-            await set(ref(db, 'logs'), DEFAULT_LOGS.reduce((acc, log) => ({ ...acc, [log.id]: log }), {}));
-            await set(ref(db, 'departments'), DEFAULT_DEPARTMENTS);
-            await set(ref(db, 'columnVisibility'), initialColumnVisibility);
+            const updates: { [key: string]: any } = {};
+            updates['/users'] = DEFAULT_USERS.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
+            updates['/documents'] = DEFAULT_DOCS.reduce((acc, doc) => ({ ...acc, [doc.id]: doc }), {});
+            updates['/logs'] = DEFAULT_LOGS.reduce((acc, log) => ({ ...acc, [log.id]: log }), {});
+            updates['/departments'] = DEFAULT_DEPARTMENTS;
+            updates['/columnVisibility'] = initialColumnVisibility;
+            
+            await set(dbRef, updates);
         }
+        dispatch({ type: 'SET_INITIALIZED', payload: true });
     };
-    setupInitialData();
-  }, []);
+
+    if (state.currentUser && !state.isInitialized) {
+        setupInitialData();
+    } else if (!state.currentUser) {
+        dispatch({ type: 'SET_INITIALIZED', payload: true });
+    }
+  }, [state.currentUser, state.isInitialized]);
+
 
   useEffect(() => {
-    dispatch({ type: 'SET_INITIAL_LOADING', payload: true });
+    if (!state.isInitialized) return;
 
     const unsubscribes = [
         onValue(ref(db, 'users'), (snapshot) => {
@@ -245,19 +251,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }),
     ];
 
-    dispatch({ type: 'SET_INITIAL_LOADING', payload: false });
-
     return () => unsubscribes.forEach(unsubscribe => unsubscribe());
-  }, []);
+  }, [state.isInitialized]);
+
 
   useEffect(() => {
+    if (!state.currentUser) return;
     const interval = setInterval(() => {
       dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
     }, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [state.currentUser]);
+
 
   const filteredDocs = useMemo(() => {
+    if (!state.isInitialized) return [];
+    
     let docs = state.documents
 
     docs = docs.filter(doc => {
@@ -328,7 +337,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return docs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
-  }, [state.documents, state.filter, state.currentUser])
+  }, [state.documents, state.filter, state.currentUser, state.isInitialized])
 
   return (
     <AppContext.Provider value={{ state, dispatch, filteredDocs }}>
