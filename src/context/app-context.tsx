@@ -9,15 +9,17 @@ import {
   DEFAULT_DEPARTMENTS,
   initialColumnVisibility,
   DEFAULT_USERS,
+  LS_USERS_KEY,
+  LS_DOCUMENTS_KEY,
+  LS_LOGS_KEY,
+  LS_DEPARTMENTS_KEY,
+  LS_COLUMNS_KEY,
 } from '@/lib/initial-data'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
-import { db } from '@/lib/firebase'
-import { ref, onValue, set, get } from 'firebase/database'
 
 type Action =
-  | { type: 'SET_INITIALIZED'; payload: boolean }
-  | { type: 'SET_DATA'; payload: Partial<Pick<AppState, 'documents' | 'users' | 'logs' | 'departments' | 'columnVisibility'>> }
+  | { type: 'INITIALIZE_STATE' }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
@@ -32,51 +34,62 @@ type Action =
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: Partial<User> & { id: string } }
   | { type: 'DELETE_USER'; payload: { id: string } }
-  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> & {id?: string, firestoreId?: string} }
+  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
 
 
-const getInitialState = (): AppState => {
-    const currentUser = typeof window !== 'undefined' ? JSON.parse(sessionStorage.getItem('currentUser') || 'null') : null;
-
-    return {
-        users: [],
-        currentUser,
-        documents: [],
-        logs: [],
-        departments: [],
-        filter: {
-            mainFilter: 'All',
-            departmentSpecificFilter: 'All',
-            search: '',
-            startDate: null,
-            endDate: null,
-            assignedDepartment: 'All',
-            periodValue: 3,
-            periodUnit: 'days',
-        },
-        columnVisibility: initialColumnVisibility,
-        selectedDocIds: [],
-        isInitialized: false,
-        dialog: { isOpen: false, title: '', message: '' },
-        modal: { type: null },
-    };
-};
+const getInitialState = (): AppState => ({
+    users: [],
+    currentUser: null,
+    documents: [],
+    logs: [],
+    departments: [],
+    filter: {
+        mainFilter: 'All',
+        departmentSpecificFilter: 'All',
+        search: '',
+        startDate: null,
+        endDate: null,
+        assignedDepartment: 'All',
+        periodValue: 3,
+        periodUnit: 'days',
+    },
+    columnVisibility: initialColumnVisibility,
+    selectedDocIds: [],
+    isInitialized: false,
+    dialog: { isOpen: false, title: '', message: '' },
+    modal: { type: null },
+})
 
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case 'SET_INITIALIZED':
-      return { ...state, isInitialized: action.payload };
-    case 'SET_DATA':
-        return { ...state, ...action.payload };
+    case 'INITIALIZE_STATE': {
+      const storedUsers = JSON.parse(localStorage.getItem(LS_USERS_KEY) || 'null') || DEFAULT_USERS;
+      const storedDocs = JSON.parse(localStorage.getItem(LS_DOCUMENTS_KEY) || 'null') || DEFAULT_DOCS;
+      const storedLogs = JSON.parse(localStorage.getItem(LS_LOGS_KEY) || 'null') || DEFAULT_LOGS;
+      const storedDepts = JSON.parse(localStorage.getItem(LS_DEPARTMENTS_KEY) || 'null') || DEFAULT_DEPARTMENTS;
+      const storedCols = JSON.parse(localStorage.getItem(LS_COLUMNS_KEY) || 'null') || initialColumnVisibility;
+      const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+      
+      return { 
+          ...state,
+          users: storedUsers,
+          documents: storedDocs,
+          logs: storedLogs,
+          departments: storedDepts,
+          columnVisibility: storedCols,
+          currentUser,
+          isInitialized: true 
+      };
+    }
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
       return { ...state, currentUser: action.payload };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...state, currentUser: null, isInitialized: false };
+      return { ...state, currentUser: null };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
     case 'SET_MODAL':
@@ -89,93 +102,77 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        const docsToUpdate = state.documents.filter(doc => {
+        let updated = false;
+        const updatedDocuments = state.documents.map(doc => {
             if (doc.isDelayed && doc.releaseDate) {
                 const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
-                return today >= releaseDate && !doc.releaseDateReached;
+                if (today >= releaseDate && !doc.releaseDateReached) {
+                    updated = true;
+                    return { ...doc, releaseDateReached: true, justReleased: true };
+                }
             }
-            return false;
+            if (doc.justReleased) {
+                updated = true;
+                return { ...doc, justReleased: false };
+            }
+            return doc;
         });
 
-        if (docsToUpdate.length > 0) {
-            docsToUpdate.forEach(doc => {
-                const updatedDoc = { ...doc, releaseDateReached: true, justReleased: true };
-                set(ref(db, `documents/${doc.id}`), updatedDoc);
-            });
+        if (updated) {
+          localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(updatedDocuments));
+          return { ...state, documents: updatedDocuments };
         }
-        
-        // Also reset 'justReleased' flag for docs that were just released in the previous check
-        const docsToReset = state.documents.filter(doc => doc.justReleased);
-        if (docsToReset.length > 0) {
-            docsToReset.forEach(doc => {
-                 const updatedDoc = { ...doc, justReleased: false };
-                 set(ref(db, `documents/${doc.id}`), updatedDoc);
-            });
-        }
-
         return state;
     }
      case 'ADD_DOCUMENT': {
-        set(ref(db, `documents/${action.payload.id}`), action.payload);
-        // State will update via the onValue listener
-        return state;
+        const newDocuments = [...state.documents, action.payload];
+        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(newDocuments));
+        return { ...state, documents: newDocuments };
       }
       case 'UPDATE_DOCUMENT': {
-        const docRef = ref(db, `documents/${action.payload.id}`);
-        get(docRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const currentDoc = snapshot.val();
-                set(docRef, { ...currentDoc, ...action.payload });
-            }
-        });
-        return state;
+        const newDocuments = state.documents.map(d => d.id === action.payload.id ? { ...d, ...action.payload } : d);
+        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(newDocuments));
+        return { ...state, documents: newDocuments };
       }
       case 'DELETE_DOCUMENT': {
-        set(ref(db, `documents/${action.payload.id}`), null);
-        
-        const logsRef = ref(db, 'logs');
-        get(logsRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const allLogs: {[key: string]: Log} = snapshot.val();
-                const logsToDelete = Object.keys(allLogs).filter(key => allLogs[key].docId === action.payload.id);
-                logsToDelete.forEach(key => {
-                    set(ref(db, `logs/${key}`), null);
-                });
-            }
-        });
-        return state;
+        const newDocuments = state.documents.filter(d => d.id !== action.payload.id);
+        const newLogs = state.logs.filter(l => l.docId !== action.payload.id);
+        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(newDocuments));
+        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(newLogs));
+        return { ...state, documents: newDocuments, logs: newLogs };
       }
       case 'ADD_USER': {
-        set(ref(db, `users/${action.payload.id}`), action.payload);
-        return state;
+        const newUsers = [...state.users, action.payload];
+        localStorage.setItem(LS_USERS_KEY, JSON.stringify(newUsers));
+        return { ...state, users: newUsers };
       }
       case 'UPDATE_USER': {
-        const userRef = ref(db, `users/${action.payload.id}`);
-        get(userRef).then((snapshot) => {
-            if(snapshot.exists()) {
-                const currentUser = snapshot.val();
-                set(userRef, { ...currentUser, ...action.payload });
-            }
-        });
-        return state;
+        const newUsers = state.users.map(u => u.id === action.payload.id ? { ...u, ...action.payload } : u);
+        localStorage.setItem(LS_USERS_KEY, JSON.stringify(newUsers));
+        return { ...state, users: newUsers };
       }
       case 'DELETE_USER': {
-        set(ref(db, `users/${action.payload.id}`), null);
-        return state;
+        const newUsers = state.users.filter(u => u.id !== action.payload.id);
+        localStorage.setItem(LS_USERS_KEY, JSON.stringify(newUsers));
+        return { ...state, users: newUsers };
       }
       case 'ADD_LOG': {
-        const logId = action.payload.id || `log-${Date.now()}`;
-        const newLog = { ...action.payload, id: logId, firestoreId: logId };
-        set(ref(db, `logs/${logId}`), newLog);
-        return state;
+        const newLog: Log = {
+          ...action.payload,
+          id: `log-${Date.now()}`,
+          firestoreId: `log-${Date.now()}`
+        };
+        const newLogs = [...state.logs, newLog];
+        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(newLogs));
+        return { ...state, logs: newLogs };
       }
       case 'SET_DEPARTMENTS': {
-        set(ref(db, 'departments'), action.payload);
-        return state;
+        localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(action.payload));
+        return { ...state, departments: action.payload };
       }
       case 'SET_COLUMN_VISIBILITY': {
-        set(ref(db, 'columnVisibility'), action.payload);
-        return state;
+        localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(action.payload));
+        return { ...state, columnVisibility: action.payload };
       }
     default:
       return state
@@ -198,70 +195,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    const setupInitialData = async () => {
-        const dbRef = ref(db);
-        const snapshot = await get(dbRef);
-        
-        if (!snapshot.exists() || !snapshot.val()) {
-            console.log("Firebase is empty. Populating with default data...");
-            // If database is empty, populate with default data
-            const updates: { [key: string]: any } = {};
-            updates['/users'] = DEFAULT_USERS.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
-            updates['/documents'] = DEFAULT_DOCS.reduce((acc, doc) => ({ ...acc, [doc.id]: doc }), {});
-            updates['/logs'] = DEFAULT_LOGS.reduce((acc, log) => ({ ...acc, [log.id]: log }), {});
-            updates['/departments'] = DEFAULT_DEPARTMENTS;
-            updates['/columnVisibility'] = initialColumnVisibility;
-            
-            await set(dbRef, updates);
-        }
-        dispatch({ type: 'SET_INITIALIZED', payload: true });
-    };
-
-    if (state.currentUser && !state.isInitialized) {
-        setupInitialData();
-    } else if (!state.currentUser) {
-        dispatch({ type: 'SET_INITIALIZED', payload: true });
-    }
-  }, [state.currentUser, state.isInitialized]);
-
+    dispatch({ type: 'INITIALIZE_STATE' });
+  }, []);
 
   useEffect(() => {
     if (!state.isInitialized) return;
-
-    const unsubscribes = [
-        onValue(ref(db, 'users'), (snapshot) => {
-            const users = snapshot.val() ? Object.values(snapshot.val()) as User[] : [];
-            dispatch({ type: 'SET_DATA', payload: { users }});
-        }),
-        onValue(ref(db, 'documents'), (snapshot) => {
-            const documents = snapshot.val() ? Object.values(snapshot.val()) as Document[] : [];
-            dispatch({ type: 'SET_DATA', payload: { documents }});
-        }),
-        onValue(ref(db, 'logs'), (snapshot) => {
-            const logs = snapshot.val() ? Object.values(snapshot.val()) as Log[] : [];
-            dispatch({ type: 'SET_DATA', payload: { logs }});
-        }),
-        onValue(ref(db, 'departments'), (snapshot) => {
-            const departments = snapshot.val() || [];
-            dispatch({ type: 'SET_DATA', payload: { departments }});
-        }),
-        onValue(ref(db, 'columnVisibility'), (snapshot) => {
-            const columnVisibility = snapshot.val() || initialColumnVisibility;
-            dispatch({ type: 'SET_DATA', payload: { columnVisibility }});
-        }),
-    ];
-
-    return () => unsubscribes.forEach(unsubscribe => unsubscribe());
-  }, [state.isInitialized]);
-
-
-  useEffect(() => {
-    if (!state.currentUser) return;
     const interval = setInterval(() => {
       dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
     }, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [state.currentUser]);
+  }, [state.isInitialized]);
 
 
   const filteredDocs = useMemo(() => {
