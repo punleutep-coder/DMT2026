@@ -179,42 +179,41 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     try {
-        const storedUsers = localStorage.getItem(LS_USERS_KEY);
-        const storedDocs = localStorage.getItem(LS_DOCUMENTS_KEY);
-        const storedLogs = localStorage.getItem(LS_LOGS_KEY);
-        const storedDepts = localStorage.getItem(LS_DEPARTMENTS_KEY);
-        const storedCols = localStorage.getItem(LS_COLUMNS_KEY);
-        const storedCurrentUser = sessionStorage.getItem('currentUser');
+      const storedDocs = localStorage.getItem(LS_DOCUMENTS_KEY);
+      let initialState: Partial<AppState>;
 
-        let initialState: Partial<AppState> = {};
-        
-        if (storedUsers && storedDocs && storedLogs && storedDepts && storedCols) {
-            initialState = {
-                users: JSON.parse(storedUsers),
-                documents: JSON.parse(storedDocs),
-                logs: JSON.parse(storedLogs),
-                departments: JSON.parse(storedDepts),
-                columnVisibility: JSON.parse(storedCols),
-                currentUser: storedCurrentUser ? JSON.parse(storedCurrentUser) : null,
-            };
-        } else {
-            localStorage.setItem(LS_USERS_KEY, JSON.stringify(DEFAULT_USERS));
-            localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(DEFAULT_DOCS));
-            localStorage.setItem(LS_LOGS_KEY, JSON.stringify(DEFAULT_LOGS));
-            localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(DEFAULT_DEPARTMENTS));
-            localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(initialColumnVisibility));
-            initialState = {
-                users: DEFAULT_USERS,
-                documents: DEFAULT_DOCS,
-                logs: DEFAULT_LOGS,
-                departments: DEFAULT_DEPARTMENTS,
-                columnVisibility: initialColumnVisibility,
-                currentUser: null,
-            }
-        }
-        dispatch({ type: 'INITIALIZE_STATE', payload: initialState });
+      if (storedDocs) {
+        // Data exists, load from local storage
+        initialState = {
+          users: JSON.parse(localStorage.getItem(LS_USERS_KEY) || '[]'),
+          documents: JSON.parse(storedDocs),
+          logs: JSON.parse(localStorage.getItem(LS_LOGS_KEY) || '[]'),
+          departments: JSON.parse(localStorage.getItem(LS_DEPARTMENTS_KEY) || '[]'),
+          columnVisibility: JSON.parse(localStorage.getItem(LS_COLUMNS_KEY) || '{}'),
+          currentUser: JSON.parse(sessionStorage.getItem('currentUser') || 'null'),
+        };
+      } else {
+        // No data, initialize with defaults and save to local storage
+        initialState = {
+          users: DEFAULT_USERS,
+          documents: DEFAULT_DOCS,
+          logs: DEFAULT_LOGS,
+          departments: DEFAULT_DEPARTMENTS,
+          columnVisibility: initialColumnVisibility,
+          currentUser: null,
+        };
+        localStorage.setItem(LS_USERS_KEY, JSON.stringify(initialState.users));
+        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(initialState.documents));
+        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(initialState.logs));
+        localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(initialState.departments));
+        localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(initialState.columnVisibility));
+        sessionStorage.removeItem('currentUser');
+      }
+      dispatch({ type: 'INITIALIZE_STATE', payload: initialState });
     } catch (error) {
-        console.error("Error reading from local storage, resetting to defaults", error);
+        console.error("Error managing local storage, resetting to defaults", error);
+        
+        // Clear potentially corrupted storage
         localStorage.clear();
         sessionStorage.clear();
         
