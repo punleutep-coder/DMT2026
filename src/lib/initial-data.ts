@@ -1,6 +1,7 @@
 
 import type { Document, Log, User } from './types';
 
+// These keys are no longer used for localStorage but are kept for reference
 export const LS_USERS_KEY = 'documentWorkflow_users';
 export const LS_DOCUMENTS_KEY = 'documentWorkflow_documents';
 export const LS_LOGS_KEY = 'documentWorkflow_logs';
