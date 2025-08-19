@@ -220,50 +220,47 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const dbRef = ref(db);
-
+    
     const initializeApp = async () => {
-      try {
-        // 1. One-time fetch for initial state
-        const snapshot = await get(dbRef);
-        let data = snapshot.val();
+        try {
+            const snapshot = await get(dbRef);
+            let data = snapshot.val();
+            
+            // If database is empty or doesn't have a crucial key, seed it.
+            if (!data || !data.documents) {
+                console.log("Database is empty or invalid. Seeding with initial data...");
+                await set(dbRef, initialData);
+                data = initialData;
+            }
 
-        // 2. If database is empty, seed it
-        if (!data || !data.documents) {
-          console.log("Database is empty or invalid. Seeding with initial data...");
-          await set(dbRef, initialData);
-          data = initialData;
+            const stateFromSnapshot = (data: any) => {
+              const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
+              const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+              const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+              const departments = data.departments || [];
+              const columnVisibility = data.columnVisibility || initialColumnVisibility;
+              const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+              return { documents, logs, users, departments, columnVisibility, currentUser };
+            };
+            
+            // Dispatch the initial state to unblock the UI
+            dispatch({ type: 'SET_INITIAL_STATE', payload: stateFromSnapshot(data) });
+
+            // After initial load, attach the listener for real-time updates.
+            onValue(dbRef, (snapshot) => {
+                const updatedData = snapshot.val();
+                if (updatedData) {
+                    dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
+                }
+            }, (error) => {
+                console.error("Firebase onValue listener error:", error);
+            });
+
+        } catch (error) {
+            console.error("Firebase initial data load failed:", error);
+            // If there's a catastrophic error, still mark as initialized to not block the UI
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } });
         }
-
-        // 3. Parse the data and dispatch initial state
-        const stateFromSnapshot = (data: any) => {
-          const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-          const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-          const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-          const departments = data.departments || [];
-          const columnVisibility = data.columnVisibility || initialColumnVisibility;
-          const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-          return { documents, logs, users, departments, columnVisibility, currentUser };
-        };
-
-        dispatch({ type: 'SET_INITIAL_STATE', payload: stateFromSnapshot(data) });
-
-        // 4. Attach a listener for subsequent real-time updates
-        const unsubscribe = onValue(dbRef, (snapshot) => {
-          const updatedData = snapshot.val();
-          if (updatedData) {
-            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
-          }
-        }, (error) => {
-          console.error("Firebase onValue listener error:", error);
-        });
-
-        return unsubscribe;
-
-      } catch (error) {
-        console.error("Firebase initial data load failed:", error);
-        // If there's an error, still mark as initialized to not block the UI
-        dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } });
-      }
     };
     
     initializeApp();
@@ -360,3 +357,5 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
+
+    
