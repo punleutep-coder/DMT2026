@@ -290,6 +290,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     initializeApp();
   }, []); // Empty dependency array ensures this runs only once
 
+
   useEffect(() => {
     if (!state.isInitialized || !state.currentUser) return;
     const interval = setInterval(() => {
