@@ -68,9 +68,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
         };
     case 'SET_DATA_FROM_SNAPSHOT':
         const data = action.payload;
-        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
-        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, ...data.logs[key] })) : [];
-        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, ...data.users[key] })) : [];
+        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
+        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
         const departments = data.departments || [];
         const columnVisibility = data.columnVisibility || initialColumnVisibility;
         
@@ -204,34 +204,42 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const dbRef = ref(db);
-    
-    // First, check if data exists. If not, seed it.
-    get(dbRef).then((snapshot) => {
-        if (!snapshot.exists() || !snapshot.hasChild('documents')) {
-            console.log("No data found, seeding initial data.");
+    let isInitialized = false;
+
+    // Check if the database is empty and seed it if necessary.
+    get(child(dbRef, 'documents')).then(snapshot => {
+        if (!snapshot.exists()) {
+            console.log("No documents found in DB, seeding initial data...");
             set(dbRef, initialData);
         }
-
-        // Now, set up a single listener for all data
-        const unsubscribe = onValue(dbRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-                // Only set initialized to true once we have the data.
-                if (!state.isInitialized) {
-                    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-                    dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser } });
-                }
-            }
-        });
-
-        return () => unsubscribe();
-
-    }).catch(error => {
-        console.error("Firebase initialization error:", error);
-         dispatch({ type: 'SET_INITIAL_STATE', payload: {} }); // Initialize even on error
     });
 
+    const unsubscribe = onValue(dbRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
+            
+            if (!isInitialized) {
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+                dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser } });
+                isInitialized = true;
+            }
+        } else {
+             // Handle case where database is empty but not yet seeded
+            if (!isInitialized) {
+                dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
+                isInitialized = true;
+            }
+        }
+    }, (error) => {
+        console.error("Firebase onValue error:", error);
+        if (!isInitialized) {
+            dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
+            isInitialized = true;
+        }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -324,3 +332,5 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
+
+    

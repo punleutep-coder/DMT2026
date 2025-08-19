@@ -64,6 +64,8 @@ export default function LoginForm() {
     setError('Invalid username or password.')
   }
 
+  const isInitializing = !state.isInitialized || (state.isInitialized && state.users.length === 0);
+
   return (
     <>
       <AnimatedBackground />
@@ -113,8 +115,8 @@ export default function LoginForm() {
                   </AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting || !state.isInitialized}>
-                {form.formState.isSubmitting || !state.isInitialized ? 'Initializing...' : 'Login'}
+              <Button type="submit" className="w-full" disabled={isInitializing}>
+                {isInitializing ? 'Initializing...' : 'Login'}
               </Button>
             </form>
           </Form>
@@ -123,3 +125,5 @@ export default function LoginForm() {
     </>
   )
 }
+
+    

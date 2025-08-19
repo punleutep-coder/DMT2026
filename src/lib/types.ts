@@ -1,3 +1,4 @@
+
 export interface HistoryEntry {
   department: string;
   start: string;
@@ -113,3 +114,5 @@ export interface ModalState {
   userId?: string;
   firestoreId?: string;
 }
+
+    
