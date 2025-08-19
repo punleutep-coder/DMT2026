@@ -223,23 +223,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        const dbRef = ref(db);
-        let snapshot = await get(dbRef);
-
-        if (!snapshot.exists() || !snapshot.hasChild('documents')) {
-          console.log("Database is empty or invalid. Seeding with initial data...");
-          await set(dbRef, initialData);
-          snapshot = await get(dbRef); // Re-fetch after seeding
+        const usersSnapshot = await get(ref(db, 'users'));
+        if (!usersSnapshot.exists()) {
+          console.log("Seeding database with initial data...");
+          await set(ref(db), initialData);
         }
-        
-        const data = snapshot.val();
-        
-        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-        const departments = data.departments || [];
-        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-        const columnVisibility = data.columnVisibility || initialColumnVisibility;
 
+        const initialLoadPromises = [
+          get(ref(db, 'users')),
+          get(ref(db, 'departments')),
+        ];
+
+        const [usersSnap, departmentsSnap] = await Promise.all(initialLoadPromises);
+
+        const usersData = usersSnap.val() || initialData.users;
+        const departmentsData = departmentsSnap.val() || initialData.departments;
+        
+        const users = Object.keys(usersData).map(key => ({ id: key, firestoreId: key, ...usersData[key] }));
+        
         let currentUser = null;
         try {
           const storedUser = sessionStorage.getItem('currentUser');
@@ -251,10 +252,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           sessionStorage.removeItem('currentUser');
         }
 
-        dispatch({ type: 'SET_INITIAL_STATE', payload: { users, departments, documents, logs, columnVisibility, currentUser } });
+        dispatch({
+          type: 'SET_INITIAL_STATE',
+          payload: {
+            users,
+            departments: departmentsData,
+            currentUser,
+          }
+        });
 
-        // Set up listener for real-time updates
-        onValue(dbRef, (snapshot) => {
+        // Set up listener for real-time updates for the whole DB
+        onValue(ref(db), (snapshot) => {
             const updatedData = snapshot.val();
             if (updatedData) {
                 dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
