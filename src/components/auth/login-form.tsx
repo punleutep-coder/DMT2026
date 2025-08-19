@@ -21,10 +21,10 @@ import AnimatedBackground from '../ui/animated-background'
 import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
-import { get, ref, set } from 'firebase/database'
+import { get, ref } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import type { Document, Log } from '@/lib/types'
-import { initialColumnVisibility, initialData } from '@/lib/initial-data'
+import { initialColumnVisibility } from '@/lib/initial-data'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -45,36 +45,6 @@ export default function LoginForm() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast()
   
-  useEffect(() => {
-    const checkAndSeedData = async () => {
-      try {
-        const usersRef = ref(db, 'users');
-        const snapshot = await get(usersRef);
-        if (!snapshot.exists()) {
-          console.log("No users found in DB, seeding with initial data...");
-          await set(ref(db), initialData);
-        }
-      } catch (e) {
-        console.error("Error checking or seeding data:", e);
-      } finally {
-        if (state.users.length > 0) {
-             dispatch({ type: 'SET_INITIALIZED', payload: true });
-        }
-      }
-    };
-    
-    checkAndSeedData();
-  }, []);
-
-  useEffect(() => {
-    // This effect ensures initialization is marked as complete
-    // once the user list is populated from the onValue listener.
-    if (state.users.length > 0 && !state.isInitialized) {
-        dispatch({ type: 'SET_INITIALIZED', payload: true });
-    }
-  }, [state.users, state.isInitialized, dispatch]);
-
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -178,5 +148,3 @@ export default function LoginForm() {
     </>
   )
 }
-
-    

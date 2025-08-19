@@ -67,9 +67,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
             isInitialized: action.payload,
         };
     case 'SET_INITIAL_STATE':
+        const currentUser = action.payload.currentUser !== undefined ? action.payload.currentUser : state.currentUser;
+        const storedUser = sessionStorage.getItem('currentUser');
+        const finalUser = currentUser || (storedUser ? JSON.parse(storedUser) : null);
+        
         return {
             ...state,
             ...action.payload,
+            currentUser: finalUser,
             isInitialized: true,
         };
     case 'SET_DATA_FROM_SNAPSHOT':
@@ -84,14 +89,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const departments = data.departments || [];
         const columnVisibility = data.columnVisibility || initialColumnVisibility;
         
-        let currentUser = state.currentUser;
-        if (currentUser) {
-            const updatedUser = users.find(u => u.id === currentUser!.id);
+        let liveCurrentUser = state.currentUser;
+        if (liveCurrentUser) {
+            const updatedUser = users.find(u => u.id === liveCurrentUser!.id);
             if (!updatedUser) { // User was deleted
                 sessionStorage.removeItem('currentUser');
-                currentUser = null;
+                liveCurrentUser = null;
             } else {
-                currentUser = updatedUser;
+                liveCurrentUser = updatedUser;
                 sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
             }
         }
@@ -103,7 +108,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             users,
             departments,
             columnVisibility,
-            currentUser,
+            currentUser: liveCurrentUser,
         };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
@@ -242,30 +247,48 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    // Set up a single listener for all data
-    const dbRef = ref(db);
-    const unsubscribe = onValue(dbRef, (snapshot) => {
-        const data = snapshot.val();
-        dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
+    const initializeApp = async () => {
+        try {
+            // One-time fetch to check for data and seed if necessary
+            const snapshot = await get(ref(db, 'users'));
+            if (!snapshot.exists()) {
+                console.log("No users found in DB, seeding with initial data...");
+                await set(ref(db), initialData);
+            }
+        } catch (error) {
+            console.error("Error during initial data check/seed:", error);
+        } finally {
+            // Signal that initialization is complete, regardless of seeding outcome
+            dispatch({ type: 'SET_INITIALIZED', payload: true });
+        }
 
-        if (state.currentUser === null) {
+        // Set up a persistent listener for real-time updates
+        const dbRef = ref(db);
+        const unsubscribe = onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
+        }, (error) => {
+            console.error("Firebase onValue listener error:", error);
+        });
+
+        // Try to load user from session storage right away
+        const storedUser = sessionStorage.getItem('currentUser');
+        if (storedUser) {
             try {
-                const storedUser = sessionStorage.getItem('currentUser');
-                if (storedUser) {
-                    dispatch({ type: 'LOGIN', payload: JSON.parse(storedUser) });
-                }
+                const user = JSON.parse(storedUser);
+                dispatch({ type: 'LOGIN', payload: { user, documents: state.documents, logs: state.logs, columnVisibility: state.columnVisibility } });
             } catch (e) {
                 console.error("Could not parse user from session storage:", e);
                 sessionStorage.removeItem('currentUser');
             }
         }
-    }, (error) => {
-        console.error("Firebase onValue listener error:", error);
-    });
+        
+        // Cleanup listener on component unmount
+        return () => unsubscribe();
+    };
 
-    // Cleanup listener on component unmount
-    return () => unsubscribe();
-  }, []); // Empty dependency array ensures this runs only once on mount
+    initializeApp();
+  }, []); // Empty dependency array ensures this runs only once
 
   useEffect(() => {
     if (!state.isInitialized || !state.currentUser) return;
@@ -357,5 +380,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
-
-    
