@@ -31,6 +31,7 @@ type Action =
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
+  | { type: 'SET_DATA_FROM_SNAPSHOT'; payload: any }
 
 
 const getInitialState = (): AppState => ({
@@ -62,19 +63,35 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_INITIAL_STATE':
         return {
             ...state,
-            users: action.payload.users || state.users,
-            documents: action.payload.documents || state.documents,
-            logs: action.payload.logs || state.logs,
-            departments: action.payload.departments || state.departments,
-            columnVisibility: action.payload.columnVisibility || state.columnVisibility,
+            ...action.payload,
             isInitialized: true,
+        };
+    case 'SET_DATA_FROM_SNAPSHOT':
+        const data = action.payload;
+        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
+        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, ...data.logs[key] })) : [];
+        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, ...data.users[key] })) : [];
+        const departments = data.departments || [];
+        const columnVisibility = data.columnVisibility || initialColumnVisibility;
+        
+        // This is a special case to handle re-login. We don't want to wipe users if they're already there.
+        const finalUsers = state.users.length > 0 && users.length === 0 ? state.users : users;
+
+        return {
+            ...state,
+            documents,
+            logs,
+            users: finalUsers,
+            departments,
+            columnVisibility,
         };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
       return { ...state, currentUser: action.payload };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...state, currentUser: null };
+      // When logging out, we preserve the list of users so login can work again
+      return { ...getInitialState(), users: state.users, isInitialized: true };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
     case 'SET_MODAL':
@@ -126,8 +143,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const { id } = action.payload;
         remove(ref(db, `documents/${id}`));
         
-        // This is not efficient, but Realtime DB doesn't have good relational query capabilities.
-        // For a larger app, you'd handle this differently (e.g., Cloud Functions).
         get(child(ref(db), 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
@@ -189,47 +204,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const dbRef = ref(db);
+    
+    // First, check if data exists. If not, seed it.
     get(dbRef).then((snapshot) => {
         if (!snapshot.exists() || !snapshot.hasChild('documents')) {
             console.log("No data found, seeding initial data.");
             set(dbRef, initialData);
-        } else {
-             console.log("Data found, loading from Firebase.");
         }
 
-        // Set up listeners for real-time updates
-        onValue(ref(db, 'documents'), (snapshot) => {
-            const data = snapshot.val() ?? {};
-            const documentsArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { documents: documentsArray } });
+        // Now, set up a single listener for all data
+        const unsubscribe = onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
+                // Only set initialized to true once we have the data.
+                if (!state.isInitialized) {
+                    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+                    dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser } });
+                }
+            }
         });
-        onValue(ref(db, 'logs'), (snapshot) => {
-            const data = snapshot.val() ?? {};
-            const logsArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { logs: logsArray } });
-        });
-        onValue(ref(db, 'users'), (snapshot) => {
-            const data = snapshot.val() ?? {};
-            const usersArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { users: usersArray } });
-        });
-         onValue(ref(db, 'departments'), (snapshot) => {
-            const data = snapshot.val() ?? [];
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { departments: data } });
-        });
-        onValue(ref(db, 'columnVisibility'), (snapshot) => {
-            const data = snapshot.val() ?? initialColumnVisibility;
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { columnVisibility: data } });
-        });
+
+        return () => unsubscribe();
 
     }).catch(error => {
         console.error("Firebase initialization error:", error);
+         dispatch({ type: 'SET_INITIAL_STATE', payload: {} }); // Initialize even on error
     });
 
-    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-    if (currentUser) {
-        dispatch({ type: 'LOGIN', payload: currentUser });
-    }
   }, []);
 
   useEffect(() => {
