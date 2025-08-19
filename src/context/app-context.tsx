@@ -121,6 +121,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
+      // Keep users and departments on logout so the login page works
       return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
@@ -247,48 +248,39 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    const initializeApp = async () => {
-        try {
-            // One-time fetch to check for data and seed if necessary
-            const snapshot = await get(ref(db, 'users'));
-            if (!snapshot.exists()) {
-                console.log("No users found in DB, seeding with initial data...");
-                await set(ref(db), initialData);
-            }
-        } catch (error) {
-            console.error("Error during initial data check/seed:", error);
-        } finally {
-            // Signal that initialization is complete, regardless of seeding outcome
+    // This listener handles all real-time updates from Firebase.
+    const dbRef = ref(db);
+    const unsubscribe = onValue(dbRef, (snapshot) => {
+        const data = snapshot.val();
+        dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
+        // Set initialized to true as soon as we get any data.
+        if (!state.isInitialized) {
             dispatch({ type: 'SET_INITIALIZED', payload: true });
         }
-
-        // Set up a persistent listener for real-time updates
-        const dbRef = ref(db);
-        const unsubscribe = onValue(dbRef, (snapshot) => {
-            const data = snapshot.val();
-            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-        }, (error) => {
-            console.error("Firebase onValue listener error:", error);
-        });
-
-        // Try to load user from session storage right away
-        const storedUser = sessionStorage.getItem('currentUser');
-        if (storedUser) {
-            try {
-                const user = JSON.parse(storedUser);
-                dispatch({ type: 'LOGIN', payload: { user, documents: state.documents, logs: state.logs, columnVisibility: state.columnVisibility } });
-            } catch (e) {
-                console.error("Could not parse user from session storage:", e);
-                sessionStorage.removeItem('currentUser');
-            }
+    }, (error) => {
+        console.error("Firebase onValue listener error:", error);
+        // Even if there's an error, we should probably initialize the app to not get stuck.
+        if (!state.isInitialized) {
+            dispatch({ type: 'SET_INITIALIZED', payload: true });
         }
-        
-        // Cleanup listener on component unmount
-        return () => unsubscribe();
-    };
+    });
 
-    initializeApp();
-  }, []); // Empty dependency array ensures this runs only once
+    // Try to load user from session storage right away
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (storedUser) {
+        try {
+            const user = JSON.parse(storedUser);
+            // We just set the user, the onValue listener will handle fetching full data
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser: user } });
+        } catch (e) {
+            console.error("Could not parse user from session storage:", e);
+            sessionStorage.removeItem('currentUser');
+        }
+    }
+    
+    // Cleanup listener on component unmount
+    return () => unsubscribe();
+  }, [state.isInitialized]); // Re-run only if isInitialized changes, but it won't.
 
 
   useEffect(() => {

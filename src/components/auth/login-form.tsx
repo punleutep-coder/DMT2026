@@ -21,10 +21,10 @@ import AnimatedBackground from '../ui/animated-background'
 import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
-import { get, ref } from 'firebase/database'
+import { get, ref, set } from 'firebase/database'
 import { db } from '@/lib/firebase'
 import type { Document, Log } from '@/lib/types'
-import { initialColumnVisibility } from '@/lib/initial-data'
+import { initialData } from '@/lib/initial-data'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -53,6 +53,23 @@ export default function LoginForm() {
     },
   })
 
+  // This effect handles the one-time database seeding if necessary.
+  useEffect(() => {
+    const seedDatabaseIfNeeded = async () => {
+        if (state.isInitialized && state.users.length === 0) {
+            console.log("No users found, seeding database...");
+            try {
+                await set(ref(db), initialData);
+            } catch (error) {
+                console.error("Failed to seed database:", error);
+                setError("Failed to initialize application data. Please refresh.");
+            }
+        }
+    };
+    seedDatabaseIfNeeded();
+  }, [state.isInitialized, state.users]);
+
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
     setIsLoggingIn(true);
@@ -66,7 +83,7 @@ export default function LoginForm() {
           const data = dataSnapshot.val();
           const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
           const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-          const columnVisibility = data.columnVisibility || initialColumnVisibility;
+          const columnVisibility = data.columnVisibility || state.columnVisibility;
 
           dispatch({ type: 'LOGIN', payload: { user, documents, logs, columnVisibility } })
           toast({
