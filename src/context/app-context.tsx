@@ -204,12 +204,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const dbRef = ref(db);
-    let isInitialized = false;
+    let isInitialLoad = true;
 
     // Check if the database is empty and seed it if necessary.
-    get(child(dbRef, 'documents')).then(snapshot => {
+    get(dbRef).then(snapshot => {
         if (!snapshot.exists()) {
-            console.log("No documents found in DB, seeding initial data...");
+            console.log("Database is empty, seeding with initial data...");
             set(dbRef, initialData);
         }
     });
@@ -219,23 +219,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (data) {
             dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
             
-            if (!isInitialized) {
+            if (isInitialLoad) {
                 const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
                 dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser } });
-                isInitialized = true;
+                isInitialLoad = false;
             }
-        } else {
-             // Handle case where database is empty but not yet seeded
-            if (!isInitialized) {
-                dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
-                isInitialized = true;
-            }
+        } else if (isInitialLoad) { // Handle case where DB is empty but not yet seeded
+             dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
+             isInitialLoad = false;
         }
     }, (error) => {
         console.error("Firebase onValue error:", error);
-        if (!isInitialized) {
+        if (isInitialLoad) {
             dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
-            isInitialized = true;
+            isInitialLoad = false;
         }
     });
 
