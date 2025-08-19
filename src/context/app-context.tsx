@@ -62,11 +62,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_INITIAL_STATE':
         return {
             ...state,
-            users: action.payload.users || [],
-            documents: action.payload.documents || [],
-            logs: action.payload.logs || [],
-            departments: action.payload.departments || [],
-            columnVisibility: action.payload.columnVisibility || initialColumnVisibility,
+            users: action.payload.users || state.users,
+            documents: action.payload.documents || state.documents,
+            logs: action.payload.logs || state.logs,
+            departments: action.payload.departments || state.departments,
+            columnVisibility: action.payload.columnVisibility || state.columnVisibility,
             isInitialized: true,
         };
     case 'LOGIN':
