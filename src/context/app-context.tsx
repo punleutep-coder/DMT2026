@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { ref, onValue, set, push, get } from 'firebase/database'
+import { ref, onValue, set, push, get, off } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
@@ -248,30 +248,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    // This listener handles all real-time updates from Firebase.
     const dbRef = ref(db);
+    // Attach a listener that handles all real-time data updates.
     const unsubscribe = onValue(dbRef, (snapshot) => {
         const data = snapshot.val();
         dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-        // Set initialized to true as soon as we get any data.
-        if (!state.isInitialized) {
-            dispatch({ type: 'SET_INITIALIZED', payload: true });
-        }
     }, (error) => {
         console.error("Firebase onValue listener error:", error);
-        // Even if there's an error, we should probably initialize the app to not get stuck.
-        if (!state.isInitialized) {
-            dispatch({ type: 'SET_INITIALIZED', payload: true });
-        }
     });
 
-    // Try to load user from session storage right away
+    // Try to load user from session storage right away.
+    // The onValue listener will hydrate the rest of the state.
     const storedUser = sessionStorage.getItem('currentUser');
     if (storedUser) {
         try {
             const user = JSON.parse(storedUser);
-            // We just set the user, the onValue listener will handle fetching full data
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser: user } });
+            dispatch({ type: 'LOGIN', payload: { user, documents: [], logs: [], columnVisibility: initialColumnVisibility } });
         } catch (e) {
             console.error("Could not parse user from session storage:", e);
             sessionStorage.removeItem('currentUser');
@@ -280,7 +272,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     // Cleanup listener on component unmount
     return () => unsubscribe();
-  }, [state.isInitialized]); // Re-run only if isInitialized changes, but it won't.
+  }, []);
 
 
   useEffect(() => {
