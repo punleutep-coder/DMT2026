@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { ref, onValue, set, get, child, push, remove, update } from 'firebase/database'
+import { ref, onValue, set, get } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
@@ -123,32 +123,30 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
 
         if (needsUpdate) {
-            update(ref(db), updates);
+            set(ref(db), updates);
         }
         return state;
     }
      case 'ADD_DOCUMENT': {
         const { id, ...docData } = action.payload;
-        const updates: any = {};
-        updates[`documents/${id}`] = docData;
-        update(ref(db), updates);
+        set(ref(db, `documents/${id}`), docData);
         return state;
       }
       case 'UPDATE_DOCUMENT': {
         const { id, ...docData } = action.payload;
-        update(ref(db, `documents/${id}`), docData);
+        set(ref(db, `documents/${id}`), docData);
         return state;
       }
       case 'DELETE_DOCUMENT': {
         const { id } = action.payload;
-        remove(ref(db, `documents/${id}`));
+        set(ref(db, `documents/${id}`), null);
         
-        get(child(ref(db), 'logs')).then(snapshot => {
+        get(ref(db, 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
                 for (const logId in logs) {
                     if (logs[logId].docId === id) {
-                        remove(ref(db, `logs/${logId}`));
+                        set(ref(db, `logs/${logId}`), null);
                     }
                 }
             }
@@ -157,21 +155,22 @@ const appReducer = (state: AppState, action: Action): AppState => {
       }
       case 'ADD_USER': {
         const { id, ...userData } = action.payload;
-        update(ref(db, `users/${id}`), userData);
+        set(ref(db, `users/${id}`), userData);
         return state;
       }
       case 'UPDATE_USER': {
         const { id, ...userData } = action.payload;
-        update(ref(db, `users/${id}`), userData);
+        set(ref(db, `users/${id}`), userData);
         return state;
       }
       case 'DELETE_USER': {
-        remove(ref(db, `users/${action.payload.id}`));
+        set(ref(db, `users/${action.payload.id}`), null);
         return state;
       }
       case 'ADD_LOG': {
-        const newLogRef = push(ref(db, 'logs'));
-        set(newLogRef, action.payload);
+        const newLogRef = ref(db, 'logs');
+        const newLog = push(newLogRef);
+        set(newLog, action.payload);
         return state;
       }
       case 'SET_DEPARTMENTS': {
@@ -204,61 +203,56 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const dbRef = ref(db);
+    
+    // Function to transform snapshot data into state shape
+    const stateFromSnapshot = (data: any) => {
+        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
+        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+        const departments = data.departments || [];
+        const columnVisibility = data.columnVisibility || initialColumnVisibility;
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+    
+        return { documents, logs, users, departments, columnVisibility, currentUser };
+    };
 
-    const initializeAndListen = async () => {
+    // Main initialization logic
+    const initializeApp = async () => {
         try {
-            // 1. One-time fetch for initial load to determine if seeding is needed
             const snapshot = await get(dbRef);
+            let initialPayload;
 
             if (!snapshot.exists()) {
-                console.log("Database is empty, seeding with initial data...");
+                console.log("Database is empty. Seeding with initial data...");
                 await set(dbRef, initialData);
+                initialPayload = initialData;
+            } else {
+                initialPayload = snapshot.val();
             }
-            
-            // 2. Load current user from session storage
-            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-            
-            // 3. Set the initial state and mark as initialized
-            const initialPayload = snapshot.val() || initialData;
-            dispatch({
-                type: 'SET_INITIAL_STATE',
-                payload: {
-                    ...stateFromSnapshot(initialPayload),
-                    currentUser
-                }
-            });
 
-            // 4. Set up a persistent listener for any subsequent real-time updates
-            const unsubscribe = onValue(dbRef, (liveSnapshot) => {
-                const data = liveSnapshot.val();
-                if (data) {
-                    dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-                }
-            }, (error) => {
-                console.error("Firebase onValue listener error:", error);
-            });
+            dispatch({ type: 'SET_INITIAL_STATE', payload: stateFromSnapshot(initialPayload) });
 
-            // Return the cleanup function for the listener
-            return () => unsubscribe();
         } catch (error) {
-            console.error("Error during initial data load:", error);
-            dispatch({ type: 'SET_INITIAL_STATE', payload: {} }); // Mark as initialized even on error to unblock UI
+            console.error("Firebase initial data load failed:", error);
+            // Even if it fails, mark as initialized to not block the UI.
+            dispatch({ type: 'SET_INITIAL_STATE', payload: {} }); 
         }
     };
     
-    initializeAndListen();
+    initializeApp();
+
+    // Set up the persistent listener for real-time updates after initial load
+    const unsubscribe = onValue(dbRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
+        }
+    }, (error) => {
+        console.error("Firebase onValue listener error:", error);
+    });
+
+    return () => unsubscribe();
   }, []);
-
-  const stateFromSnapshot = (data: any) => {
-    const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-    const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-    const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-    const departments = data.departments || [];
-    const columnVisibility = data.columnVisibility || initialColumnVisibility;
-
-    return { documents, logs, users, departments, columnVisibility };
-  }
-
 
   useEffect(() => {
     if (!state.isInitialized) return;
@@ -350,5 +344,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
-
-    
