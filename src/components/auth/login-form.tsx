@@ -53,42 +53,6 @@ export default function LoginForm() {
     },
   })
 
-  // This effect handles database seeding and signals the app is ready.
-  useEffect(() => {
-    // Check if users are loaded in the state. The onValue listener in the context
-    // is responsible for populating this.
-    if (state.users.length > 0) {
-        if (!state.isInitialized) {
-            dispatch({ type: 'SET_INITIALIZED', payload: true });
-        }
-        return; // Already have users, we are initialized.
-    }
-    
-    // If no users, we might need to seed the database.
-    const checkAndSeed = async () => {
-        try {
-            const usersSnapshot = await get(ref(db, 'users'));
-            if (!usersSnapshot.exists()) {
-                console.log("No users found in DB, seeding database...");
-                await set(ref(db), initialData);
-            }
-        } catch (error) {
-            console.error("Failed to check or seed database:", error);
-            setError("Failed to initialize application data. Please refresh.");
-        } finally {
-            // Regardless of the outcome, we mark as initialized to prevent getting stuck.
-            // The onValue listener will eventually pick up the data.
-            if (!state.isInitialized) {
-                dispatch({ type: 'SET_INITIALIZED', payload: true });
-            }
-        }
-    };
-    
-    checkAndSeed();
-
-  }, [state.users, state.isInitialized, dispatch]);
-
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
     setIsLoggingIn(true);

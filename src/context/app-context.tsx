@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { ref, onValue, set, push, get, off } from 'firebase/database'
+import { ref, onValue, set, push, get } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
@@ -248,31 +248,58 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    const dbRef = ref(db);
-    // Attach a listener that handles all real-time data updates.
-    const unsubscribe = onValue(dbRef, (snapshot) => {
-        const data = snapshot.val();
-        dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-    }, (error) => {
-        console.error("Firebase onValue listener error:", error);
-    });
-
-    // Try to load user from session storage right away.
-    // The onValue listener will hydrate the rest of the state.
-    const storedUser = sessionStorage.getItem('currentUser');
-    if (storedUser) {
+    // This effect runs only once on mount to initialize the application.
+    const initializeApp = async () => {
         try {
-            const user = JSON.parse(storedUser);
-            dispatch({ type: 'LOGIN', payload: { user, documents: [], logs: [], columnVisibility: initialColumnVisibility } });
-        } catch (e) {
-            console.error("Could not parse user from session storage:", e);
-            sessionStorage.removeItem('currentUser');
+            // Check if the database is seeded by looking for the 'users' node.
+            const usersSnapshot = await get(ref(db, 'users'));
+            if (!usersSnapshot.exists()) {
+                console.log("No users found. Seeding database...");
+                // If not seeded, write the entire initial data set.
+                await set(ref(db), initialData);
+            }
+        } catch (error) {
+            console.error("Failed to check or seed database:", error);
+        } finally {
+            // Regardless of seeding outcome, establish the real-time listener.
+            const dbRef = ref(db);
+            onValue(dbRef, (snapshot) => {
+                const data = snapshot.val();
+                dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
+                
+                // Set initialized to true as soon as we get the first data packet.
+                // This ensures the app doesn't get stuck.
+                if (!state.isInitialized) {
+                    dispatch({ type: 'SET_INITIALIZED', payload: true });
+                }
+            }, (error) => {
+                console.error("Firebase onValue listener error:", error);
+                // Even on error, we should probably initialize to not block the UI.
+                if (!state.isInitialized) {
+                    dispatch({ type: 'SET_INITIALIZED', payload: true });
+                }
+            });
+
+            // Try to load user from session storage right away.
+            const storedUser = sessionStorage.getItem('currentUser');
+            if (storedUser) {
+                try {
+                    const user = JSON.parse(storedUser);
+                    // This login action is now safe because the listener will populate the user list.
+                    dispatch({ type: 'LOGIN', payload: { user, documents: [], logs: [], columnVisibility: initialColumnVisibility } });
+                } catch (e) {
+                    console.error("Could not parse user from session storage:", e);
+                    sessionStorage.removeItem('currentUser');
+                }
+            }
         }
-    }
+    };
+
+    initializeApp();
     
-    // Cleanup listener on component unmount
-    return () => unsubscribe();
-  }, []);
+    // The onValue listener will be cleaned up by Firebase automatically on disconnect.
+    // We don't return a cleanup function here as we want the listener to persist for the app's lifetime.
+  }, []); // Empty dependency array ensures this runs only once.
 
 
   useEffect(() => {
