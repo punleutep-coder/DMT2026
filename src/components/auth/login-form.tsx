@@ -21,6 +21,10 @@ import AnimatedBackground from '../ui/animated-background'
 import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
+import { get, ref } from 'firebase/database'
+import { db } from '@/lib/firebase'
+import type { Document, Log } from '@/lib/types'
+import { initialColumnVisibility } from '@/lib/initial-data'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -38,6 +42,7 @@ const hashPassword = async (password: string): Promise<string> => {
 export default function LoginForm() {
   const { state, dispatch } = useAppContext()
   const [error, setError] = useState<string | null>(null)
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,19 +54,36 @@ export default function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
+    setIsLoggingIn(true);
     const user = state.users.find((u) => u.username === values.username)
     if (user) {
       const passwordHash = await hashPassword(values.password)
       if (passwordHash === user.passwordHash) {
-        dispatch({ type: 'LOGIN', payload: user })
-        toast({
-          title: `Welcome, ${user.username}!`,
-          description: 'You have successfully logged in.',
-        })
+        try {
+          // Fetch all data on successful login
+          const dataSnapshot = await get(ref(db));
+          const data = dataSnapshot.val();
+          const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
+          const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+          const columnVisibility = data.columnVisibility || initialColumnVisibility;
+
+          dispatch({ type: 'LOGIN', payload: { user, documents, logs, columnVisibility } })
+          toast({
+            title: `Welcome, ${user.username}!`,
+            description: 'You have successfully logged in.',
+          })
+          
+        } catch(e) {
+            console.error(e);
+            setError("Failed to load application data.");
+        } finally {
+            setIsLoggingIn(false);
+        }
         return
       }
     }
     setError('Invalid username or password.')
+    setIsLoggingIn(false);
   }
 
   const isInitializing = !state.isInitialized;
@@ -115,8 +137,8 @@ export default function LoginForm() {
                   </AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={isInitializing}>
-                {isInitializing ? 'Initializing...' : 'Login'}
+              <Button type="submit" className="w-full" disabled={isInitializing || isLoggingIn}>
+                {isInitializing ? 'Initializing...' : isLoggingIn ? 'Logging in...' : 'Login'}
               </Button>
             </form>
           </Form>
@@ -125,5 +147,3 @@ export default function LoginForm() {
     </>
   )
 }
-
-    

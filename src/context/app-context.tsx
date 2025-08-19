@@ -14,7 +14,7 @@ import { hasDepartmentPermission } from '@/lib/permissions'
 
 type Action =
   | { type: 'SET_INITIAL_STATE'; payload: Partial<AppState> }
-  | { type: 'LOGIN'; payload: User }
+  | { type: 'LOGIN'; payload: { user: User, documents: Document[], logs: Log[], columnVisibility: any } }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
   | { type: 'SET_MODAL'; payload: ModalState }
@@ -68,13 +68,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
         };
     case 'SET_DATA_FROM_SNAPSHOT':
         const data = action.payload;
-        if (!data) return { ...state, isInitialized: true };
+        if (!data) return state;
 
-        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-        const departments = data.departments || [];
-        const columnVisibility = data.columnVisibility || initialColumnVisibility;
+        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : state.documents;
+        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : state.logs;
+        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : state.users;
+        const departments = data.departments || state.departments;
+        const columnVisibility = data.columnVisibility || state.columnVisibility;
         
         return {
             ...state,
@@ -83,14 +83,19 @@ const appReducer = (state: AppState, action: Action): AppState => {
             users,
             departments,
             columnVisibility,
-            isInitialized: true, // Mark as initialized whenever we get a full data snapshot
         };
     case 'LOGIN':
-      sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
-      return { ...state, currentUser: action.payload };
+      sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
+      return { 
+        ...state, 
+        currentUser: action.payload.user,
+        documents: action.payload.documents,
+        logs: action.payload.logs,
+        columnVisibility: action.payload.columnVisibility,
+      };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...getInitialState(), users: state.users, isInitialized: true };
+      return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
     case 'SET_MODAL':
@@ -217,40 +222,51 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const dbRef = ref(db);
-    
-    const initializeApp = async () => {
-        try {
-            const snapshot = await get(dbRef);
-            let data = snapshot.val();
-            
-            if (!data || !data.documents) {
-                console.log("Database is empty or invalid. Seeding with initial data...");
-                await set(dbRef, initialData);
-                data = initialData;
-            }
 
+    const initializeApp = async () => {
+      try {
+        const snapshot = await get(dbRef);
+        if (!snapshot.exists() || !snapshot.hasChild('users')) {
+          console.log("Database is empty or invalid. Seeding with initial data...");
+          await set(dbRef, initialData);
+        }
+
+        const usersRef = ref(db, 'users');
+        const departmentsRef = ref(db, 'departments');
+
+        const [usersSnapshot, departmentsSnapshot] = await Promise.all([
+          get(usersRef),
+          get(departmentsRef),
+        ]);
+        
+        const users = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).map(key => ({ id: key, firestoreId: key, ...usersSnapshot.val()[key] })) : [];
+        const departments = departmentsSnapshot.exists() ? departmentsSnapshot.val() : [];
+        
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+        
+        if (currentUser) {
+            const fullSnapshot = await get(dbRef);
+            const data = fullSnapshot.val();
             const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
             const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-            const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-            const departments = data.departments || [];
             const columnVisibility = data.columnVisibility || initialColumnVisibility;
-            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
             
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { documents, logs, users, departments, columnVisibility, currentUser } });
-
-            onValue(dbRef, (snapshot) => {
-                const updatedData = snapshot.val();
-                if (updatedData) {
-                    dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
-                }
-            }, (error) => {
-                console.error("Firebase onValue listener error:", error);
-            });
-
-        } catch (error) {
-            console.error("Firebase initial data load failed:", error);
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } });
+            dispatch({ type: 'LOGIN', payload: { user: currentUser, documents, logs, columnVisibility } });
         }
+        
+        dispatch({ type: 'SET_INITIAL_STATE', payload: { users, departments, currentUser } });
+
+        onValue(dbRef, (snapshot) => {
+            const updatedData = snapshot.val();
+            if (updatedData) {
+                dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
+            }
+        });
+
+      } catch (error) {
+        console.error("Firebase initial data load failed:", error);
+        dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } }); // Ensure it initializes even on error
+      }
     };
     
     initializeApp();
@@ -258,12 +274,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (!state.isInitialized) return;
+    if (!state.isInitialized || !state.currentUser) return;
     const interval = setInterval(() => {
       dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
     }, 60000);
     return () => clearInterval(interval);
-  }, [state.isInitialized]);
+  }, [state.isInitialized, state.currentUser]);
 
 
   const filteredDocs = useMemo(() => {
@@ -347,5 +363,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
-
-    
