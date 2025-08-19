@@ -64,7 +64,7 @@ export default function LoginForm() {
     setError('Invalid username or password.')
   }
 
-  const isInitializing = !state.isInitialized || (state.isInitialized && state.users.length === 0);
+  const isInitializing = !state.isInitialized;
 
   return (
     <>
