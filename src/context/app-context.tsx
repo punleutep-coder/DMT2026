@@ -2,24 +2,18 @@
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
+import { db } from '@/lib/firebase'
+import { ref, onValue, set, get, child, push, remove, update } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
-  DEFAULT_DOCS,
-  DEFAULT_LOGS,
-  DEFAULT_DEPARTMENTS,
   initialColumnVisibility,
-  DEFAULT_USERS,
-  LS_USERS_KEY,
-  LS_DOCUMENTS_KEY,
-  LS_LOGS_KEY,
-  LS_DEPARTMENTS_KEY,
-  LS_COLUMNS_KEY,
+  initialData,
 } from '@/lib/initial-data'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 
 type Action =
-  | { type: 'INITIALIZE_STATE'; payload: Partial<AppState> }
+  | { type: 'SET_INITIAL_STATE'; payload: Partial<AppState> }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
@@ -65,8 +59,16 @@ const getInitialState = (): AppState => ({
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
-    case 'INITIALIZE_STATE':
-      return { ...state, ...action.payload, isInitialized: true };
+    case 'SET_INITIAL_STATE':
+        return {
+            ...state,
+            users: action.payload.users || [],
+            documents: action.payload.documents || [],
+            logs: action.payload.logs || [],
+            departments: action.payload.departments || [],
+            columnVisibility: action.payload.columnVisibility || initialColumnVisibility,
+            isInitialized: true,
+        };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
       return { ...state, currentUser: action.payload };
@@ -85,77 +87,85 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        let updated = false;
-        const updatedDocuments = state.documents.map(doc => {
+        const updates: any = {};
+        let needsUpdate = false;
+
+        state.documents.forEach(doc => {
             if (doc.isDelayed && doc.releaseDate) {
                 const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
                 if (today >= releaseDate && !doc.releaseDateReached) {
-                    updated = true;
-                    return { ...doc, releaseDateReached: true, justReleased: true };
+                    updates[`documents/${doc.id}/releaseDateReached`] = true;
+                    updates[`documents/${doc.id}/justReleased`] = true;
+                    needsUpdate = true;
                 }
             }
             if (doc.justReleased) {
-                updated = true;
-                return { ...doc, justReleased: false };
+                updates[`documents/${doc.id}/justReleased`] = false;
+                needsUpdate = true;
             }
-            return doc;
         });
 
-        if (updated) {
-          localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(updatedDocuments));
-          return { ...state, documents: updatedDocuments };
+        if (needsUpdate) {
+            update(ref(db), updates);
         }
         return state;
     }
      case 'ADD_DOCUMENT': {
-        const newDocuments = [...state.documents, action.payload];
-        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(newDocuments));
-        return { ...state, documents: newDocuments };
+        const { id, ...docData } = action.payload;
+        const updates: any = {};
+        updates[`documents/${id}`] = docData;
+        update(ref(db), updates);
+        return state;
       }
       case 'UPDATE_DOCUMENT': {
-        const newDocuments = state.documents.map(d => d.id === action.payload.id ? { ...d, ...action.payload } : d);
-        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(newDocuments));
-        return { ...state, documents: newDocuments };
+        const { id, ...docData } = action.payload;
+        update(ref(db, `documents/${id}`), docData);
+        return state;
       }
       case 'DELETE_DOCUMENT': {
-        const newDocuments = state.documents.filter(d => d.id !== action.payload.id);
-        const newLogs = state.logs.filter(l => l.docId !== action.payload.id);
-        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(newDocuments));
-        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(newLogs));
-        return { ...state, documents: newDocuments, logs: newLogs };
+        const { id } = action.payload;
+        remove(ref(db, `documents/${id}`));
+        
+        // This is not efficient, but Realtime DB doesn't have good relational query capabilities.
+        // For a larger app, you'd handle this differently (e.g., Cloud Functions).
+        get(child(ref(db), 'logs')).then(snapshot => {
+            if (snapshot.exists()) {
+                const logs = snapshot.val();
+                for (const logId in logs) {
+                    if (logs[logId].docId === id) {
+                        remove(ref(db, `logs/${logId}`));
+                    }
+                }
+            }
+        });
+        return state;
       }
       case 'ADD_USER': {
-        const newUsers = [...state.users, action.payload];
-        localStorage.setItem(LS_USERS_KEY, JSON.stringify(newUsers));
-        return { ...state, users: newUsers };
+        const { id, ...userData } = action.payload;
+        update(ref(db, `users/${id}`), userData);
+        return state;
       }
       case 'UPDATE_USER': {
-        const newUsers = state.users.map(u => u.id === action.payload.id ? { ...u, ...action.payload } : u);
-        localStorage.setItem(LS_USERS_KEY, JSON.stringify(newUsers));
-        return { ...state, users: newUsers };
+        const { id, ...userData } = action.payload;
+        update(ref(db, `users/${id}`), userData);
+        return state;
       }
       case 'DELETE_USER': {
-        const newUsers = state.users.filter(u => u.id !== action.payload.id);
-        localStorage.setItem(LS_USERS_KEY, JSON.stringify(newUsers));
-        return { ...state, users: newUsers };
+        remove(ref(db, `users/${action.payload.id}`));
+        return state;
       }
       case 'ADD_LOG': {
-        const newLog: Log = {
-          ...action.payload,
-          id: `log-${Date.now()}`,
-          firestoreId: `log-${Date.now()}`
-        };
-        const newLogs = [...state.logs, newLog];
-        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(newLogs));
-        return { ...state, logs: newLogs };
+        const newLogRef = push(ref(db, 'logs'));
+        set(newLogRef, action.payload);
+        return state;
       }
       case 'SET_DEPARTMENTS': {
-        localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(action.payload));
-        return { ...state, departments: action.payload };
+        set(ref(db, 'departments'), action.payload);
+        return state;
       }
       case 'SET_COLUMN_VISIBILITY': {
-        localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(action.payload));
-        return { ...state, columnVisibility: action.payload };
+        set(ref(db, 'columnVisibility'), action.payload);
+        return state;
       }
     default:
       return state
@@ -178,60 +188,47 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    try {
-      const storedDocs = localStorage.getItem(LS_DOCUMENTS_KEY);
-      let initialState: Partial<AppState>;
+    const dbRef = ref(db);
+    get(dbRef).then((snapshot) => {
+        if (!snapshot.exists() || !snapshot.hasChild('documents')) {
+            console.log("No data found, seeding initial data.");
+            set(dbRef, initialData);
+        } else {
+             console.log("Data found, loading from Firebase.");
+        }
 
-      if (storedDocs) {
-        // Data exists, load from local storage
-        initialState = {
-          users: JSON.parse(localStorage.getItem(LS_USERS_KEY) || '[]'),
-          documents: JSON.parse(storedDocs),
-          logs: JSON.parse(localStorage.getItem(LS_LOGS_KEY) || '[]'),
-          departments: JSON.parse(localStorage.getItem(LS_DEPARTMENTS_KEY) || '[]'),
-          columnVisibility: JSON.parse(localStorage.getItem(LS_COLUMNS_KEY) || JSON.stringify(initialColumnVisibility)),
-          currentUser: JSON.parse(sessionStorage.getItem('currentUser') || 'null'),
-        };
-      } else {
-        // No data, initialize with defaults and save to local storage for the first time
-        initialState = {
-          users: DEFAULT_USERS,
-          documents: DEFAULT_DOCS,
-          logs: DEFAULT_LOGS,
-          departments: DEFAULT_DEPARTMENTS,
-          columnVisibility: initialColumnVisibility,
-          currentUser: null,
-        };
-        localStorage.setItem(LS_USERS_KEY, JSON.stringify(initialState.users));
-        localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(initialState.documents));
-        localStorage.setItem(LS_LOGS_KEY, JSON.stringify(initialState.logs));
-        localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(initialState.departments));
-        localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(initialState.columnVisibility));
-        sessionStorage.removeItem('currentUser');
-      }
-      dispatch({ type: 'INITIALIZE_STATE', payload: initialState });
-    } catch (error) {
-      console.error("Error managing local storage, resetting to defaults", error);
-      
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      const defaultState = {
-          users: DEFAULT_USERS,
-          documents: DEFAULT_DOCS,
-          logs: DEFAULT_LOGS,
-          departments: DEFAULT_DEPARTMENTS,
-          columnVisibility: initialColumnVisibility,
-          currentUser: null
-      };
+        // Set up listeners for real-time updates
+        onValue(ref(db, 'documents'), (snapshot) => {
+            const data = snapshot.val() ?? {};
+            const documentsArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { documents: documentsArray } });
+        });
+        onValue(ref(db, 'logs'), (snapshot) => {
+            const data = snapshot.val() ?? {};
+            const logsArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { logs: logsArray } });
+        });
+        onValue(ref(db, 'users'), (snapshot) => {
+            const data = snapshot.val() ?? {};
+            const usersArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { users: usersArray } });
+        });
+         onValue(ref(db, 'departments'), (snapshot) => {
+            const data = snapshot.val() ?? [];
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { departments: data } });
+        });
+        onValue(ref(db, 'columnVisibility'), (snapshot) => {
+            const data = snapshot.val() ?? initialColumnVisibility;
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { columnVisibility: data } });
+        });
 
-      localStorage.setItem(LS_USERS_KEY, JSON.stringify(defaultState.users));
-      localStorage.setItem(LS_DOCUMENTS_KEY, JSON.stringify(defaultState.documents));
-      localStorage.setItem(LS_LOGS_KEY, JSON.stringify(defaultState.logs));
-      localStorage.setItem(LS_DEPARTMENTS_KEY, JSON.stringify(defaultState.departments));
-      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify(defaultState.columnVisibility));
+    }).catch(error => {
+        console.error("Firebase initialization error:", error);
+    });
 
-      dispatch({ type: 'INITIALIZE_STATE', payload: defaultState });
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+    if (currentUser) {
+        dispatch({ type: 'LOGIN', payload: currentUser });
     }
   }, []);
 
@@ -325,5 +322,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
-
-    

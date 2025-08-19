@@ -1,3 +1,4 @@
+
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -133,8 +134,6 @@ export default function CombineDocumentsModal({
     dispatch({
         type: 'ADD_LOG',
         payload: {
-            id: `log-${Date.now()}-combo`,
-            firestoreId: `log-${Date.now()}-combo`,
             docId: newDoc.id,
             oldStatus: 'N/A',
             newStatus: 'Created via Combination',
@@ -148,8 +147,6 @@ export default function CombineDocumentsModal({
         dispatch({
             type: 'ADD_LOG',
             payload: {
-                id: `log-${Date.now()}-${doc.id}`,
-                firestoreId: `log-${Date.now()}-${doc.id}`,
                 docId: doc.id,
                 oldStatus: doc.status,
                 newStatus: 'Combined',

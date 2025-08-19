@@ -1,3 +1,4 @@
+
 'use client'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -13,6 +14,7 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import type { Document } from '@/lib/types';
 
 const formSchema = z.object({
   docId: z.string().min(1, 'Document ID is required.'),
@@ -97,7 +99,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
 
     const now = new Date().toISOString()
-    const newDoc = {
+    const newDoc: Document = {
         id: values.docId,
         firestoreId: `doc-${Date.now()}`,
         name: values.docName,
@@ -120,7 +122,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
 
     dispatch({ type: 'ADD_DOCUMENT', payload: newDoc });
-    dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now } });
+    dispatch({ type: 'ADD_LOG', payload: { docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now } });
     
     toast({ title: "Success", description: "Document added successfully." });
     onClose();

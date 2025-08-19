@@ -1,5 +1,6 @@
+
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
@@ -16,6 +17,11 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
   const [departments, setDepartments] = useState([...state.departments])
   const [newDepartment, setNewDepartment] = useState('')
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+
+  useEffect(() => {
+    setDepartments([...state.departments]);
+  }, [state.departments]);
+
 
   const handleAddDepartment = () => {
     if (newDepartment.trim() && !departments.includes(newDepartment.trim())) {

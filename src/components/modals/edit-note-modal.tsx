@@ -1,3 +1,4 @@
+
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -55,8 +56,6 @@ export default function EditNoteModal({ isOpen, onClose, docId, firestoreId }: E
     dispatch({ 
         type: 'ADD_LOG', 
         payload: {
-            id: `log-${Date.now()}`,
-            firestoreId: `log-${Date.now()}`,
             docId, 
             oldStatus: docToUpdate.status, 
             newStatus: `Note Edited in ${docToUpdate.status}`, 

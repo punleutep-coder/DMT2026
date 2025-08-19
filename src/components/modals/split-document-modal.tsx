@@ -1,3 +1,4 @@
+
 'use client'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -87,12 +88,12 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
     const splitHistory = docToSplit.splitHistory || [];
     splitHistory.push({ timestamp: now, splitTo: newDocIds });
     dispatch({ type: 'UPDATE_DOCUMENT', payload: { id: docId, status: 'Split', lastUpdate: now, splitHistory } });
-    dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}-split`, firestoreId: `log-${Date.now()}-split`, docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` } });
+    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: docToSplit.status, newStatus: 'Split', user: state.currentUser!.username, timestamp: now, reason: `Split into: ${newDocIds.join(', ')}` } });
 
     // Add new documents and their logs
     newDocs.forEach(nd => {
         dispatch({ type: 'ADD_DOCUMENT', payload: nd });
-        dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}-${nd.id}`, firestoreId: `log-${Date.now()}-${nd.id}`, docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now } });
+        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now } });
     });
     
     onClose();

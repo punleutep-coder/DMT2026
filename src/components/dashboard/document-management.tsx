@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,8 @@ import {
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
+import { db } from '@/lib/firebase'
+import { ref, set } from 'firebase/database'
 
 export default function DocumentManagement() {
   const { state, dispatch, filteredDocs } = useAppContext()
@@ -53,33 +56,17 @@ export default function DocumentManagement() {
               onConfirm: () => {
                 try {
                   toast({ title: "Importing...", description: "Please wait while we import your data." });
-                  
-                  if (importedData.documents && Array.isArray(importedData.documents)) {
-                    importedData.documents.forEach((docData: any) => {
-                      dispatch({ type: 'ADD_DOCUMENT', payload: docData });
-                    });
-                  }
-                  
-                  if (importedData.logs && Array.isArray(importedData.logs)) {
-                     importedData.logs.forEach((logData: any) => {
-                        dispatch({ type: 'ADD_LOG', payload: logData });
-                    })
-                  }
-
-                   if (importedData.users && Array.isArray(importedData.users)) {
-                     importedData.users.forEach((userData: any) => {
-                       dispatch({ type: 'ADD_USER', payload: userData });
-                    })
-                  }
-
-                  if (importedData.departments) {
-                    dispatch({ type: 'SET_DEPARTMENTS', payload: importedData.departments });
-                  }
-                  if(importedData.columnVisibility) {
-                    dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: importedData.columnVisibility });
-                  }
-
-                  toast({ title: 'Success', description: 'Data imported successfully.' })
+                  // Instead of dispatching, we write directly to Firebase
+                  set(ref(db), importedData).then(() => {
+                    toast({ title: 'Success', description: 'Data imported successfully.' })
+                  }).catch(error => {
+                     console.error('Error during import:', error)
+                     toast({
+                       title: 'Import Error',
+                       description: 'Failed to import data to Firebase.',
+                       variant: 'destructive',
+                     })
+                  });
                 } catch (error) {
                   console.error('Error during import:', error)
                   toast({
@@ -111,9 +98,9 @@ export default function DocumentManagement() {
       toast({ title: "Exporting...", description: "Gathering data." });
 
       const dataToExport = {
-        documents: state.documents,
-        logs: state.logs,
-        users: state.users,
+        documents: state.documents.reduce((acc, doc) => ({ ...acc, [doc.id]: { ...doc, id: undefined } }), {}),
+        logs: state.logs.reduce((acc, log) => ({ ...acc, [log.id]: { ...log, id: undefined } }), {}),
+        users: state.users.reduce((acc, user) => ({ ...acc, [user.id]: { ...user, id: undefined } }), {}),
         departments: state.departments,
         columnVisibility: state.columnVisibility,
       };

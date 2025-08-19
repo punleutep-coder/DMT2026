@@ -1,3 +1,4 @@
+
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -60,7 +61,7 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
     }
 
     dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-    dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now } });
+    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now } });
 
     onClose()
   }

@@ -1,3 +1,4 @@
+
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -59,8 +60,6 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
     dispatch({ 
         type: 'ADD_LOG', 
         payload: {
-            id: `log-${Date.now()}`,
-            firestoreId: `log-${Date.now()}`,
             docId, 
             oldStatus: docToUpdate.status, 
             newStatus: values.status, 

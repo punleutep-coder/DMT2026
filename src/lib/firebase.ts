@@ -11,9 +11,8 @@ const firebaseConfig = {
   "storageBucket": "docuflow-oxcte.firebasestorage.app",
   "apiKey": "AIzaSyD95GONWkmEmfSHze3qcSkqf6uv6nLnWng",
   "authDomain": "docuflow-oxcte.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "289993871598",
-  "databaseURL": "https://docuflow-oxcte-default-rtdb.firebaseio.com"
+  "databaseURL": "https://docuflow-oxcte-default-rtdb.firebaseio.com",
+  "measurementId": ""
 };
 
 // Initialize Firebase
