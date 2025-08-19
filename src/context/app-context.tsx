@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { ref, onValue, set, get, push } from 'firebase/database'
+import { ref, onValue, set, push, get } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
@@ -32,6 +32,7 @@ type Action =
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_DATA_FROM_SNAPSHOT'; payload: any }
+  | { type: 'SET_INITIALIZED'; payload: boolean };
 
 
 const getInitialState = (): AppState => ({
@@ -60,6 +61,11 @@ const getInitialState = (): AppState => ({
 
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
+    case 'SET_INITIALIZED':
+        return {
+            ...state,
+            isInitialized: action.payload,
+        };
     case 'SET_INITIAL_STATE':
         return {
             ...state,
@@ -68,14 +74,28 @@ const appReducer = (state: AppState, action: Action): AppState => {
         };
     case 'SET_DATA_FROM_SNAPSHOT':
         const data = action.payload;
-        if (!data) return state;
+        if (!data) {
+             return { ...state, users: [], documents: [], logs: [], departments: [], columnVisibility: initialColumnVisibility };
+        }
 
-        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : state.documents;
-        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : state.logs;
-        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : state.users;
-        const departments = data.departments || state.departments;
-        const columnVisibility = data.columnVisibility || state.columnVisibility;
+        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
+        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+        const departments = data.departments || [];
+        const columnVisibility = data.columnVisibility || initialColumnVisibility;
         
+        let currentUser = state.currentUser;
+        if (currentUser) {
+            const updatedUser = users.find(u => u.id === currentUser!.id);
+            if (!updatedUser) { // User was deleted
+                sessionStorage.removeItem('currentUser');
+                currentUser = null;
+            } else {
+                currentUser = updatedUser;
+                sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            }
+        }
+
         return {
             ...state,
             documents,
@@ -83,6 +103,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             users,
             departments,
             columnVisibility,
+            currentUser,
         };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
@@ -221,63 +242,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        const usersSnapshot = await get(ref(db, 'users'));
-        if (!usersSnapshot.exists()) {
-          console.log("Seeding database with initial data...");
-          await set(ref(db), initialData);
-        }
+    // Set up a single listener for all data
+    const dbRef = ref(db);
+    const unsubscribe = onValue(dbRef, (snapshot) => {
+        const data = snapshot.val();
+        dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
 
-        const initialLoadPromises = [
-          get(ref(db, 'users')),
-          get(ref(db, 'departments')),
-        ];
-
-        const [usersSnap, departmentsSnap] = await Promise.all(initialLoadPromises);
-
-        const usersData = usersSnap.val() || initialData.users;
-        const departmentsData = departmentsSnap.val() || initialData.departments;
-        
-        const users = Object.keys(usersData).map(key => ({ id: key, firestoreId: key, ...usersData[key] }));
-        
-        let currentUser = null;
-        try {
-          const storedUser = sessionStorage.getItem('currentUser');
-          if (storedUser) {
-            currentUser = JSON.parse(storedUser);
-          }
-        } catch (e) {
-          console.error("Could not parse user from session storage:", e);
-          sessionStorage.removeItem('currentUser');
-        }
-
-        dispatch({
-          type: 'SET_INITIAL_STATE',
-          payload: {
-            users,
-            departments: departmentsData,
-            currentUser,
-          }
-        });
-
-        // Set up listener for real-time updates for the whole DB
-        onValue(ref(db), (snapshot) => {
-            const updatedData = snapshot.val();
-            if (updatedData) {
-                dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
+        if (state.currentUser === null) {
+            try {
+                const storedUser = sessionStorage.getItem('currentUser');
+                if (storedUser) {
+                    dispatch({ type: 'LOGIN', payload: JSON.parse(storedUser) });
+                }
+            } catch (e) {
+                console.error("Could not parse user from session storage:", e);
+                sessionStorage.removeItem('currentUser');
             }
-        });
+        }
+    }, (error) => {
+        console.error("Firebase onValue listener error:", error);
+    });
 
-      } catch (error) {
-        console.error("Firebase initial data load failed:", error);
-        // Still set as initialized to prevent getting stuck
-        dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } });
-      }
-    };
-    
-    initializeApp();
-  }, []);
+    // Cleanup listener on component unmount
+    return () => unsubscribe();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   useEffect(() => {
     if (!state.isInitialized || !state.currentUser) return;
@@ -369,3 +357,5 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
+
+    
