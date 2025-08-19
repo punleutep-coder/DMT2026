@@ -217,13 +217,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onValue(dbRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-            
             if (isInitialLoad) {
                 const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
                 dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser } });
                 isInitialLoad = false;
             }
+            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
         } else if (isInitialLoad) { // Handle case where DB is empty but not yet seeded
              dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
              isInitialLoad = false;
