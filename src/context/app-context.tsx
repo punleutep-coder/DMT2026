@@ -68,7 +68,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         };
     case 'SET_DATA_FROM_SNAPSHOT':
         const data = action.payload;
-        if (!data) return state; // If snapshot is empty, don't change state
+        if (!data) return { ...state, isInitialized: true };
 
         const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
         const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
@@ -76,23 +76,20 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const departments = data.departments || [];
         const columnVisibility = data.columnVisibility || initialColumnVisibility;
         
-        // This is a special case to handle re-login. We don't want to wipe users if they're already there.
-        const finalUsers = state.users.length > 0 && users.length === 0 ? state.users : users;
-
         return {
             ...state,
             documents,
             logs,
-            users: finalUsers,
+            users,
             departments,
             columnVisibility,
+            isInitialized: true, // Mark as initialized whenever we get a full data snapshot
         };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
       return { ...state, currentUser: action.payload };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      // When logging out, we preserve the list of users so login can work again
       return { ...getInitialState(), users: state.users, isInitialized: true };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload } };
@@ -226,27 +223,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const snapshot = await get(dbRef);
             let data = snapshot.val();
             
-            // If database is empty or doesn't have a crucial key, seed it.
             if (!data || !data.documents) {
                 console.log("Database is empty or invalid. Seeding with initial data...");
                 await set(dbRef, initialData);
                 data = initialData;
             }
 
-            const stateFromSnapshot = (data: any) => {
-              const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-              const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-              const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-              const departments = data.departments || [];
-              const columnVisibility = data.columnVisibility || initialColumnVisibility;
-              const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-              return { documents, logs, users, departments, columnVisibility, currentUser };
-            };
+            const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
+            const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+            const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+            const departments = data.departments || [];
+            const columnVisibility = data.columnVisibility || initialColumnVisibility;
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
             
-            // Dispatch the initial state to unblock the UI
-            dispatch({ type: 'SET_INITIAL_STATE', payload: stateFromSnapshot(data) });
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { documents, logs, users, departments, columnVisibility, currentUser } });
 
-            // After initial load, attach the listener for real-time updates.
             onValue(dbRef, (snapshot) => {
                 const updatedData = snapshot.val();
                 if (updatedData) {
@@ -258,7 +249,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
         } catch (error) {
             console.error("Firebase initial data load failed:", error);
-            // If there's a catastrophic error, still mark as initialized to not block the UI
             dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } });
         }
     };
@@ -271,7 +261,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!state.isInitialized) return;
     const interval = setInterval(() => {
       dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
-    }, 60000); // Check every minute
+    }, 60000);
     return () => clearInterval(interval);
   }, [state.isInitialized]);
 
