@@ -221,11 +221,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    const dbRef = ref(db);
-
     const initializeApp = async () => {
       try {
+        const dbRef = ref(db);
         const snapshot = await get(dbRef);
+
         if (!snapshot.exists() || !snapshot.hasChild('users')) {
           console.log("Database is empty or invalid. Seeding with initial data...");
           await set(dbRef, initialData);
@@ -242,35 +242,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const users = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).map(key => ({ id: key, firestoreId: key, ...usersSnapshot.val()[key] })) : [];
         const departments = departmentsSnapshot.exists() ? departmentsSnapshot.val() : [];
         
-        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-        
-        if (currentUser) {
-            const fullSnapshot = await get(dbRef);
-            const data = fullSnapshot.val();
-            const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-            const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-            const columnVisibility = data.columnVisibility || initialColumnVisibility;
-            
-            dispatch({ type: 'LOGIN', payload: { user: currentUser, documents, logs, columnVisibility } });
-        }
-        
-        dispatch({ type: 'SET_INITIAL_STATE', payload: { users, departments, currentUser } });
+        dispatch({ type: 'SET_INITIAL_STATE', payload: { users, departments } });
 
+        // Set up listener for real-time updates to the whole database
         onValue(dbRef, (snapshot) => {
             const updatedData = snapshot.val();
             if (updatedData) {
                 dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
             }
         });
-
       } catch (error) {
         console.error("Firebase initial data load failed:", error);
-        dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } }); // Ensure it initializes even on error
+        // Still set as initialized to prevent getting stuck
+        dispatch({ type: 'SET_INITIAL_STATE', payload: { isInitialized: true } });
       }
     };
     
     initializeApp();
-
   }, []);
 
   useEffect(() => {
