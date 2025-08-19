@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { ref, onValue, set, get } from 'firebase/database'
+import { ref, onValue, set, get, push } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
@@ -68,6 +68,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
         };
     case 'SET_DATA_FROM_SNAPSHOT':
         const data = action.payload;
+        if (!data) return state; // If snapshot is empty, don't change state
+
         const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
         const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
         const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
@@ -104,8 +106,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        const updates: any = {};
         let needsUpdate = false;
+        
+        const updates: {[key: string]: any} = {};
 
         state.documents.forEach(doc => {
             if (doc.isDelayed && doc.releaseDate) {
@@ -123,18 +126,29 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
 
         if (needsUpdate) {
-            set(ref(db), updates);
+            Object.keys(updates).forEach(key => {
+                set(ref(db, key), updates[key]);
+            })
         }
         return state;
     }
      case 'ADD_DOCUMENT': {
-        const { id, ...docData } = action.payload;
+        const { id, firestoreId, ...docData } = action.payload;
         set(ref(db, `documents/${id}`), docData);
         return state;
       }
       case 'UPDATE_DOCUMENT': {
         const { id, ...docData } = action.payload;
-        set(ref(db, `documents/${id}`), docData);
+        
+        const updates: {[key: string]: any} = {};
+        Object.keys(docData).forEach(key => {
+            updates[`documents/${id}/${key}`] = (docData as any)[key];
+        });
+
+        Object.keys(updates).forEach(key => {
+            set(ref(db, key), updates[key]);
+        })
+
         return state;
       }
       case 'DELETE_DOCUMENT': {
@@ -144,22 +158,26 @@ const appReducer = (state: AppState, action: Action): AppState => {
         get(ref(db, 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
+                const updates: {[key: string]: any} = {};
                 for (const logId in logs) {
                     if (logs[logId].docId === id) {
-                        set(ref(db, `logs/${logId}`), null);
+                        updates[`logs/${logId}`] = null;
                     }
                 }
+                Object.keys(updates).forEach(key => {
+                    set(ref(db, key), updates[key]);
+                })
             }
         });
         return state;
       }
       case 'ADD_USER': {
-        const { id, ...userData } = action.payload;
+        const { id, firestoreId, ...userData } = action.payload;
         set(ref(db, `users/${id}`), userData);
         return state;
       }
       case 'UPDATE_USER': {
-        const { id, ...userData } = action.payload;
+        const { id, firestoreId, ...userData } = action.payload;
         set(ref(db, `users/${id}`), userData);
         return state;
       }
@@ -168,9 +186,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return state;
       }
       case 'ADD_LOG': {
-        const newLogRef = ref(db, 'logs');
-        const newLog = push(newLogRef);
-        set(newLog, action.payload);
+        const newLogRef = push(ref(db, 'logs'));
+        set(newLogRef, action.payload);
         return state;
       }
       case 'SET_DEPARTMENTS': {
@@ -204,7 +221,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const dbRef = ref(db);
     
-    // Function to transform snapshot data into state shape
     const stateFromSnapshot = (data: any) => {
         const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
         const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
@@ -216,42 +232,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return { documents, logs, users, departments, columnVisibility, currentUser };
     };
 
-    // Main initialization logic
     const initializeApp = async () => {
         try {
             const snapshot = await get(dbRef);
-            let initialPayload;
+            let data = snapshot.val();
 
-            if (!snapshot.exists()) {
-                console.log("Database is empty. Seeding with initial data...");
+            if (!data || !data.documents) {
+                console.log("Database is empty or invalid. Seeding with initial data...");
                 await set(dbRef, initialData);
-                initialPayload = initialData;
-            } else {
-                initialPayload = snapshot.val();
+                data = initialData;
             }
 
-            dispatch({ type: 'SET_INITIAL_STATE', payload: stateFromSnapshot(initialPayload) });
+            dispatch({ type: 'SET_INITIAL_STATE', payload: stateFromSnapshot(data) });
 
+            const unsubscribe = onValue(dbRef, (snapshot) => {
+                const updatedData = snapshot.val();
+                if (updatedData) {
+                    dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
+                }
+            }, (error) => {
+                console.error("Firebase onValue listener error:", error);
+            });
+
+            return () => unsubscribe();
         } catch (error) {
             console.error("Firebase initial data load failed:", error);
-            // Even if it fails, mark as initialized to not block the UI.
             dispatch({ type: 'SET_INITIAL_STATE', payload: {} }); 
         }
     };
     
     initializeApp();
-
-    // Set up the persistent listener for real-time updates after initial load
-    const unsubscribe = onValue(dbRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-        }
-    }, (error) => {
-        console.error("Firebase onValue listener error:", error);
-    });
-
-    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -344,3 +354,5 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
+
+    
