@@ -224,33 +224,43 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const initializeApp = async () => {
       try {
         const dbRef = ref(db);
-        const snapshot = await get(dbRef);
+        let snapshot = await get(dbRef);
 
-        if (!snapshot.exists() || !snapshot.hasChild('users')) {
+        if (!snapshot.exists() || !snapshot.hasChild('documents')) {
           console.log("Database is empty or invalid. Seeding with initial data...");
           await set(dbRef, initialData);
+          snapshot = await get(dbRef); // Re-fetch after seeding
+        }
+        
+        const data = snapshot.val();
+        
+        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+        const departments = data.departments || [];
+        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
+        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+        const columnVisibility = data.columnVisibility || initialColumnVisibility;
+
+        let currentUser = null;
+        try {
+          const storedUser = sessionStorage.getItem('currentUser');
+          if (storedUser) {
+            currentUser = JSON.parse(storedUser);
+          }
+        } catch (e) {
+          console.error("Could not parse user from session storage:", e);
+          sessionStorage.removeItem('currentUser');
         }
 
-        const usersRef = ref(db, 'users');
-        const departmentsRef = ref(db, 'departments');
+        dispatch({ type: 'SET_INITIAL_STATE', payload: { users, departments, documents, logs, columnVisibility, currentUser } });
 
-        const [usersSnapshot, departmentsSnapshot] = await Promise.all([
-          get(usersRef),
-          get(departmentsRef),
-        ]);
-        
-        const users = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).map(key => ({ id: key, firestoreId: key, ...usersSnapshot.val()[key] })) : [];
-        const departments = departmentsSnapshot.exists() ? departmentsSnapshot.val() : [];
-        
-        dispatch({ type: 'SET_INITIAL_STATE', payload: { users, departments } });
-
-        // Set up listener for real-time updates to the whole database
+        // Set up listener for real-time updates
         onValue(dbRef, (snapshot) => {
             const updatedData = snapshot.val();
             if (updatedData) {
                 dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: updatedData });
             }
         });
+
       } catch (error) {
         console.error("Firebase initial data load failed:", error);
         // Still set as initialized to prevent getting stuck
