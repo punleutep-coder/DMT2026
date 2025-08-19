@@ -53,6 +53,28 @@ export default function LoginForm() {
     },
   })
 
+  // This effect will run when the component mounts and ensure the DB is seeded if necessary.
+  useEffect(() => {
+    const seedDatabaseIfNeeded = async () => {
+      // We check if users exist, as it's a good proxy for whether the DB is seeded.
+      if (state.isInitialized && state.users.length === 0) {
+        console.log("No users found in state after init. Seeding database...");
+        try {
+          // Check again directly from DB to be sure
+          const usersSnapshot = await get(ref(db, 'users'));
+          if (!usersSnapshot.exists()) {
+            await set(ref(db), initialData);
+            console.log("Database seeded successfully.");
+          }
+        } catch (error) {
+          console.error("Failed to seed database:", error);
+        }
+      }
+    };
+    seedDatabaseIfNeeded();
+  }, [state.isInitialized, state.users]);
+
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
     setIsLoggingIn(true);
