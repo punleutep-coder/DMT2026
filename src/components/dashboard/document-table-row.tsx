@@ -140,7 +140,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
             {doc.tertiaryId && <div className="text-xs text-muted-foreground">Ter: {doc.tertiaryId}</div>}
             {doc.quaternaryId && <div className="text-xs text-muted-foreground">Qua: {doc.quaternaryId}</div>}
             <div className="flex flex-wrap gap-1 mt-2">
-                {doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
+                {Array.isArray(doc.tags) && doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
             </div>
         </TableCell>
       )}
