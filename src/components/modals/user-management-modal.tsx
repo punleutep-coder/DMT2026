@@ -18,6 +18,7 @@ import { Checkbox } from '../ui/checkbox'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { User } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
+import { v4 as uuidv4 } from 'uuid';
 
 const permissionsSchema = z.record(z.boolean()).default({});
 
@@ -99,7 +100,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
-    const uniqueId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const uniqueId = `user-${uuidv4()}`;
     const userData: User = {
         id: isEditing ? userToEdit.id : uniqueId,
         firestoreId: isEditing ? userToEdit.firestoreId : uniqueId,
