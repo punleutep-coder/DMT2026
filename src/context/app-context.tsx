@@ -197,18 +197,12 @@ const appReducer = (state: AppState, action: Action): AppState => {
       case 'ADD_USER': {
         const newUser = action.payload;
         set(ref(db, `users/${newUser.id}`), newUser);
-        return {
-            ...state,
-            users: [...state.users, newUser],
-        };
+        return state;
       }
       case 'UPDATE_USER': {
         const updatedUser = action.payload;
         set(ref(db, `users/${updatedUser.id}`), updatedUser);
-        return {
-            ...state,
-            users: state.users.map(u => u.id === updatedUser.id ? updatedUser : u),
-        };
+        return state;
       }
       case 'DELETE_USER': {
         set(ref(db, `users/${action.payload.id}`), null);
@@ -411,5 +405,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
-
-    
