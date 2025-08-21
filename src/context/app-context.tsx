@@ -125,7 +125,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       // Keep users and departments on logout so the login page works
       return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true };
     case 'SET_FILTER':
-      return { ...state, filter: { ...state.filter, ...action.payload } };
+      return { ...state, filter: { ...state.filter, ...state.filter } };
     case 'SET_MODAL':
       return { ...state, modal: action.payload };
     case 'SET_DIALOG':
@@ -202,12 +202,12 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return state;
       }
       case 'ADD_USER': {
-        const { id, firestoreId, ...userData } = action.payload;
+        const { id, ...userData } = action.payload;
         set(ref(db, `users/${id}`), userData);
         return state;
       }
       case 'UPDATE_USER': {
-        const { id, firestoreId, ...userData } = action.payload;
+        const { id, ...userData } = action.payload;
         set(ref(db, `users/${id}`), userData);
         return state;
       }
@@ -294,8 +294,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let docs = state.documents
 
     // <<<<<<<<<<<<<<<< START: PERMISSION FILTERING (HIGHEST PRIORITY) >>>>>>>>>>>>>>>>
-    if (state.currentUser?.role !== 'Admin' && state.currentUser?.departmentPermissions?.length > 0) {
-      docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status))
+    if (state.currentUser?.role !== 'Admin' && Array.isArray(state.currentUser?.departmentPermissions) && state.currentUser.departmentPermissions.length > 0) {
+        docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status));
     }
     // <<<<<<<<<<<<<<<< END: PERMISSION FILTERING >>>>>>>>>>>>>>>>
 

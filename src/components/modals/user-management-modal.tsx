@@ -139,7 +139,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             message: 'Are you sure you want to delete this user? This action cannot be undone.',
             confirmText: 'Delete',
             onConfirm: () => {
-                dispatch({ type: 'DELETE_USER', payload: user });
+                dispatch({ type: 'DELETE_USER', payload: {id: user.id} });
                 toast({ title: "User Deleted", description: `User ${user.username} has been removed.` });
             }
         }
