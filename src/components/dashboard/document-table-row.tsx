@@ -120,8 +120,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   }
 
   const isCompleted = doc.status.startsWith('Completed');
-  const isTerminal = isCompleted || doc.status === 'Combined' || doc.status === 'Split';
-  
+  const isCombinedOrSplit = doc.status === 'Combined' || doc.status === 'Split';
+  const isTerminal = isCompleted || isCombinedOrSplit;
 
   return (
     <TableRow
@@ -197,11 +197,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                             {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}><Redo2 className="mr-2 h-4 w-4" />Advance</DropdownMenuItem>}
                             {hasPermission(currentUser, 'canCompleteDocument') && <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}><CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete</DropdownMenuItem>}
                         </>
-                    ) : isCompleted ? (
-                        <>
-                         {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4"/>Re-open</DropdownMenuItem>}
-                        </>
                     ) : null}
+                    
+                    {isCompleted && hasPermission(currentUser, 'canMoveDocument') && (
+                        <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4"/>Re-open</DropdownMenuItem>
+                    )}
 
                     <DropdownMenuSeparator />
                     {hasPermission(currentUser, 'canDeleteDocument') && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
