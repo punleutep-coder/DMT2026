@@ -30,8 +30,12 @@ const formSchema = z.object({
   permissions: permissionsSchema,
   departmentPermissions: z.array(z.string()).default([]),
 }).refine(data => {
+    // Password is required for new users with the 'User' role.
     const isNewUser = !data.id;
-    return !isNewUser || (data.password && data.password.length > 0);
+    if (isNewUser && data.role === 'User') {
+      return data.password && data.password.length > 0;
+    }
+    return true;
 }, {
   message: "Password is required for new users.",
   path: ["password"],
@@ -114,38 +118,31 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     }
     
     if (!passwordHash && !isUpdating) {
+        // This case should be handled by form validation, but as a safeguard...
         form.setError("password", { message: "Password is required for new users." });
         return;
     }
 
+    const userData: User = {
+        id: isUpdating ? values.id! : uuidv4(),
+        firestoreId: isUpdating ? userToEdit!.firestoreId : uuidv4(),
+        username: values.username,
+        role: values.role,
+        permissions: values.role === 'Admin' ? {} : values.permissions,
+        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
+        passwordHash: passwordHash!
+    }
+
     if (isUpdating) {
-        const userData: User = {
-            id: values.id!,
-            firestoreId: userToEdit!.firestoreId,
-            username: values.username,
-            role: values.role,
-            permissions: values.role === 'Admin' ? {} : values.permissions,
-            departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
-            passwordHash: passwordHash!
-        }
         dispatch({ type: 'UPDATE_USER', payload: userData });
         toast({ title: "Success", description: "User updated successfully." });
     } else {
-        const newUserId = uuidv4();
-        const userData: User = {
-            id: newUserId,
-            firestoreId: newUserId,
-            username: values.username,
-            role: values.role,
-            permissions: values.role === 'Admin' ? {} : values.permissions,
-            departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
-            passwordHash: passwordHash!
-        }
         dispatch({ type: 'ADD_USER', payload: userData });
         toast({ title: "Success", description: "User created successfully." });
     }
+    
     setEditingUserId(undefined);
-    form.reset();
+    form.reset({id: undefined, username: '', password: '', role: 'User', permissions: {}, departmentPermissions: []});
   }
 
   const handleDeleteUser = (user: User) => {
@@ -270,9 +267,10 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                                                             name={`permissions.${key}`}
                                                             render={({ field }) => (
                                                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                                                <label className="text-sm font-normal">{name}</label>
+                                                                <label className="text-sm font-normal" htmlFor={`permission-switch-${key}`}>{name}</label>
                                                                 <FormControl>
                                                                 <Switch
+                                                                    id={`permission-switch-${key}`}
                                                                     checked={!!field.value}
                                                                     onCheckedChange={field.onChange}
                                                                 />
@@ -331,3 +329,5 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
+
+    
