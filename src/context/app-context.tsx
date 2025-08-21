@@ -80,7 +80,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_DATA_FROM_SNAPSHOT':
         const data = action.payload;
         if (!data) {
-             return { ...state, users: [], documents: [], logs: [], departments: [], columnVisibility: initialColumnVisibility };
+             return { ...state, users: [], documents: [], logs: [], departments: [], columnVisibility: initialColumnVisibility, isInitialized: true };
         }
 
         const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
@@ -109,6 +109,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             departments,
             columnVisibility,
             currentUser: liveCurrentUser,
+            isInitialized: true, // Set initialized to true once we have data
         };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
@@ -248,17 +249,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    // This effect establishes a persistent real-time listener for the entire database.
     const dbRef = ref(db);
     const unsubscribe = onValue(dbRef, (snapshot) => {
         const data = snapshot.val();
         dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-
-        // Set initialized to true as soon as we get the first data packet.
-        // This ensures the app doesn't get stuck on "Initializing...".
-        if (!state.isInitialized) {
-            dispatch({ type: 'SET_INITIALIZED', payload: true });
-        }
     }, (error) => {
         console.error("Firebase onValue listener error:", error);
         // Even on error, we should initialize to not block the UI.
@@ -281,7 +275,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
-    // The returned function will be called on component unmount, cleaning up the listener.
     return () => unsubscribe();
   }, []); // Empty dependency array ensures this runs only once on mount.
 
@@ -312,7 +305,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         (doc.quaternaryId && doc.quaternaryId.toLowerCase().includes(searchLower)) ||
         (doc.assignedDepartment && doc.assignedDepartment.toLowerCase().includes(searchLower)) ||
         (doc.keywords && doc.keywords.toLowerCase().includes(searchLower)) ||
-        doc.tags.join(', ').toLowerCase().includes(searchLower)
+        (Array.isArray(doc.tags) && doc.tags.join(', ').toLowerCase().includes(searchLower))
 
       let dateMatch = true
       if (state.filter.startDate && state.filter.endDate) {
