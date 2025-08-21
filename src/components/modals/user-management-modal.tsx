@@ -57,7 +57,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   const [editingUserId, setEditingUserId] = useState<string | undefined>(initialUserId)
   
   const userToEdit = useMemo(() => state.users.find(u => u.id === editingUserId), [state.users, editingUserId]);
-  const isEditing = !!userToEdit
+  const isEditing = !!editingUserId;
 
   const form = useForm<z.infer<typeof formSchema> & { id?: string }>({
     resolver: zodResolver(formSchema),
@@ -77,39 +77,51 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
 
   useEffect(() => {
     const user = state.users.find(u => u.id === editingUserId);
-    form.reset({
-        id: user?.id,
-        username: user?.username || '',
-        password: '',
-        role: user?.role || 'User',
-        permissions: user?.permissions || {},
-        departmentPermissions: user?.departmentPermissions || []
-    });
+    if (user) {
+        form.reset({
+            id: user.id,
+            username: user.username,
+            password: '',
+            role: user.role,
+            permissions: user.permissions || {},
+            departmentPermissions: user.departmentPermissions || []
+        });
+    } else {
+        form.reset({
+            id: undefined,
+            username: '',
+            password: '',
+            role: 'User',
+            permissions: {},
+            departmentPermissions: []
+        });
+    }
   }, [editingUserId, state.users, form]);
 
   const role = form.watch('role');
 
   const onSubmit = async (values: z.infer<typeof formSchema> & { id?: string }) => {
-    let passwordHash = userToEdit?.passwordHash;
+    const isUpdating = !!editingUserId;
+    const userBeingEdited = isUpdating ? state.users.find(u => u.id === editingUserId) : null;
+    
+    if (!isUpdating && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
+        form.setError('username', { message: 'This username is already taken.' });
+        return;
+    }
+
+    let passwordHash = userBeingEdited?.passwordHash;
     if (values.password) {
         passwordHash = await hashPassword(values.password);
     }
     
-    if (!passwordHash && !isEditing) {
+    if (!passwordHash && !isUpdating) {
         form.setError("password", { message: "Password is required for new users." });
         return;
     }
-
-    if (!isEditing && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
-        form.setError('username', { message: 'This username is already taken.' });
-        return;
-    }
-    
-    const isUpdating = isEditing && userToEdit;
     
     const userData: User = {
-        id: isUpdating ? userToEdit.id : uuidv4(),
-        firestoreId: isUpdating ? userToEdit.firestoreId : uuidv4(),
+        id: isUpdating ? editingUserId : uuidv4(),
+        firestoreId: isUpdating ? userBeingEdited!.firestoreId : uuidv4(),
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
@@ -124,8 +136,8 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
       dispatch({ type: 'ADD_USER', payload: userData });
       toast({ title: "Success", description: "User created successfully." });
     }
-    setEditingUserId(undefined)
-    form.reset()
+    setEditingUserId(undefined);
+    form.reset();
   }
 
   const handleDeleteUser = (user: User) => {
@@ -311,5 +323,3 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
-
-    
