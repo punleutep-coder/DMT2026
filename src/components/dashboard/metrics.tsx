@@ -7,11 +7,39 @@ import { Clock } from 'lucide-react'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils';
 
 const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary' }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; }) => {
-  const { state, dispatch } = useAppContext()
+  const { state, dispatch, filteredDocs } = useAppContext()
   const isActive = state.filter.mainFilter === filter
 
   const handleClick = () => {
     dispatch({ type: 'SET_FILTER', payload: { mainFilter: filter, departmentSpecificFilter: 'All' } })
+    
+    let docsToShow = filteredDocs;
+    if (filter === 'All') {
+        docsToShow = state.documents.filter(d => d.status !== 'Combined' && d.status !== 'Split');
+    } else {
+        // We need to re-apply the filter logic to get the correct list of documents
+        if (filter === 'Exceeding Period') {
+            docsToShow = state.documents.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit));
+        } else if (filter === 'In Progress') {
+            docsToShow = state.documents.filter(d => !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
+        } else if (filter === 'Delayed') {
+            docsToShow = state.documents.filter(d => d.isDelayed && !d.releaseDateReached);
+        } else if (filter === 'Release Date Reached') {
+            docsToShow = state.documents.filter(d => d.releaseDateReached === true);
+        } else if (filter === 'Completed') {
+            docsToShow = state.documents.filter(d => d.status.startsWith('Completed'));
+        } else if (filter.startsWith('Completed (')) {
+            docsToShow = state.documents.filter(d => d.status === filter);
+        }
+    }
+
+    dispatch({ 
+        type: 'OPEN_CHAT_BAR', 
+        payload: {
+            title: `${title} Documents`,
+            documents: docsToShow,
+        }
+    });
   }
 
   return (
@@ -33,7 +61,7 @@ const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primar
 }
 
 export default function Metrics() {
-  const { state, filteredDocs } = useAppContext()
+  const { state } = useAppContext()
 
   const metrics = useMemo(() => {
     const docs = state.documents;

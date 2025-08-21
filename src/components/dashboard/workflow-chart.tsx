@@ -14,13 +14,12 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { useMemo } from 'react'
 
 export default function WorkflowChart() {
-  const { state, dispatch } = useAppContext()
-  // IMPORTANT: Use the complete, unfiltered list of documents for the chart
-  const { documents, departments } = state
+  const { state, dispatch, filteredDocs } = useAppContext()
+  const { departments } = state
 
   const chartData = useMemo(() => {
-    // Filter out combined/split documents for a clearer workflow view
-    const activeDocs = documents.filter(d => d.status !== 'Combined' && d.status !== 'Split');
+    // Use filteredDocs to make the chart dynamic
+    const activeDocs = filteredDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
     
     const counts = departments.map(dept => ({
       name: dept.replace('Department ', ''),
@@ -30,12 +29,19 @@ export default function WorkflowChart() {
 
     return counts;
 
-  }, [documents, departments])
+  }, [filteredDocs, departments])
 
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
-      const department = data.activePayload[0].payload.fullName
-      dispatch({ type: 'SET_FILTER', payload: { ...state.filter, mainFilter: 'All', departmentSpecificFilter: department }})
+      const departmentName = data.activePayload[0].payload.fullName
+      const docsInDept = filteredDocs.filter(doc => doc.status === departmentName)
+      dispatch({ 
+        type: 'OPEN_CHAT_BAR', 
+        payload: {
+          title: `Documents in ${departmentName}`,
+          documents: docsInDept,
+        }
+      })
     }
   }
 
