@@ -23,13 +23,14 @@ import { v4 as uuidv4 } from 'uuid';
 const permissionsSchema = z.record(z.boolean()).default({});
 
 const formSchema = z.object({
+  id: z.string().optional(),
   username: z.string().min(1, 'Username is required.'),
   password: z.string().optional(),
   role: z.enum(['Admin', 'User']),
   permissions: permissionsSchema,
   departmentPermissions: z.array(z.string()).default([]),
 }).refine(data => {
-    const isNewUser = !(data as any).id;
+    const isNewUser = !data.id;
     return !isNewUser || (data.password && data.password.length > 0);
 }, {
   message: "Password is required for new users.",
@@ -59,7 +60,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   const userToEdit = useMemo(() => state.users.find(u => u.id === editingUserId), [state.users, editingUserId]);
   const isEditing = !!userToEdit;
 
-  const form = useForm<z.infer<typeof formSchema> & { id?: string }>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: undefined,
@@ -99,14 +100,8 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
 
   const role = form.watch('role');
 
-  const onSubmit = async (values: z.infer<typeof formSchema> & { id?: string }) => {
-    const isUpdating = !!editingUserId;
-    
-    if (isUpdating !== isEditing) {
-        // This is a failsafe, should not happen with correct logic.
-        console.error("Mismatch between edit state and form state.");
-        return;
-    }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const isUpdating = !!values.id;
 
     if (!isUpdating && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
         form.setError('username', { message: 'This username is already taken.' });
@@ -122,23 +117,32 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         form.setError("password", { message: "Password is required for new users." });
         return;
     }
-    
-    const userData: User = {
-        id: isUpdating ? editingUserId : uuidv4(),
-        firestoreId: isUpdating ? userToEdit!.firestoreId : uuidv4(),
-        username: values.username,
-        role: values.role,
-        permissions: values.role === 'Admin' ? {} : values.permissions,
-        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
-        passwordHash: passwordHash!
-    }
-    
+
     if (isUpdating) {
-      dispatch({ type: 'UPDATE_USER', payload: userData });
-      toast({ title: "Success", description: "User updated successfully." });
+        const userData: User = {
+            id: values.id!,
+            firestoreId: userToEdit!.firestoreId,
+            username: values.username,
+            role: values.role,
+            permissions: values.role === 'Admin' ? {} : values.permissions,
+            departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
+            passwordHash: passwordHash!
+        }
+        dispatch({ type: 'UPDATE_USER', payload: userData });
+        toast({ title: "Success", description: "User updated successfully." });
     } else {
-      dispatch({ type: 'ADD_USER', payload: userData });
-      toast({ title: "Success", description: "User created successfully." });
+        const newUserId = uuidv4();
+        const userData: User = {
+            id: newUserId,
+            firestoreId: newUserId,
+            username: values.username,
+            role: values.role,
+            permissions: values.role === 'Admin' ? {} : values.permissions,
+            departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
+            passwordHash: passwordHash!
+        }
+        dispatch({ type: 'ADD_USER', payload: userData });
+        toast({ title: "Success", description: "User created successfully." });
     }
     setEditingUserId(undefined);
     form.reset();
@@ -266,7 +270,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                                                             name={`permissions.${key}`}
                                                             render={({ field }) => (
                                                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                                                <FormLabel className="text-sm font-normal">{name}</FormLabel>
+                                                                <label className="text-sm font-normal">{name}</label>
                                                                 <FormControl>
                                                                 <Switch
                                                                     checked={!!field.value}
