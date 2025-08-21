@@ -4,7 +4,7 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
 import { ref, onValue, set, push, get } from 'firebase/database'
-import type { AppState, User, Document, Log, DialogState, ModalState, ChatBarState } from '@/lib/types'
+import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
   initialData,
@@ -32,9 +32,7 @@ type Action =
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_DATA_FROM_SNAPSHOT'; payload: any }
-  | { type: 'SET_INITIALIZED'; payload: boolean }
-  | { type: 'OPEN_CHAT_BAR'; payload: { title: string; documents: Document[] } }
-  | { type: 'CLOSE_CHAT_BAR' };
+  | { type: 'SET_INITIALIZED'; payload: boolean };
 
 
 const getInitialState = (): AppState => ({
@@ -58,7 +56,6 @@ const getInitialState = (): AppState => ({
     isInitialized: false,
     dialog: { isOpen: false, title: '', message: '' },
     modal: { type: null },
-    chatBar: { isOpen: false, title: '', documents: [] },
 })
 
 
@@ -231,23 +228,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
         set(ref(db, 'columnVisibility'), action.payload);
         return state;
       }
-      case 'OPEN_CHAT_BAR':
-        return {
-            ...state,
-            chatBar: {
-                isOpen: true,
-                title: action.payload.title,
-                documents: action.payload.documents,
-            },
-        };
-    case 'CLOSE_CHAT_BAR':
-        return {
-            ...state,
-            chatBar: {
-                ...state.chatBar,
-                isOpen: false,
-            },
-        };
     default:
       return state
   }

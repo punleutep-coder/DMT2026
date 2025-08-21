@@ -5,17 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMemo } from 'react'
 import { Clock } from 'lucide-react'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils';
-import type { Document } from '@/lib/types';
 
-const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary', documents }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; documents: Document[] }) => {
+const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary' }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; }) => {
   const { state, dispatch } = useAppContext()
   const isActive = state.filter.mainFilter === filter
 
   const handleClick = () => {
-    // First, set the main filter for the table
     dispatch({ type: 'SET_FILTER', payload: { mainFilter: filter, departmentSpecificFilter: 'All' } })
-    // Then, open the chat bar with the relevant documents
-    dispatch({ type: 'OPEN_CHAT_BAR', payload: { title, documents } })
   }
 
   return (
@@ -40,7 +36,7 @@ export default function Metrics() {
   const { state, filteredDocs } = useAppContext()
 
   const metrics = useMemo(() => {
-    const docs = filteredDocs;
+    const docs = state.documents;
 
     const activeDocs = docs.filter(d => d.status !== 'Combined' && d.status !== 'Split')
     const inProgressDocs = activeDocs.filter(d => !d.isDelayed && !d.status.startsWith('Completed'))
@@ -53,16 +49,16 @@ export default function Metrics() {
     const exceedingDocs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit));
 
     return {
-      total: { value: activeDocs.length, docs: activeDocs },
-      inProgress: { value: inProgressDocs.length, docs: inProgressDocs },
-      delayed: { value: delayedDocs.length, docs: delayedDocs },
-      releaseReached: { value: releaseReachedDocs.length, docs: releaseReachedDocs },
-      completed: { value: completedDocs.length, docs: completedDocs },
-      completedSuccess: { value: completedSuccessDocs.length, docs: completedSuccessDocs },
-      completedUnsuccess: { value: completedUnsuccessDocs.length, docs: completedUnsuccessDocs },
-      exceeding: { value: exceedingDocs.length, docs: exceedingDocs },
+      total: activeDocs.length,
+      inProgress: inProgressDocs.length,
+      delayed: delayedDocs.length,
+      releaseReached: releaseReachedDocs.length,
+      completed: completedDocs.length,
+      completedSuccess: completedSuccessDocs.length,
+      completedUnsuccess: completedUnsuccessDocs.length,
+      exceeding: exceedingDocs.length,
     }
-  }, [filteredDocs, state.filter.periodValue, state.filter.periodUnit])
+  }, [state.documents, state.filter.periodValue, state.filter.periodUnit])
 
   const metricItems = [
     { title: 'Total Documents', filter: 'All', metric: metrics.total, valueColorClass: 'text-blue-400' },
@@ -82,11 +78,10 @@ export default function Metrics() {
           <MetricCard
             key={item.title}
             title={item.title}
-            value={item.metric.value}
+            value={item.metric}
             filter={item.filter}
             icon={item.icon}
             valueColorClass={item.valueColorClass}
-            documents={item.metric.docs}
           />
         ))}
       </div>
