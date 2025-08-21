@@ -105,9 +105,9 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
-    const uniqueId = `user-${uuidv4()}`;
+    const uniqueId = isEditing ? userToEdit.id : `user-${uuidv4()}`;
     const userData: User = {
-        id: isEditing ? userToEdit.id : uniqueId,
+        id: uniqueId,
         firestoreId: isEditing ? userToEdit.firestoreId : uniqueId,
         username: values.username,
         role: values.role,
@@ -182,7 +182,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                 <ScrollArea className="h-40 rounded-md border p-2">
                     <div className="space-y-2">
                     {state.users.map(user => (
-                        <div key={user.firestoreId} className="flex items-center justify-between rounded-md p-2 bg-muted/50">
+                        <div key={user.id} className="flex items-center justify-between rounded-md p-2 bg-muted/50">
                             <div>
                                 <span className="font-medium">{user.username}</span>
                                 <span className="text-sm text-muted-foreground ml-2">({user.role})</span>
@@ -310,3 +310,5 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
+
+    
