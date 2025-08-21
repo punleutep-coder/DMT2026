@@ -95,20 +95,24 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         passwordHash = await hashPassword(values.password);
     }
     
-    if (!passwordHash && !isEditing) {
+    if (!passwordHash && isEditing === false) {
         form.setError("password", { message: "Password is required for new users." });
         return;
     }
 
-    if (!isEditing && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
+    if (isEditing === false && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
         form.setError('username', { message: 'This username is already taken.' });
         return;
     }
 
-    const uniqueId = isEditing ? userToEdit.id : `user-${uuidv4()}`;
+    const isUpdating = isEditing && userToEdit;
+
+    const uniqueId = isUpdating ? userToEdit.id : `user-${uuidv4()}`;
+    const firestoreId = isUpdating ? userToEdit.firestoreId : uniqueId;
+
     const userData: User = {
         id: uniqueId,
-        firestoreId: isEditing ? userToEdit.firestoreId : uniqueId,
+        firestoreId: firestoreId,
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
@@ -116,7 +120,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         passwordHash: passwordHash!
     }
     
-    if (isEditing) {
+    if (isUpdating) {
       dispatch({ type: 'UPDATE_USER', payload: userData });
       toast({ title: "Success", description: "User updated successfully." });
     } else {
@@ -310,5 +314,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
+
+    
 
     
