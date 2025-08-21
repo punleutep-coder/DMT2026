@@ -1,3 +1,4 @@
+
 'use client'
 
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -10,6 +11,7 @@ import DocumentManagement from './document-management'
 import { useAppContext } from '@/hooks/use-app-context'
 import ConfirmDialog from '../modals/confirm-dialog'
 import ModalManager from '../modals/modal-manager'
+import ChatBar from './chat-bar'
 
 export default function Dashboard() {
   const { state } = useAppContext()
@@ -29,6 +31,7 @@ export default function Dashboard() {
       </div>
       {state.dialog.isOpen && <ConfirmDialog />}
       {state.modal.type && <ModalManager />}
+      <ChatBar />
     </SidebarProvider>
   )
 }

@@ -1,16 +1,21 @@
+
 'use client'
 import { useAppContext } from '@/hooks/use-app-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMemo } from 'react'
 import { Clock } from 'lucide-react'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils';
+import type { Document } from '@/lib/types';
 
-const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary' }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; }) => {
+const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary', documents }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; documents: Document[] }) => {
   const { state, dispatch } = useAppContext()
   const isActive = state.filter.mainFilter === filter
 
   const handleClick = () => {
+    // First, set the main filter for the table
     dispatch({ type: 'SET_FILTER', payload: { mainFilter: filter, departmentSpecificFilter: 'All' } })
+    // Then, open the chat bar with the relevant documents
+    dispatch({ type: 'OPEN_CHAT_BAR', payload: { title, documents } })
   }
 
   return (
@@ -38,36 +43,36 @@ export default function Metrics() {
     const docs = filteredDocs;
 
     const activeDocs = docs.filter(d => d.status !== 'Combined' && d.status !== 'Split')
-    const inProgress = activeDocs.filter(d => !d.isDelayed && !d.status.startsWith('Completed')).length
-    const delayed = activeDocs.filter(d => d.isDelayed && !d.releaseDateReached).length
-    const releaseReached = activeDocs.filter(d => d.releaseDateReached).length
-    const completedSuccess = activeDocs.filter(d => d.status === 'Completed (Success)').length
-    const completedUnsuccess = activeDocs.filter(d => d.status === 'Completed (Unsuccess)').length
-    const totalCompleted = completedSuccess + completedUnsuccess
+    const inProgressDocs = activeDocs.filter(d => !d.isDelayed && !d.status.startsWith('Completed'))
+    const delayedDocs = activeDocs.filter(d => d.isDelayed && !d.releaseDateReached)
+    const releaseReachedDocs = activeDocs.filter(d => d.releaseDateReached)
+    const completedSuccessDocs = activeDocs.filter(d => d.status === 'Completed (Success)')
+    const completedUnsuccessDocs = activeDocs.filter(d => d.status === 'Completed (Unsuccess)')
+    const completedDocs = [...completedSuccessDocs, ...completedUnsuccessDocs]
 
-    const exceedingCount = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit)).length;
+    const exceedingDocs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit));
 
     return {
-      total: activeDocs.length,
-      inProgress,
-      delayed,
-      releaseReached,
-      completed: totalCompleted,
-      completedSuccess,
-      completedUnsuccess,
-      exceeding: exceedingCount,
+      total: { value: activeDocs.length, docs: activeDocs },
+      inProgress: { value: inProgressDocs.length, docs: inProgressDocs },
+      delayed: { value: delayedDocs.length, docs: delayedDocs },
+      releaseReached: { value: releaseReachedDocs.length, docs: releaseReachedDocs },
+      completed: { value: completedDocs.length, docs: completedDocs },
+      completedSuccess: { value: completedSuccessDocs.length, docs: completedSuccessDocs },
+      completedUnsuccess: { value: completedUnsuccessDocs.length, docs: completedUnsuccessDocs },
+      exceeding: { value: exceedingDocs.length, docs: exceedingDocs },
     }
   }, [filteredDocs, state.filter.periodValue, state.filter.periodUnit])
 
   const metricItems = [
-    { title: 'Total Documents', value: metrics.total, filter: 'All', valueColorClass: 'text-blue-400' },
-    { title: 'In Progress', value: metrics.inProgress, filter: 'In Progress', valueColorClass: 'text-yellow-400' },
-    { title: 'Delayed', value: metrics.delayed, filter: 'Delayed', valueColorClass: 'text-yellow-400' },
-    { title: 'Release Date Reached', value: metrics.releaseReached, filter: 'Release Date Reached', valueColorClass: 'text-red-500' },
-    { title: 'Completed', value: metrics.completed, filter: 'Completed', valueColorClass: 'text-green-400' },
-    { title: 'Completed (Success)', value: metrics.completedSuccess, filter: 'Completed (Success)', valueColorClass: 'text-green-400' },
-    { title: 'Completed (Unsuccess)', value: metrics.completedUnsuccess, filter: 'Completed (Unsuccess)', valueColorClass: 'text-red-500' },
-    { title: 'Exceeding Period', value: metrics.exceeding, filter: 'Exceeding Period', icon: <Clock className="h-5 w-5 text-muted-foreground" />, valueColorClass: 'text-orange-400' },
+    { title: 'Total Documents', filter: 'All', metric: metrics.total, valueColorClass: 'text-blue-400' },
+    { title: 'In Progress', filter: 'In Progress', metric: metrics.inProgress, valueColorClass: 'text-yellow-400' },
+    { title: 'Delayed', filter: 'Delayed', metric: metrics.delayed, valueColorClass: 'text-yellow-400' },
+    { title: 'Release Date Reached', filter: 'Release Date Reached', metric: metrics.releaseReached, valueColorClass: 'text-red-500' },
+    { title: 'Completed', filter: 'Completed', metric: metrics.completed, valueColorClass: 'text-green-400' },
+    { title: 'Completed (Success)', filter: 'Completed (Success)', metric: metrics.completedSuccess, valueColorClass: 'text-green-400' },
+    { title: 'Completed (Unsuccess)', filter: 'Completed (Unsuccess)', metric: metrics.completedUnsuccess, valueColorClass: 'text-red-500' },
+    { title: 'Exceeding Period', filter: 'Exceeding Period', metric: metrics.exceeding, icon: <Clock className="h-5 w-5 text-muted-foreground" />, valueColorClass: 'text-orange-400' },
   ]
 
   return (
@@ -77,10 +82,11 @@ export default function Metrics() {
           <MetricCard
             key={item.title}
             title={item.title}
-            value={item.value}
+            value={item.metric.value}
             filter={item.filter}
             icon={item.icon}
             valueColorClass={item.valueColorClass}
+            documents={item.metric.docs}
           />
         ))}
       </div>
