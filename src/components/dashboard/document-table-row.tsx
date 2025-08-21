@@ -122,8 +122,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   const isCompleted = doc.status.startsWith('Completed');
   const isTerminal = isCompleted || doc.status === 'Combined' || doc.status === 'Split';
   
-  const lastHistoryEntry = doc.history[doc.history.length - 1];
-
 
   return (
     <TableRow
@@ -159,12 +157,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
           <Badge variant={getStatusBadgeVariant(doc.status, doc.isDelayed, doc.releaseDateReached)}>
             {getStatusText(doc)}
           </Badge>
-          {lastHistoryEntry && (
-            <div className="mt-1 text-xs">
-              <p className="text-foreground font-semibold">{lastHistoryEntry.receiver}</p>
-              <p className="text-muted-foreground">{lastHistoryEntry.note}</p>
-            </div>
-          )}
         </TableCell>
       )}
       {columnVisibility.lastUpdate && (
@@ -220,5 +212,3 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     </TableRow>
   )
 }
-
-    
