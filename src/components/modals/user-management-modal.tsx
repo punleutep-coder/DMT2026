@@ -95,24 +95,21 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         passwordHash = await hashPassword(values.password);
     }
     
-    if (!passwordHash && isEditing === false) {
+    if (!passwordHash && !isEditing) {
         form.setError("password", { message: "Password is required for new users." });
         return;
     }
 
-    if (isEditing === false && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
+    if (!isEditing && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
         form.setError('username', { message: 'This username is already taken.' });
         return;
     }
-
+    
     const isUpdating = isEditing && userToEdit;
-
-    const uniqueId = isUpdating ? userToEdit.id : `user-${uuidv4()}`;
-    const firestoreId = isUpdating ? userToEdit.firestoreId : uniqueId;
-
+    
     const userData: User = {
-        id: uniqueId,
-        firestoreId: firestoreId,
+        id: isUpdating ? userToEdit.id : uuidv4(),
+        firestoreId: isUpdating ? userToEdit.firestoreId : uuidv4(),
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
@@ -314,7 +311,5 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
-
-    
 
     

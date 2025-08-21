@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { ref, onValue, set, push, get } from 'firebase/database'
+import { ref, onValue, set, push, get, update } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
@@ -26,7 +26,7 @@ type Action =
   | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
   | { type: 'DELETE_DOCUMENT'; payload: { id: string } }
   | { type: 'ADD_USER'; payload: User }
-  | { type: 'UPDATE_USER'; payload: Partial<User> & { id: string } }
+  | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
@@ -125,7 +125,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       // Keep users and departments on logout so the login page works
       return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true };
     case 'SET_FILTER':
-      return { ...state, filter: { ...state.filter, ...state.filter } };
+      return { ...state, filter: { ...state.filter, ...action.payload } };
     case 'SET_MODAL':
       return { ...state, modal: action.payload };
     case 'SET_DIALOG':
@@ -156,9 +156,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
 
         if (needsUpdate) {
-            Object.keys(updates).forEach(key => {
-                set(ref(db, key), updates[key]);
-            })
+            update(ref(db), updates);
         }
         return state;
     }
@@ -175,41 +173,42 @@ const appReducer = (state: AppState, action: Action): AppState => {
             updates[`documents/${id}/${key}`] = (docData as any)[key];
         });
 
-        Object.keys(updates).forEach(key => {
-            set(ref(db, key), updates[key]);
-        })
-
+        update(ref(db), updates);
         return state;
       }
       case 'DELETE_DOCUMENT': {
         const { id } = action.payload;
-        set(ref(db, `documents/${id}`), null);
+        const updates: {[key: string]: any} = {};
+        updates[`documents/${id}`] = null;
         
         get(ref(db, 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
-                const updates: {[key: string]: any} = {};
                 for (const logId in logs) {
                     if (logs[logId].docId === id) {
                         updates[`logs/${logId}`] = null;
                     }
                 }
-                Object.keys(updates).forEach(key => {
-                    set(ref(db, key), updates[key]);
-                })
             }
+            update(ref(db), updates);
         });
         return state;
       }
       case 'ADD_USER': {
-        const { id, ...userData } = action.payload;
-        set(ref(db, `users/${id}`), userData);
-        return state;
+        const newUser = action.payload;
+        set(ref(db, `users/${newUser.id}`), newUser);
+        return {
+            ...state,
+            users: [...state.users, newUser],
+        };
       }
       case 'UPDATE_USER': {
-        const { id, ...userData } = action.payload;
-        set(ref(db, `users/${id}`), userData);
-        return state;
+        const updatedUser = action.payload;
+        set(ref(db, `users/${updatedUser.id}`), updatedUser);
+        return {
+            ...state,
+            users: state.users.map(u => u.id === updatedUser.id ? updatedUser : u),
+        };
       }
       case 'DELETE_USER': {
         set(ref(db, `users/${action.payload.id}`), null);
@@ -266,9 +265,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (storedUser) {
         try {
             const user = JSON.parse(storedUser);
-            // This LOGIN action is now safe because the listener will populate the user list and other data.
-            // We can pre-fill the user and let the listener sync the rest.
-            dispatch({ type: 'LOGIN', payload: { user, documents: [], logs: [], columnVisibility: initialColumnVisibility } });
+            dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser: user } });
         } catch (e) {
             console.error("Could not parse user from session storage:", e);
             sessionStorage.removeItem('currentUser');
@@ -414,3 +411,5 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
+
+    
