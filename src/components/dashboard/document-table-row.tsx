@@ -193,7 +193,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                             {hasPermission(currentUser, 'canSplitDocument') && <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)}><Split className="mr-2 h-4 w-4" />Split Document</DropdownMenuItem>}
                             {hasPermission(currentUser, 'canDelayDocument') && <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id, doc.firestoreId)}><Clock className="mr-2 h-4 w-4" />Delay</DropdownMenuItem>}
                             {hasPermission(currentUser, 'canEditCurrentNote') && <DropdownMenuItem onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}><FileEdit className="mr-2 h-4 w-4" />Edit Current Note</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem disabled={doc.history.length <= 1} onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4" />Move Back</DropdownMenuItem>}
+                            {hasPermission(currentUser, 'canMoveDocument') && doc.history.length > 1 && <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4" />Move Back</DropdownMenuItem>}
                             {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}><Redo2 className="mr-2 h-4 w-4" />Advance</DropdownMenuItem>}
                             {hasPermission(currentUser, 'canCompleteDocument') && <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}><CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete</DropdownMenuItem>}
                         </>
@@ -204,7 +204,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     )}
 
                     <DropdownMenuSeparator />
-                    {hasPermission(currentUser, 'canDeleteDocument') && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
+                    {!isCombinedOrSplit && hasPermission(currentUser, 'canDeleteDocument') && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
         </TableCell>
