@@ -57,7 +57,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   const [editingUserId, setEditingUserId] = useState<string | undefined>(initialUserId)
   
   const userToEdit = useMemo(() => state.users.find(u => u.id === editingUserId), [state.users, editingUserId]);
-  const isEditing = !!editingUserId;
+  const isEditing = !!userToEdit;
 
   const form = useForm<z.infer<typeof formSchema> & { id?: string }>({
     resolver: zodResolver(formSchema),
@@ -76,15 +76,14 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   }, [initialUserId]);
 
   useEffect(() => {
-    const user = state.users.find(u => u.id === editingUserId);
-    if (user) {
+    if (userToEdit) {
         form.reset({
-            id: user.id,
-            username: user.username,
+            id: userToEdit.id,
+            username: userToEdit.username,
             password: '',
-            role: user.role,
-            permissions: user.permissions || {},
-            departmentPermissions: user.departmentPermissions || []
+            role: userToEdit.role,
+            permissions: userToEdit.permissions || {},
+            departmentPermissions: userToEdit.departmentPermissions || []
         });
     } else {
         form.reset({
@@ -96,20 +95,25 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             departmentPermissions: []
         });
     }
-  }, [editingUserId, state.users, form]);
+  }, [userToEdit, form]);
 
   const role = form.watch('role');
 
   const onSubmit = async (values: z.infer<typeof formSchema> & { id?: string }) => {
     const isUpdating = !!editingUserId;
-    const userBeingEdited = isUpdating ? state.users.find(u => u.id === editingUserId) : null;
     
+    if (isUpdating !== isEditing) {
+        // This is a failsafe, should not happen with correct logic.
+        console.error("Mismatch between edit state and form state.");
+        return;
+    }
+
     if (!isUpdating && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
         form.setError('username', { message: 'This username is already taken.' });
         return;
     }
 
-    let passwordHash = userBeingEdited?.passwordHash;
+    let passwordHash = userToEdit?.passwordHash;
     if (values.password) {
         passwordHash = await hashPassword(values.password);
     }
@@ -121,7 +125,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     
     const userData: User = {
         id: isUpdating ? editingUserId : uuidv4(),
-        firestoreId: isUpdating ? userBeingEdited!.firestoreId : uuidv4(),
+        firestoreId: isUpdating ? userToEdit!.firestoreId : uuidv4(),
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
@@ -219,7 +223,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                     <DialogHeader>
                         <DialogTitle>{isEditing ? 'Edit User' : 'Add New User'}</DialogTitle>
                         <DialogDescription>
-                            {isEditing && userToEdit ? `Editing user: ${userToEdit.username}` : 'Create a new user and set their role and permissions.'}
+                            {isEditing ? `Editing user: ${userToEdit.username}` : 'Create a new user and set their role and permissions.'}
                         </DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="h-[40vh] p-4 -mx-4">
