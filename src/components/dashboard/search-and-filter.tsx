@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useAppContext } from '@/hooks/use-app-context'
@@ -11,21 +12,31 @@ import { format } from 'date-fns';
 
 export default function SearchAndFilter() {
   const { state, dispatch, filteredDocs } = useAppContext()
+  const [searchTerm, setSearchTerm] = useState(state.filter.search);
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [periodValue, setPeriodValue] = useState(state.filter.periodValue);
   const [periodUnit, setPeriodUnit] = useState(state.filter.periodUnit);
 
   useEffect(() => {
+    setSearchTerm(state.filter.search);
     setDateFrom(state.filter.startDate ? format(state.filter.startDate, 'yyyy-MM-dd') : '');
     setDateTo(state.filter.endDate ? format(state.filter.endDate, 'yyyy-MM-dd') : '');
     setPeriodValue(state.filter.periodValue);
     setPeriodUnit(state.filter.periodUnit);
   }, [state.filter]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({ type: 'SET_FILTER', payload: { search: e.target.value } })
-  }
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      dispatch({ type: 'SET_FILTER', payload: { search: searchTerm } })
+    }, 300); // 300ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm, dispatch]);
+
 
   const handleDateFilter = () => {
     if (dateFrom && dateTo) {
@@ -60,8 +71,8 @@ export default function SearchAndFilter() {
               type="text"
               placeholder="Search..."
               className="w-full pr-24"
-              value={state.filter.search}
-              onChange={handleSearchChange}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             {isFiltered && (
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

@@ -293,65 +293,68 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     let docs = state.documents
 
-    docs = docs.filter(doc => {
-      const searchLower = state.filter.search.toLowerCase()
-      if (!searchLower) return true;
+    if (state.filter.search) {
+      docs = docs.filter(doc => {
+        const searchLower = state.filter.search.toLowerCase()
+        if (!searchLower) return true;
+  
+        // 1. Basic document fields
+        const basicSearchMatch =
+          doc.id.toLowerCase().includes(searchLower) ||
+          doc.name.toLowerCase().includes(searchLower) ||
+          (doc.office && doc.office.toLowerCase().includes(searchLower)) ||
+          (doc.secondaryId && doc.secondaryId.toLowerCase().includes(searchLower)) ||
+          (doc.tertiaryId && doc.tertiaryId.toLowerCase().includes(searchLower)) ||
+          (doc.quaternaryId && doc.quaternaryId.toLowerCase().includes(searchLower)) ||
+          (doc.assignedDepartment && doc.assignedDepartment.toLowerCase().includes(searchLower)) ||
+          (doc.keywords && doc.keywords.toLowerCase().includes(searchLower)) ||
+          (Array.isArray(doc.tags) && doc.tags.some(tag => tag.toLowerCase().includes(searchLower)));
+  
+        if (basicSearchMatch) return true;
+  
+        // 2. Document History
+        const historySearchMatch = doc.history?.some(entry => 
+          (entry.receiver && entry.receiver.toLowerCase().includes(searchLower)) ||
+          (entry.note && entry.note.toLowerCase().includes(searchLower))
+        );
+  
+        if (historySearchMatch) return true;
+  
+        // 3. Document Logs
+        const docLogs = state.logs.filter(log => log.docId === doc.id);
+        const logSearchMatch = docLogs.some(log => 
+          (log.user && log.user.toLowerCase().includes(searchLower)) ||
+          (log.reason && log.reason.toLowerCase().includes(searchLower))
+        );
+        
+        if (logSearchMatch) return true;
+  
+        return false;
+      })
+    }
 
-      // 1. Basic document fields
-      const basicSearchMatch =
-        doc.id.toLowerCase().includes(searchLower) ||
-        doc.name.toLowerCase().includes(searchLower) ||
-        (doc.office && doc.office.toLowerCase().includes(searchLower)) ||
-        (doc.secondaryId && doc.secondaryId.toLowerCase().includes(searchLower)) ||
-        (doc.tertiaryId && doc.tertiaryId.toLowerCase().includes(searchLower)) ||
-        (doc.quaternaryId && doc.quaternaryId.toLowerCase().includes(searchLower)) ||
-        (doc.assignedDepartment && doc.assignedDepartment.toLowerCase().includes(searchLower)) ||
-        (doc.keywords && doc.keywords.toLowerCase().includes(searchLower)) ||
-        (Array.isArray(doc.tags) && doc.tags.some(tag => tag.toLowerCase().includes(searchLower)));
-
-      if (basicSearchMatch) return true;
-
-      // 2. Document History
-      const historySearchMatch = doc.history?.some(entry => 
-        entry.receiver.toLowerCase().includes(searchLower) ||
-        entry.note.toLowerCase().includes(searchLower)
-      );
-
-      if (historySearchMatch) return true;
-
-      // 3. Document Logs
-      const docLogs = state.logs.filter(log => log.docId === doc.id);
-      const logSearchMatch = docLogs.some(log => 
-        log.user.toLowerCase().includes(searchLower) ||
-        (log.reason && log.reason.toLowerCase().includes(searchLower))
-      );
-      
-      if (logSearchMatch) return true;
-
-      // Filter by date range (only if other searches don't match)
-      let dateMatch = true
-      if (state.filter.startDate && state.filter.endDate) {
-        dateMatch = false
-        if (doc.history && Array.isArray(doc.history)) {
-          for (const entry of doc.history) {
-            const entryStart = new Date(entry.start)
-            const entryEnd = entry.end ? new Date(entry.end) : new Date()
-            const overlap =
-              entryStart <= state.filter.endDate! && entryEnd >= state.filter.startDate!
-            if (overlap) {
-              dateMatch = true
-              break
+    // Date filtering logic
+    if (state.filter.startDate && state.filter.endDate) {
+        docs = docs.filter(doc => {
+            if (doc.history && Array.isArray(doc.history)) {
+                for (const entry of doc.history) {
+                    const entryStart = new Date(entry.start)
+                    const entryEnd = entry.end ? new Date(entry.end) : new Date()
+                    const overlap =
+                        entryStart <= state.filter.endDate! && entryEnd >= state.filter.startDate!
+                    if (overlap) {
+                        return true
+                    }
+                }
             }
-          }
-        }
-      }
-
-      const assignedDeptMatch =
-        state.filter.assignedDepartment === 'All' ||
-        doc.assignedDepartment === state.filter.assignedDepartment
-      
-      return dateMatch && assignedDeptMatch
-    })
+            return false;
+        });
+    }
+  
+    // Assigned Department filtering
+    if (state.filter.assignedDepartment !== 'All') {
+        docs = docs.filter(doc => doc.assignedDepartment === state.filter.assignedDepartment);
+    }
 
     if (state.filter.mainFilter !== 'All') {
         if (state.filter.mainFilter === 'Exceeding Period') {
@@ -382,30 +385,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status))
     }
 
-    // This logic needs to be outside the initial .filter() to apply correctly
-    let finalDocs = docs;
-    if (state.filter.search && state.filter.startDate && state.filter.endDate) {
-        finalDocs = docs.filter(doc => {
-            const hasMatch = 
-                doc.id.toLowerCase().includes(state.filter.search.toLowerCase()) ||
-                doc.name.toLowerCase().includes(state.filter.search.toLowerCase()) ||
-                (doc.office && doc.office.toLowerCase().includes(state.filter.search.toLowerCase())) ||
-                doc.history?.some(entry => 
-                    entry.receiver.toLowerCase().includes(state.filter.search.toLowerCase()) ||
-                    entry.note.toLowerCase().includes(state.filter.search.toLowerCase())
-                );
-            
-            const dateMatch = doc.history?.some(entry => {
-                 const entryStart = new Date(entry.start)
-                 const entryEnd = entry.end ? new Date(entry.end) : new Date()
-                 return entryStart <= state.filter.endDate! && entryEnd >= state.filter.startDate!
-            });
-
-            return hasMatch && dateMatch;
-        });
-    }
-
-    return finalDocs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
+    return docs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
   }, [state.documents, state.logs, state.filter, state.currentUser, state.isInitialized])
 
   return (
@@ -414,5 +394,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
-
-    
