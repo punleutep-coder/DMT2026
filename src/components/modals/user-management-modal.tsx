@@ -99,9 +99,10 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
+    const uniqueId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const userData: User = {
-        id: isEditing ? userToEdit.id : `user-${Date.now()}`,
-        firestoreId: isEditing ? userToEdit.firestoreId : `user-${Date.now()}`,
+        id: isEditing ? userToEdit.id : uniqueId,
+        firestoreId: isEditing ? userToEdit.firestoreId : uniqueId,
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
