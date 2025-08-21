@@ -100,6 +100,11 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         return;
     }
 
+    if (!isEditing && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
+        form.setError('username', { message: 'This username is already taken.' });
+        return;
+    }
+
     const uniqueId = `user-${uuidv4()}`;
     const userData: User = {
         id: isEditing ? userToEdit.id : uniqueId,
@@ -115,10 +120,6 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
       dispatch({ type: 'UPDATE_USER', payload: userData });
       toast({ title: "Success", description: "User updated successfully." });
     } else {
-      if (state.users.some(u => u.username === values.username)) {
-        form.setError('username', { message: 'This username is already taken.' })
-        return
-      }
       dispatch({ type: 'ADD_USER', payload: userData });
       toast({ title: "Success", description: "User created successfully." });
     }
@@ -181,7 +182,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                 <ScrollArea className="h-40 rounded-md border p-2">
                     <div className="space-y-2">
                     {state.users.map(user => (
-                        <div key={user.id} className="flex items-center justify-between rounded-md p-2 bg-muted/50">
+                        <div key={user.firestoreId} className="flex items-center justify-between rounded-md p-2 bg-muted/50">
                             <div>
                                 <span className="font-medium">{user.username}</span>
                                 <span className="text-sm text-muted-foreground ml-2">({user.role})</span>
