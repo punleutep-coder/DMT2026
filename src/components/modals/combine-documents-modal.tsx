@@ -93,15 +93,23 @@ export default function CombineDocumentsModal({
 
     const allTags = new Set<string>()
     const allKeywords = new Set<string>()
+    const allLinks = new Set<string>()
+    const allNames = new Set<string>()
     docsToCombine.forEach(doc => {
       doc.tags.forEach(tag => allTags.add(tag));
       doc.keywords?.split(' ').forEach(kw => kw && allKeywords.add(kw));
+      doc.documentLink.forEach(link => allLinks.add(link));
+      allNames.add(doc.name);
+      // Also add the original document names to keywords for searchability
+      doc.name.split(' ').forEach(namePart => namePart && allKeywords.add(namePart));
     });
+
+    const combinedName = `${values.newDocName} (Combined: ${Array.from(allNames).join(', ')})`;
 
     const newDoc: Document = {
       id: values.newDocId,
       firestoreId: `doc-${Date.now()}`,
-      name: values.newDocName,
+      name: combinedName,
       office: values.office || null,
       status: values.targetDepartment,
       initialDepartment: values.targetDepartment,
@@ -110,7 +118,7 @@ export default function CombineDocumentsModal({
       secondaryId: null,
       tertiaryId: null,
       quaternaryId: null,
-      documentLink: [] as string[],
+      documentLink: Array.from(allLinks),
       history: [
         {
           department: values.targetDepartment,
