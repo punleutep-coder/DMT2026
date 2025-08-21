@@ -95,13 +95,30 @@ export default function CombineDocumentsModal({
     const allKeywords = new Set<string>()
     const allLinks = new Set<string>()
     const allNames = new Set<string>()
+    const allInfo = new Set<string>()
+
     docsToCombine.forEach(doc => {
-      doc.tags.forEach(tag => allTags.add(tag));
-      doc.keywords?.split(' ').forEach(kw => kw && allKeywords.add(kw));
-      doc.documentLink.forEach(link => allLinks.add(link));
+      // Aggregate tags, links, and names
+      doc.tags?.forEach(tag => allTags.add(tag));
+      doc.documentLink?.forEach(link => allLinks.add(link));
       allNames.add(doc.name);
-      // Also add the original document names to keywords for searchability
-      doc.name.split(' ').forEach(namePart => namePart && allKeywords.add(namePart));
+
+      // Aggregate all searchable text fields into keywords
+      const fieldsToAggregate = [
+        doc.name,
+        doc.keywords,
+        doc.office,
+        doc.assignedDepartment,
+        doc.secondaryId,
+        doc.tertiaryId,
+        doc.quaternaryId,
+      ];
+
+      fieldsToAggregate.forEach(field => {
+        if(field) {
+            field.split(/[\s,]+/).forEach(part => part && allKeywords.add(part.trim()));
+        }
+      });
     });
 
     const combinedName = `${values.newDocName} (Combined: ${Array.from(allNames).join(', ')})`;
