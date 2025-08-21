@@ -294,43 +294,62 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let docs = state.documents
 
     if (state.filter.search) {
-      docs = docs.filter(doc => {
-        const searchLower = state.filter.search.toLowerCase()
-        if (!searchLower) return true;
-  
-        // 1. Basic document fields
-        const basicSearchMatch =
-          doc.id.toLowerCase().includes(searchLower) ||
-          doc.name.toLowerCase().includes(searchLower) ||
-          (doc.office && doc.office.toLowerCase().includes(searchLower)) ||
-          (doc.secondaryId && doc.secondaryId.toLowerCase().includes(searchLower)) ||
-          (doc.tertiaryId && doc.tertiaryId.toLowerCase().includes(searchLower)) ||
-          (doc.quaternaryId && doc.quaternaryId.toLowerCase().includes(searchLower)) ||
-          (doc.assignedDepartment && doc.assignedDepartment.toLowerCase().includes(searchLower)) ||
-          (doc.keywords && doc.keywords.toLowerCase().includes(searchLower)) ||
-          (Array.isArray(doc.tags) && doc.tags.some(tag => tag.toLowerCase().includes(searchLower)));
-  
-        if (basicSearchMatch) return true;
-  
-        // 2. Document History
-        const historySearchMatch = doc.history?.some(entry => 
-          (entry.receiver && entry.receiver.toLowerCase().includes(searchLower)) ||
-          (entry.note && entry.note.toLowerCase().includes(searchLower))
-        );
-  
-        if (historySearchMatch) return true;
-  
-        // 3. Document Logs
-        const docLogs = state.logs.filter(log => log.docId === doc.id);
-        const logSearchMatch = docLogs.some(log => 
-          (log.user && log.user.toLowerCase().includes(searchLower)) ||
-          (log.reason && log.reason.toLowerCase().includes(searchLower))
-        );
-        
-        if (logSearchMatch) return true;
-  
-        return false;
-      })
+      const searchLower = state.filter.search.toLowerCase()
+      if (searchLower) {
+        docs = docs.filter(doc => {
+            const basicSearchMatch =
+                doc.id.toLowerCase().includes(searchLower) ||
+                doc.name.toLowerCase().includes(searchLower) ||
+                (doc.office && doc.office.toLowerCase().includes(searchLower)) ||
+                (doc.secondaryId && doc.secondaryId.toLowerCase().includes(searchLower)) ||
+                (doc.tertiaryId && doc.tertiaryId.toLowerCase().includes(searchLower)) ||
+                (doc.quaternaryId && doc.quaternaryId.toLowerCase().includes(searchLower)) ||
+                (doc.assignedDepartment && doc.assignedDepartment.toLowerCase().includes(searchLower)) ||
+                (doc.keywords && doc.keywords.toLowerCase().includes(searchLower)) ||
+                (Array.isArray(doc.tags) && doc.tags.some(tag => tag.toLowerCase().includes(searchLower)));
+
+            if (basicSearchMatch) return true;
+
+            const historySearchMatch = doc.history && doc.history.some(entry => 
+                (entry.receiver && entry.receiver.toLowerCase().includes(searchLower)) ||
+                (entry.note && entry.note.toLowerCase().includes(searchLower))
+            );
+
+            if (historySearchMatch) return true;
+
+            const docLogs = state.logs.filter(log => log.docId === doc.id);
+            const logSearchMatch = docLogs.some(log => 
+                (log.user && log.user.toLowerCase().includes(searchLower)) ||
+                (log.reason && log.reason.toLowerCase().includes(searchLower))
+            );
+            
+            if (logSearchMatch) return true;
+            
+            // Search within combined source documents
+            if (doc.combinedFrom && doc.combinedFrom.length > 0) {
+              const sourceDocs = doc.combinedFrom
+                .map(id => state.documents.find(d => d.id === id))
+                .filter((d): d is Document => !!d);
+
+              const sourceDocMatch = sourceDocs.some(sourceDoc => 
+                sourceDoc.id.toLowerCase().includes(searchLower) || 
+                sourceDoc.name.toLowerCase().includes(searchLower)
+              );
+              if (sourceDocMatch) return true;
+            }
+
+            // Search within split original document
+            if (doc.splitFrom) {
+                const sourceDoc = state.documents.find(d => d.id === doc.splitFrom);
+                if (sourceDoc) {
+                    const sourceDocMatch = sourceDoc.id.toLowerCase().includes(searchLower) || sourceDoc.name.toLowerCase().includes(searchLower);
+                    if (sourceDocMatch) return true;
+                }
+            }
+
+            return false;
+        });
+      }
     }
 
     // Date filtering logic
@@ -394,3 +413,5 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
+
+    
