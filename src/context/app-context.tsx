@@ -293,6 +293,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     let docs = state.documents
 
+    // <<<<<<<<<<<<<<<< START: PERMISSION FILTERING (HIGHEST PRIORITY) >>>>>>>>>>>>>>>>
+    if (state.currentUser?.role !== 'Admin' && state.currentUser?.departmentPermissions?.length > 0) {
+      docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status))
+    }
+    // <<<<<<<<<<<<<<<< END: PERMISSION FILTERING >>>>>>>>>>>>>>>>
+
     if (state.filter.search) {
       const searchLower = state.filter.search.toLowerCase()
       if (searchLower) {
@@ -399,11 +405,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         docs = docs.filter(d => d.status === state.filter.departmentSpecificFilter)
     }
 
-    
-    if (state.currentUser?.role !== 'Admin' && state.currentUser?.departmentPermissions?.length > 0) {
-      docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status))
-    }
-
     return docs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
   }, [state.documents, state.logs, state.filter, state.currentUser, state.isInitialized])
 
@@ -413,5 +414,3 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
-
-    
