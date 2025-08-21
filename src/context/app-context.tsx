@@ -4,7 +4,7 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
 import { ref, onValue, set, push, get } from 'firebase/database'
-import type { AppState, User, Document, Log, DialogState, ModalState, ChatBarState } from '@/lib/types'
+import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
   initialData,
@@ -20,8 +20,6 @@ type Action =
   | { type: 'SET_MODAL'; payload: ModalState }
   | { type: 'SET_DIALOG'; payload: Partial<DialogState> }
   | { type: 'CLOSE_DIALOG' }
-  | { type: 'OPEN_CHAT_BAR', payload: { title: string, documents: Document[] } }
-  | { type: 'CLOSE_CHAT_BAR' }
   | { type: 'SET_SELECTED_DOC_IDS'; payload: string[] }
   | { type: 'CHECK_DELAYED_DOCUMENTS' }
   | { type: 'ADD_DOCUMENT'; payload: Document }
@@ -58,7 +56,6 @@ const getInitialState = (): AppState => ({
     isInitialized: false,
     dialog: { isOpen: false, title: '', message: '' },
     modal: { type: null },
-    chatBar: { isOpen: false, title: '', documents: [] },
 })
 
 
@@ -135,10 +132,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, dialog: { ...getInitialState().dialog, ...action.payload, isOpen: true } };
     case 'CLOSE_DIALOG':
       return { ...state, dialog: { ...state.dialog, isOpen: false } };
-    case 'OPEN_CHAT_BAR':
-      return { ...state, chatBar: { isOpen: true, ...action.payload } };
-    case 'CLOSE_CHAT_BAR':
-      return { ...state, chatBar: { ...state.chatBar, isOpen: false } };
     case 'SET_SELECTED_DOC_IDS':
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {

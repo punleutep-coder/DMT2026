@@ -59,12 +59,6 @@ export interface User {
   departmentPermissions: string[];
 }
 
-export interface ChatBarState {
-  isOpen: boolean;
-  title: string;
-  documents: Document[];
-}
-
 export interface AppState {
   users: User[];
   currentUser: User | null;
@@ -86,7 +80,6 @@ export interface AppState {
   isInitialized: boolean;
   dialog: DialogState;
   modal: ModalState;
-  chatBar: ChatBarState;
 }
 
 export interface DialogState {

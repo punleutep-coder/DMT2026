@@ -1,3 +1,4 @@
+
 'use client'
 import {
   Bar,
@@ -34,14 +35,7 @@ export default function WorkflowChart() {
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const departmentName = data.activePayload[0].payload.fullName
-      const docsInDept = filteredDocs.filter(doc => doc.status === departmentName)
-      dispatch({ 
-        type: 'OPEN_CHAT_BAR', 
-        payload: {
-          title: `Documents in ${departmentName}`,
-          documents: docsInDept,
-        }
-      })
+      dispatch({ type: 'SET_FILTER', payload: { departmentSpecificFilter: departmentName, mainFilter: 'All' }})
     }
   }
 
