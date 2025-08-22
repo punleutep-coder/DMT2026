@@ -30,14 +30,13 @@ const formSchema = z.object({
   permissions: permissionsSchema,
   departmentPermissions: z.array(z.string()).default([]),
 }).refine(data => {
-    // Password is required for new users with the 'User' role.
     const isNewUser = !data.id;
     if (isNewUser && data.role === 'User') {
       return data.password && data.password.length > 0;
     }
     return true;
 }, {
-  message: "Password is required for new users.",
+  message: "Password is required for new users with the 'User' role.",
   path: ["password"],
 });
 
@@ -62,8 +61,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   const [editingUserId, setEditingUserId] = useState<string | undefined>(initialUserId)
   
   const userToEdit = useMemo(() => state.users.find(u => u.id === editingUserId), [state.users, editingUserId]);
-  const isEditing = !!userToEdit;
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -101,7 +99,8 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         });
     }
   }, [userToEdit, form]);
-
+  
+  const isEditing = !!form.getValues('id');
   const role = form.watch('role');
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -118,9 +117,12 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     }
     
     if (!passwordHash && !isUpdating) {
-        // This case should be handled by form validation, but as a safeguard...
-        form.setError("password", { message: "Password is required for new users." });
-        return;
+        if(values.role === 'User') {
+          form.setError("password", { message: "Password is required for new users." });
+          return;
+        }
+        // For admins, if no password, create a default one (or handle as needed)
+        passwordHash = await hashPassword(uuidv4()); // Create a random, unusable password
     }
 
     const userData: User = {
@@ -155,7 +157,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         payload: {
             isOpen: true,
             title: 'Delete User',
-            message: 'Are you sure you want to delete this user? This action cannot be undone.',
+            message: `Are you sure you want to delete user '${user.username}'? This action cannot be undone.`,
             confirmText: 'Delete',
             onConfirm: () => {
                 dispatch({ type: 'DELETE_USER', payload: {id: user.id} });
@@ -224,7 +226,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                     <DialogHeader>
                         <DialogTitle>{isEditing ? 'Edit User' : 'Add New User'}</DialogTitle>
                         <DialogDescription>
-                            {isEditing ? `Editing user: ${userToEdit.username}` : 'Create a new user and set their role and permissions.'}
+                            {isEditing ? `Editing user: ${userToEdit?.username}` : 'Create a new user and set their role and permissions.'}
                         </DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="h-[40vh] p-4 -mx-4">
@@ -329,5 +331,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
+
+    
 
     
