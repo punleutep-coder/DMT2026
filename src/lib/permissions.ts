@@ -7,6 +7,7 @@ export const hasPermission = (user: User | null, permissionKey: keyof typeof PER
   if (user.role === 'Admin') return true;
   
   if (permissionKey === 'canEditDocumentDetails') {
+     if (!user.permissions) return false;
      return Object.keys(user.permissions).some(p => p.startsWith('canEdit') && user.permissions[p] === true);
   }
 
