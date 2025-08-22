@@ -79,21 +79,6 @@ const hashPassword = async (password: string): Promise<string> => {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-const PermissionCheckbox = ({ name, label, control }: any) => (
-  <FormField
-    control={control}
-    name={name}
-    render={({ field }) => (
-      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-        <FormControl>
-          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-        </FormControl>
-        <FormLabel className="font-normal">{label}</FormLabel>
-      </FormItem>
-    )}
-  />
-)
-
 export default function UserManagementModal({
   isOpen,
   onClose,
@@ -199,7 +184,6 @@ export default function UserManagementModal({
     }
 
     if (!passwordHash && !isUpdating) {
-      // This case is caught by validation, but as a fallback:
       form.setError('password', { message: 'Password is required for new users.' })
       return
     }
@@ -270,12 +254,7 @@ export default function UserManagementModal({
     Object.entries(PERMISSIONS_CONFIG).forEach(([key, name]) => {
       if (key.startsWith('canOpenDocumentLink')) {
         groups['Open Document Link Permissions'].push({ key, name })
-      } else if (
-        key !== 'canViewLog' &&
-        key !== 'canExportData' &&
-        key !== 'canManageColumns'
-      ) {
-        // Basic permissions
+      } else {
         groups['Document Permissions'].push({ key, name })
       }
     })
@@ -284,115 +263,245 @@ export default function UserManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl glassmorphic-card">
+      <DialogContent className="sm:max-w-2xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>User Management</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* User List and Form */}
-              <div className='space-y-4'>
-                <ScrollArea className="h-40 rounded-md border p-2">
-                  <div className="space-y-2">
-                    {state.users.map(user => (
-                        <div key={user.id} className="flex items-center justify-between rounded-md p-2 bg-muted/50">
-                            <div>
-                                <span className="font-medium">{user.username}</span>
-                                <span className="text-sm text-muted-foreground ml-2">({user.role})</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => handleSetEditMode(user)}
-                                >
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive hover:text-destructive"
-                                    onClick={() => handleDeleteUser(user)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
+        <ScrollArea className="h-[70vh] -mx-6 px-6">
+          <div className="space-y-4">
+            <div className="rounded-md border p-2 space-y-2">
+              {state.users.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between rounded-md p-2 bg-muted/20"
+                >
+                  <div>
+                    <span className="font-medium">{user.username}</span>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      ({user.role})
+                    </span>
                   </div>
-                </ScrollArea>
-                
-                <div>
-                  <DialogHeader>
-                      <DialogTitle>
-                      {mode === 'edit' ? `Edit User: ${userToEdit?.username}` : 'Add New User'}
-                      </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                      <FormField
-                          control={form.control}
-                          name="username"
-                          render={({ field }) => (
-                              <FormItem>
-                                  <FormLabel>Username</FormLabel>
-                                  <FormControl>
-                                      <Input {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                              </FormItem>
-                          )}
-                      />
-                      <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                              <FormItem>
-                                  <FormLabel>Password</FormLabel>
-                                  <FormControl>
-                                      <Input
-                                          type="password"
-                                          placeholder={
-                                              mode === 'edit'
-                                                  ? 'Leave blank to keep current password'
-                                                  : ''
-                                          }
-                                          {...field}
-                                      />
-                                  </FormControl>
-                                  {mode === 'edit' && (
-                                      <FormDescription>
-                                          Leave blank to keep the existing password.
-                                      </FormDescription>
-                                  )}
-                                  <FormMessage />
-                              </FormItem>
-                          )}
-                      />
-                      <FormField
-                          control={form.control}
-                          name="role"
-                          render={({ field }) => (
-                              <FormItem>
-                                  <FormLabel>Role</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                      <FormControl>
-                                          <SelectTrigger>
-                                              <SelectValue placeholder="Select a role" />
-                                          </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                          <SelectItem value="Admin">Admin</SelectItem>
-                                          <SelectItem value="User">User</SelectItem>
-                                      </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                              </FormItem>
-                          )}
-                      />
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => handleSetEditMode(user)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteUser(user)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <DialogFooter className="pt-4 border-t mt-4">
+                </div>
+              ))}
+            </div>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">
+                    {mode === 'edit'
+                      ? `Edit User: ${userToEdit?.username}`
+                      : 'Add New User'}
+                  </h3>
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder={
+                              mode === 'edit'
+                                ? 'Leave blank to keep current password'
+                                : ''
+                            }
+                            {...field}
+                          />
+                        </FormControl>
+                         <FormDescription>
+                           {mode === 'edit' ? 'Leave blank to keep the existing password.' : ''}
+                         </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="User">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {role === 'User' ? (
+                  <div className="space-y-6">
+                    <div className="space-y-4 p-4 border rounded-md">
+                      <h3 className="font-semibold text-foreground">
+                        Document Permissions
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {permissionGroups['Document Permissions'].map(
+                          ({ key, name }) => (
+                            <FormField
+                              key={key}
+                              control={form.control}
+                              name={`permissions.${key}`}
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {name}
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 p-4 border rounded-md">
+                      <h3 className="font-semibold text-foreground">
+                        Open Document Link Permissions
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        {permissionGroups['Open Document Link Permissions'].map(
+                          ({ key, name }) => (
+                             <FormField
+                              key={key}
+                              control={form.control}
+                              name={`permissions.${key}`}
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {name}
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded-md space-y-4">
+                      <h3 className="font-semibold text-foreground">
+                        Department Access Permissions
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        If no departments are selected, the user will have
+                        access to all departments.
+                      </p>
+                      <FormField
+                        control={form.control}
+                        name="departmentPermissions"
+                        render={() => (
+                          <FormItem>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                              {state.departments.map((dept) => (
+                                <FormField
+                                  key={dept}
+                                  control={form.control}
+                                  name="departmentPermissions"
+                                  render={({ field }) => {
+                                    return (
+                                      <FormItem
+                                        key={dept}
+                                        className="flex flex-row items-start space-x-3 space-y-0"
+                                      >
+                                        <FormControl>
+                                          <Checkbox
+                                            checked={field.value?.includes(
+                                              dept
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                              return checked
+                                                ? field.onChange([
+                                                    ...(field.value || []),
+                                                    dept,
+                                                  ])
+                                                : field.onChange(
+                                                    (
+                                                      field.value || []
+                                                    )?.filter(
+                                                      (value) => value !== dept
+                                                    )
+                                                  )
+                                            }}
+                                          />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                          {dept}
+                                        </FormLabel>
+                                      </FormItem>
+                                    )
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-40 text-muted-foreground p-4 border rounded-md">
+                    Admins have all permissions by default.
+                  </div>
+                )}
+                 <DialogFooter className="pt-4">
                     <Button type="button" variant="ghost" onClick={handleSetAddMode}>
                       {mode === 'edit' ? 'Cancel Edit' : 'Clear Form'}
                     </Button>
@@ -400,107 +509,13 @@ export default function UserManagementModal({
                       {mode === 'edit' ? 'Save Changes' : 'Add User'}
                     </Button>
                   </DialogFooter>
-                </div>
-              </div>
-
-              {/* Permissions Section */}
-              <div className="space-y-4">
-                <ScrollArea className="h-[70vh] p-4 border rounded-md">
-                    <DialogHeader className="mb-4">
-                        <DialogTitle>Permissions</DialogTitle>
-                        <DialogDescription>
-                            Set permissions for the selected user role. Admins have all permissions by default.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                  {role === 'User' ? (
-                    <div className="space-y-6">
-                      {Object.entries(permissionGroups).map(([groupName, permissions]) => (
-                        <div key={groupName} className="space-y-4 p-4 border rounded-md">
-                          <h3 className="font-semibold text-foreground">{groupName}</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {permissions.map(
-                              ({ key, name }) => (
-                                <PermissionCheckbox
-                                  key={key}
-                                  name={`permissions.${key}`}
-                                  label={name}
-                                  control={form.control}
-                                />
-                              )
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      <div className="p-4 border rounded-md space-y-4">
-                        <h3 className="font-semibold text-foreground">
-                          Department Access Permissions
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          If no departments are selected, the user will have access to all departments.
-                        </p>
-                        <FormField
-                          control={form.control}
-                          name="departmentPermissions"
-                          render={() => (
-                            <FormItem>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {state.departments.map((dept) => (
-                                  <FormField
-                                    key={dept}
-                                    control={form.control}
-                                    name="departmentPermissions"
-                                    render={({ field }) => {
-                                      return (
-                                        <FormItem
-                                          key={dept}
-                                          className="flex flex-row items-start space-x-3 space-y-0"
-                                        >
-                                          <FormControl>
-                                            <Checkbox
-                                              checked={field.value?.includes(
-                                                dept
-                                              )}
-                                              onCheckedChange={(checked) => {
-                                                return checked
-                                                  ? field.onChange([
-                                                      ...(field.value || []),
-                                                      dept,
-                                                    ])
-                                                  : field.onChange(
-                                                      (field.value || [])?.filter(
-                                                        (value) => value !== dept
-                                                      )
-                                                    )
-                                              }}
-                                            />
-                                          </FormControl>
-                                          <FormLabel className="font-normal">
-                                            {dept}
-                                          </FormLabel>
-                                        </FormItem>
-                                      )
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-40 text-muted-foreground">
-                      Admins have all permissions by default.
-                    </div>
-                  )}
-                </ScrollArea>
-              </div>
-            </div>
-          </form>
-        </Form>
+              </form>
+            </Form>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )
 }
+
+    
