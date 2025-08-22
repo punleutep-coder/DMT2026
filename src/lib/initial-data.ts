@@ -35,7 +35,7 @@ const adminPermissions = {
 };
 
 const DEFAULT_USERS: { [key: string]: Omit<User, 'id'> } = {
-    'user-1': { firestoreId: 'user-1', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: adminPermissions, departmentPermissions: [] }
+    'user-admin': { firestoreId: 'user-admin', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: adminPermissions, departmentPermissions: [] }
 };
 
 export const COLUMN_CONFIG: { [key: string]: { name: string } } = {
