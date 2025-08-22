@@ -187,10 +187,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         </DropdownMenuItem> : null
                     ))}
 
+                    <DropdownMenuSeparator />
+
                     {/* --- Actions for NON-TERMINAL documents --- */}
                     {!isTerminal && (
                         <>
-                            <DropdownMenuSeparator />
                             {canEditDetails && (
                                 <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}>
                                     <Pencil className="mr-2 h-4 w-4" />Edit Details
@@ -216,7 +217,9 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                                     <FileEdit className="mr-2 h-4 w-4" />Edit Current Note
                                 </DropdownMenuItem>
                             )}
+                            
                             <DropdownMenuSeparator />
+                            
                             {hasPermission(currentUser, 'canMoveDocument') && doc.history.length > 1 && (
                                 <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
                                     <Undo2 className="mr-2 h-4 w-4" />Move Back
@@ -238,7 +241,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     {/* --- Actions for COMPLETED documents --- */}
                     {isCompleted && (
                         <>
-                            <DropdownMenuSeparator />
                             {hasPermission(currentUser, 'canMoveDocument') && (
                                 <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
                                     <Undo2 className="mr-2 h-4 w-4"/>Re-open
@@ -247,13 +249,14 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         </>
                     )}
                     
-                    <DropdownMenuSeparator />
-                    
-                    {/* --- Delete Action --- */}
+                    {/* --- Delete Action (available for non-Combined/Split documents) --- */}
                     {hasPermission(currentUser, 'canDeleteDocument') && !isCombinedOrSplit && (
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}>
-                            <Trash2 className="mr-2 h-4 w-4" />Delete Document
-                        </DropdownMenuItem>
+                        <>
+                           <DropdownMenuSeparator />
+                           <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}>
+                                <Trash2 className="mr-2 h-4 w-4" />Delete Document
+                           </DropdownMenuItem>
+                        </>
                     )}
 
                 </DropdownMenuContent>
