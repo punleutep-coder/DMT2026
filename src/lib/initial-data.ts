@@ -65,7 +65,6 @@ export const PERMISSIONS_CONFIG = {
     canMoveDocument: 'Move Document (Advance/Back)',
     canCompleteDocument: 'Complete Document',
     canDeleteDocument: 'Delete Document',
-    canEditDocumentDetails: 'Edit Document Details', // General permission
     canReleaseDocument: 'Release Document from Delay',
     canEditCurrentNote: 'Edit Current Note',
     canViewLog: 'View Log',
