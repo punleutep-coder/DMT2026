@@ -100,6 +100,10 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
   }, [initialUserId, state.users, form]);
 
   const handleSetEditMode = (user: User) => {
+    if (state.currentUser?.id === user.id) {
+        dispatch({ type: 'SET_DIALOG', payload: { isOpen: true, title: 'Error', message: 'You cannot edit your own account from this panel.', isAlert: true }})
+        return;
+    }
     setMode('edit');
     setEditingUserId(user.id);
     form.reset({
@@ -137,7 +141,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         if(values.role === 'Admin') {
            passwordHash = await hashPassword(uuidv4()); // Assign a random secure password for admin
         } else {
-            // This case should be caught by validation, but as a fallback:
+            // This case is caught by validation, but as a fallback:
             form.setError('password', { message: 'Password is required for new users.'})
             return;
         }
@@ -309,30 +313,47 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                                             <AccordionTrigger>Department Access</AccordionTrigger>
                                             <AccordionContent className="space-y-2">
                                                 <p className="text-sm text-muted-foreground">Select which departments this user can see documents from. If none are selected, user can see all.</p>
-                                                <Controller
+                                                <FormField
                                                     control={form.control}
                                                     name="departmentPermissions"
                                                     render={({ field }) => (
-                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                        <FormItem className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                                             {state.departments.map((dept) => (
-                                                                <FormItem key={dept} className="flex items-center space-x-2">
-                                                                    <Checkbox
-                                                                        checked={field.value?.includes(dept)}
-                                                                        onCheckedChange={(checked) => {
-                                                                            const newValue = checked
-                                                                                ? [...(field.value || []), dept]
-                                                                                : (field.value || []).filter((value) => value !== dept);
-                                                                            field.onChange(newValue);
-                                                                        }}
-                                                                    />
-                                                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                                        {dept}
-                                                                    </label>
-                                                                </FormItem>
+                                                                <FormField
+                                                                    key={dept}
+                                                                    control={form.control}
+                                                                    name="departmentPermissions"
+                                                                    render={({ field }) => {
+                                                                        return (
+                                                                        <FormItem
+                                                                            key={dept}
+                                                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                                                        >
+                                                                            <FormControl>
+                                                                            <Checkbox
+                                                                                checked={field.value?.includes(dept)}
+                                                                                onCheckedChange={(checked) => {
+                                                                                return checked
+                                                                                    ? field.onChange([...field.value, dept])
+                                                                                    : field.onChange(
+                                                                                        field.value?.filter(
+                                                                                        (value) => value !== dept
+                                                                                        )
+                                                                                    )
+                                                                                }}
+                                                                            />
+                                                                            </FormControl>
+                                                                            <FormLabel className="text-sm font-normal">
+                                                                                {dept}
+                                                                            </FormLabel>
+                                                                        </FormItem>
+                                                                        )
+                                                                    }}
+                                                                />
                                                             ))}
-                                                        </div>
+                                                        </FormItem>
                                                     )}
-                                                />
+                                                    />
                                             </AccordionContent>
                                         </AccordionItem>
                                     </Accordion>
@@ -352,5 +373,3 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
-
-    
