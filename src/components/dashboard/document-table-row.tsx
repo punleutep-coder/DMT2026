@@ -123,7 +123,13 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   const isCombinedOrSplit = doc.status === 'Combined' || doc.status === 'Split';
   const isTerminal = isCompleted || isCombinedOrSplit;
 
-  const canEditDetails = hasPermission(currentUser, 'canEditDocumentDetails');
+  const editPermissions = [
+      'canEditDocumentId', 'canEditDocumentName', 'canEditOffice', 
+      'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 
+      'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4', 
+      'canEditAssignedDepartment'
+  ];
+  const canEditDetails = editPermissions.some(p => hasPermission(currentUser, p as any));
 
   return (
     <TableRow
@@ -174,7 +180,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {/* --- Always Available Actions --- */}
                     {hasPermission(currentUser, 'canViewLog') && (
                         <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)}>
                             <FileText className="mr-2 h-4 w-4" />View Log
@@ -187,16 +192,14 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         </DropdownMenuItem> : null
                     ))}
 
-                    <DropdownMenuSeparator />
+                    {!isTerminal && canEditDetails && (
+                        <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}>
+                            <Pencil className="mr-2 h-4 w-4" />Edit Details
+                        </DropdownMenuItem>
+                    )}
 
-                    {/* --- Actions for NON-TERMINAL documents --- */}
                     {!isTerminal && (
                         <>
-                            {canEditDetails && (
-                                <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}>
-                                    <Pencil className="mr-2 h-4 w-4" />Edit Details
-                                </DropdownMenuItem>
-                            )}
                             {hasPermission(currentUser, 'canSplitDocument') && (
                                 <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)}>
                                     <Split className="mr-2 h-4 w-4" />Split Document
@@ -217,39 +220,35 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                                     <FileEdit className="mr-2 h-4 w-4" />Edit Current Note
                                 </DropdownMenuItem>
                             )}
-                            
+                        </>
+                    )}
+
+                    {isCompleted && hasPermission(currentUser, 'canMoveDocument') && (
+                        <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
+                            <Undo2 className="mr-2 h-4 w-4"/>Re-open
+                        </DropdownMenuItem>
+                    )}
+
+                    {!isTerminal && hasPermission(currentUser, 'canMoveDocument') && (
+                        <>
                             <DropdownMenuSeparator />
-                            
-                            {hasPermission(currentUser, 'canMoveDocument') && doc.history.length > 1 && (
+                            {doc.history.length > 1 && (
                                 <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
                                     <Undo2 className="mr-2 h-4 w-4" />Move Back
                                 </DropdownMenuItem>
                             )}
-                            {hasPermission(currentUser, 'canMoveDocument') && (
-                                <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}>
-                                    <Redo2 className="mr-2 h-4 w-4" />Advance
-                                </DropdownMenuItem>
-                            )}
-                            {hasPermission(currentUser, 'canCompleteDocument') && (
-                                <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}>
-                                    <CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete
-                                </DropdownMenuItem>
-                            )}
+                            <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}>
+                                <Redo2 className="mr-2 h-4 w-4" />Advance
+                            </DropdownMenuItem>
                         </>
                     )}
 
-                    {/* --- Actions for COMPLETED documents --- */}
-                    {isCompleted && (
-                        <>
-                            {hasPermission(currentUser, 'canMoveDocument') && (
-                                <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
-                                    <Undo2 className="mr-2 h-4 w-4"/>Re-open
-                                </DropdownMenuItem>
-                            )}
-                        </>
+                    {!isTerminal && hasPermission(currentUser, 'canCompleteDocument') && (
+                         <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}>
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete
+                        </DropdownMenuItem>
                     )}
                     
-                    {/* --- Delete Action (available for non-Combined/Split documents) --- */}
                     {hasPermission(currentUser, 'canDeleteDocument') && !isCombinedOrSplit && (
                         <>
                            <DropdownMenuSeparator />
