@@ -123,6 +123,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   const isCombinedOrSplit = doc.status === 'Combined' || doc.status === 'Split';
   const isTerminal = isCompleted || isCombinedOrSplit;
 
+  const canEditDetails = hasPermission(currentUser, 'canEditDocumentDetails');
+
   return (
     <TableRow
       data-state={isSelected && 'selected'}
@@ -173,7 +175,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     {hasPermission(currentUser, 'canViewLog') && <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)}><FileText className="mr-2 h-4 w-4" />View Log</DropdownMenuItem>}
-                    {hasPermission(currentUser, 'canEditDocumentDetails') && <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}><Pencil className="mr-2 h-4 w-4" />Edit Details</DropdownMenuItem>}
+                    {canEditDetails && <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}><Pencil className="mr-2 h-4 w-4" />Edit Details</DropdownMenuItem>}
                     
                     {Array.isArray(doc.documentLink) && doc.documentLink.map((link, i) => (
                         hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ?

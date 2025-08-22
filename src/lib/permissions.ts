@@ -1,3 +1,4 @@
+
 'use client';
 import type { User } from './types';
 import { PERMISSIONS_CONFIG } from './initial-data';
@@ -5,9 +6,9 @@ import { PERMISSIONS_CONFIG } from './initial-data';
 export const hasPermission = (user: User | null, permissionKey: keyof typeof PERMISSIONS_CONFIG): boolean => {
   if (!user) return false;
   if (user.role === 'Admin') return true;
+  if (!user.permissions) return false;
   
   if (permissionKey === 'canEditDocumentDetails') {
-     if (!user.permissions) return false;
      return Object.keys(user.permissions).some(p => p.startsWith('canEdit') && user.permissions[p] === true);
   }
 
