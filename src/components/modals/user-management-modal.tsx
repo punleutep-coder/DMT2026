@@ -143,8 +143,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         }
     }
 
-    const newFirestoreId = `user-${uuidv4()}`;
-    const newId = isUpdating ? values.id! : newFirestoreId;
+    const newId = isUpdating ? values.id! : `user-${uuidv4()}`;
     const userData: User = {
         id: newId,
         firestoreId: isUpdating ? userToEdit!.firestoreId : newId,
@@ -353,3 +352,5 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
+
+    
