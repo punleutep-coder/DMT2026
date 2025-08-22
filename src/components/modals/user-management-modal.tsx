@@ -31,12 +31,13 @@ const formSchema = z.object({
   departmentPermissions: z.array(z.string()).default([]),
 }).refine(data => {
     const isNewUser = !data.id;
+    // Password is required only when creating a new user with the 'User' role.
     if (isNewUser && data.role === 'User') {
       return data.password && data.password.length > 0;
     }
     return true;
 }, {
-  message: "Password is required for new users with the 'User' role.",
+  message: "Password is required for new users.",
   path: ["password"],
 });
 
@@ -129,22 +130,20 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     }
 
     let passwordHash = isUpdating ? userToEdit?.passwordHash : undefined;
-    if (values.password) {
+    if (values.password && values.password.length > 0) {
         passwordHash = await hashPassword(values.password);
     }
     
     if (!passwordHash && !isUpdating) {
-        if(values.role === 'User') {
-          form.setError("password", { message: "Password is required for new users." });
-          return;
-        }
-        // For admins, if no password, create a default one (or handle as needed)
-        passwordHash = await hashPassword(uuidv4()); // Create a random, unusable password
+        // This case is for Admins created without a password. 
+        // Users are handled by the refine validation.
+        passwordHash = await hashPassword(uuidv4());
     }
 
+    const newFirestoreId = `user-${uuidv4()}`;
     const userData: User = {
-        id: isUpdating ? values.id! : uuidv4(),
-        firestoreId: isUpdating ? userToEdit!.firestoreId : uuidv4(),
+        id: isUpdating ? values.id! : newFirestoreId,
+        firestoreId: isUpdating ? userToEdit!.firestoreId : newFirestoreId,
         username: values.username,
         role: values.role,
         permissions: values.role === 'Admin' ? {} : values.permissions,
@@ -350,5 +349,3 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
-
-    
