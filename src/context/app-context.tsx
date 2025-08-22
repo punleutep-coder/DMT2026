@@ -194,33 +194,33 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
         return state;
       }
-      case 'ADD_USER': {
+    case 'ADD_USER': {
         const newUser = action.payload;
         set(ref(db, `users/${newUser.id}`), newUser);
-        return state;
-      }
-      case 'UPDATE_USER': {
+        return state; // Rely on onValue listener to update state
+    }
+    case 'UPDATE_USER': {
         const updatedUser = action.payload;
         set(ref(db, `users/${updatedUser.id}`), updatedUser);
-        return state;
-      }
-      case 'DELETE_USER': {
+        return state; // Rely on onValue listener to update state
+    }
+    case 'DELETE_USER': {
         set(ref(db, `users/${action.payload.id}`), null);
-        return state;
-      }
-      case 'ADD_LOG': {
+        return state; // Rely on onValue listener to update state
+    }
+    case 'ADD_LOG': {
         const newLogRef = push(ref(db, 'logs'));
         set(newLogRef, action.payload);
         return state;
-      }
-      case 'SET_DEPARTMENTS': {
+    }
+    case 'SET_DEPARTMENTS': {
         set(ref(db, 'departments'), action.payload);
         return state;
-      }
-      case 'SET_COLUMN_VISIBILITY': {
+    }
+    case 'SET_COLUMN_VISIBILITY': {
         set(ref(db, 'columnVisibility'), action.payload);
         return state;
-      }
+    }
     default:
       return state
   }
