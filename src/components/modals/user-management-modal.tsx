@@ -58,60 +58,77 @@ const hashPassword = async (password: string): Promise<string> => {
 export default function UserManagementModal({ isOpen, onClose, userId: initialUserId }: UserManagementModalProps) {
   const { state, dispatch } = useAppContext()
   const { toast } = useToast()
-  const [editingUserId, setEditingUserId] = useState<string | undefined>(initialUserId)
-  
+  const [mode, setMode] = useState<'add' | 'edit'>('add');
+  const [editingUserId, setEditingUserId] = useState<string | undefined>(undefined);
+
   const userToEdit = useMemo(() => state.users.find(u => u.id === editingUserId), [state.users, editingUserId]);
+
+  const defaultFormValues = {
+    id: undefined,
+    username: '',
+    password: '',
+    role: 'User' as 'Admin' | 'User',
+    permissions: {},
+    departmentPermissions: []
+  };
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      id: undefined,
-      username: '',
-      password: '',
-      role: 'User',
-      permissions: {},
-      departmentPermissions: []
-    },
+    defaultValues: defaultFormValues,
   })
   
   useEffect(() => {
-    setEditingUserId(initialUserId);
-  }, [initialUserId]);
-
-  useEffect(() => {
-    if (userToEdit) {
-        form.reset({
-            id: userToEdit.id,
-            username: userToEdit.username,
-            password: '',
-            role: userToEdit.role,
-            permissions: userToEdit.permissions || {},
-            departmentPermissions: userToEdit.departmentPermissions || []
-        });
+    if (initialUserId) {
+        const user = state.users.find(u => u.id === initialUserId);
+        if (user) {
+            setMode('edit');
+            setEditingUserId(initialUserId);
+            form.reset({
+                id: user.id,
+                username: user.username,
+                password: '',
+                role: user.role,
+                permissions: user.permissions || {},
+                departmentPermissions: user.departmentPermissions || []
+            });
+        }
     } else {
-        form.reset({
-            id: undefined,
-            username: '',
-            password: '',
-            role: 'User',
-            permissions: {},
-            departmentPermissions: []
-        });
+        setMode('add');
+        setEditingUserId(undefined);
+        form.reset(defaultFormValues);
     }
-  }, [userToEdit, form]);
-  
-  const isEditing = !!form.getValues('id');
+  }, [initialUserId, state.users, form]);
+
+  const handleSetEditMode = (user: User) => {
+    setMode('edit');
+    setEditingUserId(user.id);
+    form.reset({
+        id: user.id,
+        username: user.username,
+        password: '',
+        role: user.role,
+        permissions: user.permissions || {},
+        departmentPermissions: user.departmentPermissions || []
+    });
+  };
+
+  const handleSetAddMode = () => {
+    setMode('add');
+    setEditingUserId(undefined);
+    form.reset(defaultFormValues);
+  }
+
   const role = form.watch('role');
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const isUpdating = !!values.id;
+    const isUpdating = mode === 'edit' && !!values.id;
 
     if (!isUpdating && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
         form.setError('username', { message: 'This username is already taken.' });
         return;
     }
 
-    let passwordHash = userToEdit?.passwordHash;
+    let passwordHash = isUpdating ? userToEdit?.passwordHash : undefined;
     if (values.password) {
         passwordHash = await hashPassword(values.password);
     }
@@ -143,8 +160,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
         toast({ title: "Success", description: "User created successfully." });
     }
     
-    setEditingUserId(undefined);
-    form.reset({id: undefined, username: '', password: '', role: 'User', permissions: {}, departmentPermissions: []});
+    handleSetAddMode();
   }
 
   const handleDeleteUser = (user: User) => {
@@ -161,6 +177,9 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             confirmText: 'Delete',
             onConfirm: () => {
                 dispatch({ type: 'DELETE_USER', payload: {id: user.id} });
+                if (editingUserId === user.id) {
+                    handleSetAddMode();
+                }
                 toast({ title: "User Deleted", description: `User ${user.username} has been removed.` });
             }
         }
@@ -208,7 +227,7 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                                 <span className="text-sm text-muted-foreground ml-2">({user.role})</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingUserId(user.id)}>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSetEditMode(user)}>
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteUser(user)}>
@@ -224,15 +243,15 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="space-y-4">
                     <DialogHeader>
-                        <DialogTitle>{isEditing ? 'Edit User' : 'Add New User'}</DialogTitle>
+                        <DialogTitle>{mode === 'edit' ? 'Edit User' : 'Add New User'}</DialogTitle>
                         <DialogDescription>
-                            {isEditing ? `Editing user: ${userToEdit?.username}` : 'Create a new user and set their role and permissions.'}
+                            {mode === 'edit' ? `Editing user: ${userToEdit?.username}` : 'Create a new user and set their role and permissions.'}
                         </DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="h-[40vh] p-4 -mx-4">
                         <div className="space-y-4 px-1">
                             <FormField control={form.control} name="username" render={({ field }) => ( <FormItem><FormLabel>Username</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                            <FormField control={form.control} name="password" render={({ field }) => ( <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder={isEditing ? 'Leave blank to keep current password' : ''} {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField control={form.control} name="password" render={({ field }) => ( <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder={mode === 'edit' ? 'Leave blank to keep current password' : ''} {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <FormField
                                 control={form.control}
                                 name="role"
@@ -321,8 +340,8 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
                     </ScrollArea>
                 </div>
                 <DialogFooter className="pt-4">
-                <Button type="button" variant="ghost" onClick={() => { setEditingUserId(undefined); form.reset(); }}>{isEditing ? "Cancel Edit" : "Clear Form"}</Button>
-                <Button type="submit">{isEditing ? 'Save Changes' : 'Create User'}</Button>
+                <Button type="button" variant="ghost" onClick={handleSetAddMode}>{mode === 'edit' ? "Cancel Edit" : "Clear Form"}</Button>
+                <Button type="submit">{mode === 'edit' ? 'Save Changes' : 'Create User'}</Button>
                 </DialogFooter>
             </form>
             </Form>
@@ -331,7 +350,5 @@ export default function UserManagementModal({ isOpen, onClose, userId: initialUs
     </Dialog>
   )
 }
-
-    
 
     
