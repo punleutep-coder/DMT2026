@@ -122,8 +122,18 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   const isCompleted = doc.status.startsWith('Completed');
   const isCombinedOrSplit = doc.status === 'Combined' || doc.status === 'Split';
   const isTerminal = isCompleted || isCombinedOrSplit;
-
   const canEditDetails = hasPermission(currentUser, 'canEditDocumentDetails');
+
+  // New computed variables for clarity
+  const canBeDelayed = hasPermission(currentUser, 'canDelayDocument') && !isTerminal && !doc.isDelayed;
+  const canBeReleased = hasPermission(currentUser, 'canReleaseDocument') && doc.isDelayed;
+  const canBeAdvanced = hasPermission(currentUser, 'canMoveDocument') && !isTerminal && !doc.isDelayed;
+  const canBeMovedBack = hasPermission(currentUser, 'canMoveDocument') && !isTerminal && !doc.isDelayed && doc.history.length > 1;
+  const canBeCompleted = hasPermission(currentUser, 'canCompleteDocument') && !isTerminal && !doc.isDelayed;
+  const canBeReopened = hasPermission(currentUser, 'canMoveDocument') && isCompleted;
+  const canBeSplit = hasPermission(currentUser, 'canSplitDocument') && !isTerminal && !doc.isDelayed;
+  const canEditNote = hasPermission(currentUser, 'canEditCurrentNote') && !isTerminal && !doc.isDelayed;
+  const canBeDeleted = hasPermission(currentUser, 'canDeleteDocument') && !isCombinedOrSplit;
 
   return (
     <TableRow
@@ -175,6 +185,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     {hasPermission(currentUser, 'canViewLog') && <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)}><FileText className="mr-2 h-4 w-4" />View Log</DropdownMenuItem>}
+                    
                     {canEditDetails && <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}><Pencil className="mr-2 h-4 w-4" />Edit Details</DropdownMenuItem>}
                     
                     {Array.isArray(doc.documentLink) && doc.documentLink.map((link, i) => (
@@ -185,28 +196,26 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     ))}
 
                     <DropdownMenuSeparator />
-
-                    {doc.isDelayed ? (
-                        <>
-                         {hasPermission(currentUser, 'canReleaseDocument') && <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id, doc.firestoreId)}><Play className="mr-2 h-4 w-4 text-yellow-400" />Release Now</DropdownMenuItem>}
-                        </>
-                    ) : !isTerminal ? (
-                        <>
-                            {hasPermission(currentUser, 'canSplitDocument') && <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)}><Split className="mr-2 h-4 w-4" />Split Document</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canDelayDocument') && <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id, doc.firestoreId)}><Clock className="mr-2 h-4 w-4" />Delay</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canEditCurrentNote') && <DropdownMenuItem onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}><FileEdit className="mr-2 h-4 w-4" />Edit Current Note</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canMoveDocument') && doc.history.length > 1 && <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4" />Move Back</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canMoveDocument') && <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}><Redo2 className="mr-2 h-4 w-4" />Advance</DropdownMenuItem>}
-                            {hasPermission(currentUser, 'canCompleteDocument') && <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}><CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete</DropdownMenuItem>}
-                        </>
-                    ) : null}
                     
-                    {isCompleted && hasPermission(currentUser, 'canMoveDocument') && (
-                        <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4"/>Re-open</DropdownMenuItem>
-                    )}
+                    {canBeReleased && <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id, doc.firestoreId)}><Play className="mr-2 h-4 w-4 text-yellow-400" />Release Now</DropdownMenuItem>}
+                    
+                    {canBeSplit && <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)}><Split className="mr-2 h-4 w-4" />Split Document</DropdownMenuItem>}
+                    
+                    {canBeDelayed && <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id, doc.firestoreId)}><Clock className="mr-2 h-4 w-4" />Delay</DropdownMenuItem>}
+                    
+                    {canEditNote && <DropdownMenuItem onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}><FileEdit className="mr-2 h-4 w-4" />Edit Current Note</DropdownMenuItem>}
+                    
+                    {canBeMovedBack && <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4" />Move Back</DropdownMenuItem>}
+                    
+                    {canBeAdvanced && <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}><Redo2 className="mr-2 h-4 w-4" />Advance</DropdownMenuItem>}
+                    
+                    {canBeCompleted && <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}><CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete</DropdownMenuItem>}
 
-                    <DropdownMenuSeparator />
-                    {!isCombinedOrSplit && hasPermission(currentUser, 'canDeleteDocument') && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
+                    {canBeReopened && <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}><Undo2 className="mr-2 h-4 w-4"/>Re-open</DropdownMenuItem>}
+
+                    {(canBeDelayed || canBeReleased || canBeAdvanced || canBeCompleted || canBeReopened || canBeSplit) && <DropdownMenuSeparator />}
+
+                    {canBeDeleted && <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}><Trash2 className="mr-2 h-4 w-4" />Delete Document</DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
         </TableCell>
