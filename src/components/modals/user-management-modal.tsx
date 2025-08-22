@@ -54,7 +54,7 @@ const formSchema = z
   .refine(
     (data) => {
       const isNewUser = !data.id
-      if (isNewUser && data.role === 'User') {
+      if (isNewUser) {
         return data.password && data.password.length > 0
       }
       return true
@@ -514,5 +514,3 @@ export default function UserManagementModal({
     </Dialog>
   )
 }
-
-    
