@@ -130,7 +130,14 @@ export default function UserManagementModal({
       }
     } else {
       setEditingUserId(undefined)
-      form.reset()
+      form.reset({
+        id: undefined,
+        username: '',
+        password: '',
+        role: 'User' as const,
+        permissions: {},
+        departmentPermissions: [],
+      })
     }
   }, [initialUserId, state.users, form])
 
@@ -207,53 +214,42 @@ export default function UserManagementModal({
   }
   
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const isUpdating = mode === 'edit' && !!editingUserId
-    const userToUpdate = isUpdating
-      ? state.users.find((u) => u.id === editingUserId)
-      : null
+    const isUpdating = !!values.id;
 
-    if (
-      !isUpdating &&
-      state.users.some(
-        (u) => u.username.toLowerCase() === values.username.toLowerCase()
-      )
-    ) {
-      form.setError('username', { message: 'This username is already taken.' })
-      return
+    if (!isUpdating && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
+        form.setError('username', { message: 'This username is already taken.' });
+        return;
     }
 
-    let passwordHash = userToUpdate?.passwordHash
+    let passwordHash = isUpdating ? state.users.find(u => u.id === values.id)?.passwordHash : undefined;
     if (values.password && values.password.length > 0) {
-      passwordHash = await hashPassword(values.password)
+        passwordHash = await hashPassword(values.password);
     }
-
+    
     if (!passwordHash && !isUpdating) {
-      form.setError('password', {
-        message: 'Password is required for new users.',
-      })
-      return
+        form.setError('password', { message: 'Password is required for new users.' });
+        return;
     }
-
+    
     const userData: User = {
-      id: isUpdating ? userToUpdate!.id : `user-${uuidv4()}`,
-      firestoreId: isUpdating ? userToUpdate!.firestoreId : `user-${uuidv4()}`,
-      username: values.username,
-      role: values.role,
-      permissions: values.role === 'Admin' ? {} : values.permissions,
-      departmentPermissions:
-        values.role === 'Admin' ? [] : values.departmentPermissions,
-      passwordHash: passwordHash!,
-    }
+        id: isUpdating ? values.id! : `user-${uuidv4()}`,
+        firestoreId: isUpdating ? state.users.find(u=>u.id === values.id)!.firestoreId : `user-${uuidv4()}`,
+        username: values.username,
+        role: values.role,
+        permissions: values.role === 'Admin' ? {} : values.permissions,
+        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
+        passwordHash: passwordHash!,
+    };
 
     if (isUpdating) {
-      dispatch({ type: 'UPDATE_USER', payload: userData })
-      toast({ title: 'Success', description: 'User updated successfully.' })
+        dispatch({ type: 'UPDATE_USER', payload: userData });
+        toast({ title: 'Success', description: 'User updated successfully.' });
     } else {
-      dispatch({ type: 'ADD_USER', payload: userData })
-      toast({ title: 'Success', description: 'User created successfully.' })
+        dispatch({ type: 'ADD_USER', payload: userData });
+        toast({ title: 'Success', description: 'User created successfully.' });
     }
 
-    handleSetAddMode()
+    handleSetAddMode();
   }
 
   return (
@@ -472,6 +468,7 @@ export default function UserManagementModal({
                                   />
                                 ))}
                               </div>
+                              <FormMessage />
                             </FormItem>
                           )}
                         />
