@@ -423,49 +423,31 @@ export default function UserManagementModal({
                         <FormField
                           control={form.control}
                           name="departmentPermissions"
-                          render={() => (
+                          render={({ field }) => (
                             <FormItem>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {state.departments.map((dept) => (
-                                  <FormField
+                                  <FormItem
                                     key={dept}
-                                    control={form.control}
-                                    name="departmentPermissions"
-                                    render={({ field }) => {
-                                      return (
-                                        <FormItem
-                                          key={dept}
-                                          className="flex flex-row items-start space-x-3 space-y-0"
-                                        >
-                                          <FormControl>
-                                            <Checkbox
-                                              checked={field.value?.includes(
-                                                dept
-                                              )}
-                                              onCheckedChange={(checked) => {
-                                                return checked
-                                                  ? field.onChange([
-                                                      ...(field.value || []),
-                                                      dept,
-                                                    ])
-                                                  : field.onChange(
-                                                      (
-                                                        field.value || []
-                                                      )?.filter(
-                                                        (value) =>
-                                                          value !== dept
-                                                      )
-                                                    )
-                                              }}
-                                            />
-                                          </FormControl>
-                                          <FormLabel className="font-normal">
-                                            {dept}
-                                          </FormLabel>
-                                        </FormItem>
-                                      )
-                                    }}
-                                  />
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(dept)}
+                                        onCheckedChange={(checked) => {
+                                          const newValue = checked
+                                            ? [...(field.value || []), dept]
+                                            : (field.value || []).filter(
+                                                (value) => value !== dept
+                                              );
+                                          field.onChange(newValue);
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      {dept}
+                                    </FormLabel>
+                                  </FormItem>
                                 ))}
                               </div>
                               <FormMessage />
@@ -500,3 +482,5 @@ export default function UserManagementModal({
     </Dialog>
   )
 }
+
+    
