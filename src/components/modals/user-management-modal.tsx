@@ -165,50 +165,52 @@ export default function UserManagementModal({
   const role = form.watch('role')
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const isUpdating = mode === 'edit' && !!values.id
+    const isUpdating = mode === 'edit' && !!values.id;
 
+    // Check for username collision on new user creation
     if (
       !isUpdating &&
       state.users.some(
         (u) => u.username.toLowerCase() === values.username.toLowerCase()
       )
     ) {
-      form.setError('username', { message: 'This username is already taken.' })
-      return
+      form.setError('username', { message: 'This username is already taken.' });
+      return;
     }
 
-    let passwordHash = isUpdating ? userToEdit?.passwordHash : undefined
+    let passwordHash = isUpdating ? userToEdit?.passwordHash : undefined;
     if (values.password && values.password.length > 0) {
-      passwordHash = await hashPassword(values.password)
+      passwordHash = await hashPassword(values.password);
     }
 
     if (!passwordHash && !isUpdating) {
-      form.setError('password', { message: 'Password is required for new users.' })
-      return
+      form.setError('password', { message: 'Password is required for new users.' });
+      return;
     }
 
-    const newId = isUpdating ? values.id! : `user-${uuidv4()}`
+    const newId = isUpdating ? values.id! : `user-${uuidv4()}`;
+
+    // Construct the user data object with correct permissions
     const userData: User = {
       id: newId,
       firestoreId: isUpdating ? userToEdit!.firestoreId : newId,
       username: values.username,
       role: values.role,
       permissions: values.role === 'Admin' ? {} : values.permissions,
-      departmentPermissions:
-        values.role === 'Admin' ? [] : values.departmentPermissions,
+      departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
       passwordHash: passwordHash!,
-    }
+    };
 
     if (isUpdating) {
-      dispatch({ type: 'UPDATE_USER', payload: userData })
-      toast({ title: 'Success', description: 'User updated successfully.' })
+      dispatch({ type: 'UPDATE_USER', payload: userData });
+      toast({ title: 'Success', description: 'User updated successfully.' });
     } else {
-      dispatch({ type: 'ADD_USER', payload: userData })
-      toast({ title: 'Success', description: 'User created successfully.' })
+      dispatch({ type: 'ADD_USER', payload: userData });
+      toast({ title: 'Success', description: 'User created successfully.' });
     }
 
-    handleSetAddMode()
-  }
+    handleSetAddMode();
+  };
 
   const handleDeleteUser = (user: User) => {
     if (state.currentUser?.id === user.id) {
@@ -262,7 +264,7 @@ export default function UserManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl glassmorphic-card">
+      <DialogContent className="sm:max-w-4xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>User Management</DialogTitle>
         </DialogHeader>
@@ -519,10 +521,7 @@ export default function UserManagementModal({
                 </ScrollArea>
             </div>
         </div>
-        
       </DialogContent>
     </Dialog>
   )
 }
-
-    
