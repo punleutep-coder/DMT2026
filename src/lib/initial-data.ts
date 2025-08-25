@@ -68,17 +68,21 @@ export const PERMISSIONS_CONFIG = {
     canReleaseDocument: 'Release Document from Delay',
     canEditCurrentNote: 'Edit Current Note',
     canViewLog: 'View Log',
-    canOpenDocumentLink1: 'Open Document Link 1',
-    canOpenDocumentLink2: 'Open Document Link 2',
-    canOpenDocumentLink3: 'Open Document Link 3',
-    canOpenDocumentLink4: 'Open Document Link 4',
     canEditDocumentId: 'Edit Document ID (Primary)',
     canEditDocumentName: 'Edit Document Name',
     canEditOffice: 'Edit Office',
     canEditSecondaryId: 'Edit Secondary ID',
     canEditTertiaryId: 'Edit Tertiary ID',
     canEditQuaternaryId: 'Edit Quaternary ID',
-    canEditAssignedDepartment: 'Edit Assigned Department'
+    canEditAssignedDepartment: 'Edit Assigned Department',
+    canOpenDocumentLink1: 'Open Document Link 1',
+    canOpenDocumentLink2: 'Open Document Link 2',
+    canOpenDocumentLink3: 'Open Document Link 3',
+    canOpenDocumentLink4: 'Open Document Link 4',
+    canEditDocumentLink1: 'Edit Document Link 1',
+    canEditDocumentLink2: 'Edit Document Link 2',
+    canEditDocumentLink3: 'Edit Document Link 3',
+    canEditDocumentLink4: 'Edit Document Link 4',
 };
 
 export const initialData = {
