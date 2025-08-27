@@ -11,9 +11,13 @@ import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
 import { useToast } from '@/hooks/use-toast'
+import { sanitizeFirebaseKey } from '@/lib/utils'
 
 const formSchema = z.object({
-  id: z.string().min(1, 'Document ID is required.'),
+  id: z.string().min(1, 'Document ID is required.').refine(
+    (val) => !/[.#$\[\]/]/.test(val),
+    { message: 'Document ID cannot contain ".", "#", "$", "[", "]", or "/".' }
+  ),
   name: z.string().min(1, 'Document name is required.'),
   office: z.string().optional(),
   secondaryId: z.string().optional(),
@@ -59,30 +63,58 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
   if (!docToUpdate) return null
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (values.id !== docToUpdate.id && state.documents.some(d => d.id === values.id)) {
+    const sanitizedId = sanitizeFirebaseKey(values.id);
+    if (sanitizedId !== docToUpdate.id && state.documents.some(d => d.id === sanitizedId)) {
         form.setError('id', { message: 'This Document ID already exists.' });
         return;
     }
     
-    const updatedFields: Partial<Document> & {id: string} = {
-        id: docToUpdate.id,
-        lastUpdate: new Date().toISOString(),
-    }
+    // If the ID has changed, we need to create a new record and delete the old one,
+    // as Firebase doesn't allow renaming keys.
+    if (sanitizedId !== docToUpdate.id) {
+        // Create the new document object with the new ID
+        const newDoc: Document = {
+            ...docToUpdate,
+            id: sanitizedId, // Use the new sanitized ID
+            name: values.name,
+            office: values.office || null,
+            assignedDepartment: values.assignedDepartment || null,
+            secondaryId: values.secondaryId || null,
+            tertiaryId: values.tertiaryId || null,
+            quaternaryId: values.quaternaryId || null,
+            documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
+            lastUpdate: new Date().toISOString(),
+        };
 
-    // Only add fields to update if the user has permission and the value has changed
-    if (hasPermission(currentUser, 'canEditDocumentId') && values.id !== docToUpdate.id) updatedFields.id = values.id;
-    if (hasPermission(currentUser, 'canEditDocumentName') && values.name !== docToUpdate.name) updatedFields.name = values.name;
-    if (hasPermission(currentUser, 'canEditOffice') && values.office !== docToUpdate.office) updatedFields.office = values.office || null;
-    if (hasPermission(currentUser, 'canEditAssignedDepartment') && values.assignedDepartment !== docToUpdate.assignedDepartment) updatedFields.assignedDepartment = values.assignedDepartment || null;
-    if (hasPermission(currentUser, 'canEditSecondaryId') && values.secondaryId !== docToUpdate.secondaryId) updatedFields.secondaryId = values.secondaryId || null;
-    if (hasPermission(currentUser, 'canEditTertiaryId') && values.tertiaryId !== docToUpdate.tertiaryId) updatedFields.tertiaryId = values.tertiaryId || null;
-    if (hasPermission(currentUser, 'canEditQuaternaryId') && values.quaternaryId !== docToUpdate.quaternaryId) updatedFields.quaternaryId = values.quaternaryId || null;
+        // Dispatch action to add the new document
+        dispatch({ type: 'ADD_DOCUMENT', payload: newDoc });
+
+        // Dispatch action to delete the old document
+        dispatch({ type: 'DELETE_DOCUMENT', payload: { id: docToUpdate.id } });
+        
+        toast({ title: "Success", description: `Document ID changed to ${sanitizedId}.` });
+
+    } else {
+        const updatedFields: Partial<Document> & {id: string} = {
+            id: docToUpdate.id,
+            lastUpdate: new Date().toISOString(),
+        }
+
+        // Only add fields to update if the user has permission and the value has changed
+        if (hasPermission(currentUser, 'canEditDocumentName') && values.name !== docToUpdate.name) updatedFields.name = values.name;
+        if (hasPermission(currentUser, 'canEditOffice') && values.office !== docToUpdate.office) updatedFields.office = values.office || null;
+        if (hasPermission(currentUser, 'canEditAssignedDepartment') && values.assignedDepartment !== docToUpdate.assignedDepartment) updatedFields.assignedDepartment = values.assignedDepartment || null;
+        if (hasPermission(currentUser, 'canEditSecondaryId') && values.secondaryId !== docToUpdate.secondaryId) updatedFields.secondaryId = values.secondaryId || null;
+        if (hasPermission(currentUser, 'canEditTertiaryId') && values.tertiaryId !== docToUpdate.tertiaryId) updatedFields.tertiaryId = values.tertiaryId || null;
+        if (hasPermission(currentUser, 'canEditQuaternaryId') && values.quaternaryId !== docToUpdate.quaternaryId) updatedFields.quaternaryId = values.quaternaryId || null;
+        
+        const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
+        updatedFields.documentLink = newLinks;
+        
+        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+        toast({ title: "Success", description: "Document details saved." });
+    }
     
-    const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
-    updatedFields.documentLink = newLinks;
-    
-    dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-    toast({ title: "Success", description: "Document details saved." });
     onClose();
   }
 

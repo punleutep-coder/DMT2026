@@ -11,6 +11,7 @@ import {
 } from '@/lib/initial-data'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
+import { sanitizeFirebaseKey } from '@/lib/utils'
 
 type Action =
   | { type: 'SET_INITIAL_STATE'; payload: Partial<AppState> }
@@ -141,16 +142,17 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
 
         state.documents.forEach(doc => {
+            const sanitizedId = sanitizeFirebaseKey(doc.id);
             if (doc.isDelayed && doc.releaseDate) {
                 const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
                 if (today >= releaseDate && !doc.releaseDateReached) {
-                    updates[`documents/${doc.id}/releaseDateReached`] = true;
-                    updates[`documents/${doc.id}/justReleased`] = true;
+                    updates[`documents/${sanitizedId}/releaseDateReached`] = true;
+                    updates[`documents/${sanitizedId}/justReleased`] = true;
                     needsUpdate = true;
                 }
             }
             if (doc.justReleased) {
-                updates[`documents/${doc.id}/justReleased`] = false;
+                updates[`documents/${sanitizedId}/justReleased`] = false;
                 needsUpdate = true;
             }
         });
@@ -162,15 +164,17 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
      case 'ADD_DOCUMENT': {
         const { id, firestoreId, ...docData } = action.payload;
-        set(ref(db, `documents/${id}`), docData);
+        const sanitizedId = sanitizeFirebaseKey(id);
+        set(ref(db, `documents/${sanitizedId}`), docData);
         return state;
       }
       case 'UPDATE_DOCUMENT': {
         const { id, ...docData } = action.payload;
+        const sanitizedId = sanitizeFirebaseKey(id);
         
         const updates: {[key: string]: any} = {};
         Object.keys(docData).forEach(key => {
-            updates[`documents/${id}/${key}`] = (docData as any)[key];
+            updates[`documents/${sanitizedId}/${key}`] = (docData as any)[key];
         });
 
         update(ref(db), updates);
@@ -178,14 +182,15 @@ const appReducer = (state: AppState, action: Action): AppState => {
       }
       case 'DELETE_DOCUMENT': {
         const { id } = action.payload;
+        const sanitizedId = sanitizeFirebaseKey(id);
         const updates: {[key: string]: any} = {};
-        updates[`documents/${id}`] = null;
+        updates[`documents/${sanitizedId}`] = null;
         
         get(ref(db, 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
                 for (const logId in logs) {
-                    if (logs[logId].docId === id) {
+                    if (logs[logId].docId === sanitizedId) {
                         updates[`logs/${logId}`] = null;
                     }
                 }

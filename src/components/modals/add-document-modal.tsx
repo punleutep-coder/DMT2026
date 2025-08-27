@@ -15,9 +15,13 @@ import { suggestTagsAction } from '@/app/actions/ai'
 import { Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
+import { sanitizeFirebaseKey } from '@/lib/utils'
 
 const formSchema = z.object({
-  docId: z.string().min(1, 'Document ID is required.'),
+  docId: z.string().min(1, 'Document ID is required.').refine(
+    (val) => !/[.#$\[\]/]/.test(val),
+    { message: 'Document ID cannot contain ".", "#", "$", "[", "]", or "/".' }
+  ),
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
@@ -83,7 +87,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (state.documents.some(d => d.id === values.docId)) {
+    const sanitizedId = sanitizeFirebaseKey(values.docId);
+    if (state.documents.some(d => d.id === sanitizedId)) {
         form.setError('docId', { message: 'This Document ID already exists.' });
         return;
     }
@@ -100,7 +105,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
 
     const now = new Date().toISOString()
     const newDoc: Document = {
-        id: values.docId,
+        id: sanitizedId,
         firestoreId: `doc-${Date.now()}`,
         name: values.docName,
         office: values.office || null,
