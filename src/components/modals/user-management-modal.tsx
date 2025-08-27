@@ -38,9 +38,17 @@ import type { User } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { v4 as uuidv4 } from 'uuid'
 import { FormDescription } from '../ui/form'
-import { cn } from '@/lib/utils'
 
-const permissionsSchema = z.record(z.boolean()).default({})
+// Create a schema for permissions dynamically from PERMISSIONS_CONFIG
+const permissionsSchema = z.object(
+  Object.keys(PERMISSIONS_CONFIG).reduce(
+    (acc, key) => {
+      acc[key] = z.boolean().optional() // Make each permission optional
+      return acc
+    },
+    {} as Record<string, z.ZodOptional<z.ZodBoolean>>
+  )
+)
 
 const formSchema = z
   .object({
@@ -80,13 +88,13 @@ const hashPassword = async (password: string): Promise<string> => {
 }
 
 const permissionGroups = {
-  'Document Permissions': Object.entries(PERMISSIONS_CONFIG)
-    .filter(([key]) => !key.startsWith('canOpenDocumentLink') && key !== 'canManageAdmins')
-    .map(([key, name]) => ({ key, name })),
-  'Open Document Link Permissions': Object.entries(PERMISSIONS_CONFIG)
-    .filter(([key]) => key.startsWith('canOpenDocumentLink'))
-    .map(([key, name]) => ({ key, name })),
-}
+    'Document Permissions': Object.entries(PERMISSIONS_CONFIG)
+      .filter(([key]) => !key.startsWith('canOpenDocumentLink'))
+      .map(([key, name]) => ({ key, name })),
+    'Open Document Link Permissions': Object.entries(PERMISSIONS_CONFIG)
+      .filter(([key]) => key.startsWith('canOpenDocumentLink'))
+      .map(([key, name]) => ({ key, name })),
+  }
 
 export default function UserManagementModal({
   isOpen,
@@ -149,6 +157,12 @@ export default function UserManagementModal({
       toast({ title: 'Error', description: 'You cannot edit your own account from this panel.', variant: 'destructive' });
       return;
     }
+    // Prevent Admins from editing other Admins unless they have the canManageAdmins permission
+    if (user.role === 'Admin' && currentUser?.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
+       toast({ title: 'Permission Denied', description: 'You do not have permission to edit other Admins.', variant: 'destructive' });
+       return;
+    }
+
     setEditingUserId(user.id)
     form.reset({
       id: user.id,
@@ -177,11 +191,9 @@ export default function UserManagementModal({
         toast({ title: 'Error', description: 'You cannot delete your own account.', variant: 'destructive' });
         return;
     }
-     if (currentUser?.role === 'Admin' && user.role === 'Admin') {
-        if(!currentUser.permissions.canManageAdmins) {
-            toast({ title: 'Permission Denied', description: 'You do not have permission to delete other admins.', variant: 'destructive' });
-            return;
-        }
+     if (user.role === 'Admin' && currentUser?.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
+        toast({ title: 'Permission Denied', description: 'You do not have permission to delete other Admins.', variant: 'destructive' });
+        return;
     }
 
     dispatch({
@@ -213,15 +225,14 @@ export default function UserManagementModal({
         return;
     }
     
-    if (currentUser?.role === 'Admin' && isUpdating && values.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
-        const targetUser = state.users.find(u => u.id === values.id);
-        if(targetUser?.role === 'Admin') {
-            toast({ title: 'Permission Denied', description: 'You cannot edit other Admin users.', variant: 'destructive' });
-            return;
-        }
+    const targetUser = isUpdating ? state.users.find(u => u.id === values.id) : null;
+    if (isUpdating && targetUser?.role === 'Admin' && currentUser?.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
+        toast({ title: 'Permission Denied', description: 'You cannot edit other Admin users.', variant: 'destructive' });
+        return;
     }
+    
 
-    let passwordHash = isUpdating ? state.users.find(u => u.id === values.id)?.passwordHash : undefined;
+    let passwordHash = isUpdating ? targetUser?.passwordHash : undefined;
     if (values.password && values.password.length > 0) {
         passwordHash = await hashPassword(values.password);
     }
@@ -230,14 +241,17 @@ export default function UserManagementModal({
         form.setError('password', { message: 'Password is required for new users.' });
         return;
     }
+
+    const finalPermissions = values.role === 'Admin' ? {} : values.permissions;
+    const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
     
     const userData: User = {
         id: isUpdating ? values.id! : `user-${uuidv4()}`,
-        firestoreId: isUpdating ? state.users.find(u=>u.id === values.id)!.firestoreId : `user-${uuidv4()}`,
+        firestoreId: isUpdating ? targetUser!.firestoreId : `user-${uuidv4()}`,
         username: values.username,
         role: values.role,
-        permissions: values.role === 'User' ? values.permissions : {},
-        departmentPermissions: values.role === 'User' ? values.departmentPermissions : [],
+        permissions: finalPermissions,
+        departmentPermissions: finalDepartmentPermissions,
         passwordHash: passwordHash!,
     };
     
@@ -255,10 +269,23 @@ export default function UserManagementModal({
   const canManageUser = (user: User) => {
     if (!currentUser) return false;
     if (currentUser.id === user.id) return false; // Cannot manage self
-    if (currentUser.role === 'Admin') return true;
+    // Admins with canManageAdmins can manage anyone except themselves
+    if (currentUser.role === 'Admin' && currentUser.permissions.canManageAdmins) return true;
+    // Standard Admins cannot manage other Admins
+    if (currentUser.role === 'Admin' && user.role === 'Admin') return false;
+    // Standard Admins can manage Users
+    if (currentUser.role === 'Admin' && user.role === 'User') return true;
+    
     return false;
   }
   
+  const canSetRole = (roleToSet: 'Admin' | 'User') => {
+      if (!currentUser) return false;
+      if (currentUser.role === 'Admin' && currentUser.permissions.canManageAdmins) return true;
+      if (currentUser.role === 'Admin' && roleToSet === 'User') return true;
+      return false;
+  }
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -371,6 +398,7 @@ export default function UserManagementModal({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
+                            disabled={!canSetRole('Admin') && !canSetRole('User')}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -378,8 +406,8 @@ export default function UserManagementModal({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Admin">Admin</SelectItem>
-                              <SelectItem value="User">User</SelectItem>
+                              {canSetRole('Admin') && <SelectItem value="Admin">Admin</SelectItem>}
+                              {canSetRole('User') && <SelectItem value="User">User</SelectItem>}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -404,7 +432,7 @@ export default function UserManagementModal({
                                 <FormField
                                   key={key}
                                   control={form.control}
-                                  name={`permissions.${key}`}
+                                  name={`permissions.${key as keyof typeof PERMISSIONS_CONFIG}`}
                                   render={({ field }) => (
                                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                                       <FormControl>
@@ -434,39 +462,49 @@ export default function UserManagementModal({
                           access to all departments.
                         </p>
                         <FormField
-                          control={form.control}
-                          name="departmentPermissions"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {state.departments.map((dept) => (
-                                  <FormItem
-                                    key={dept}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(dept)}
-                                        onCheckedChange={(checked) => {
-                                          const newValue = checked
-                                            ? [...(field.value || []), dept]
-                                            : (field.value || []).filter(
-                                                (value) => value !== dept
-                                              );
-                                          field.onChange(newValue);
+                            control={form.control}
+                            name="departmentPermissions"
+                            render={({ field }) => (
+                                <FormItem>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {state.departments.map((dept) => (
+                                    <FormField
+                                        key={dept}
+                                        control={form.control}
+                                        name="departmentPermissions"
+                                        render={({ field }) => {
+                                        return (
+                                            <FormItem
+                                            key={dept}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                            >
+                                            <FormControl>
+                                                <Checkbox
+                                                checked={field.value?.includes(dept)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                    ? field.onChange([...(field.value || []), dept])
+                                                    : field.onChange(
+                                                        (field.value || []).filter(
+                                                            (value) => value !== dept
+                                                        )
+                                                        );
+                                                }}
+                                                />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                                {dept}
+                                            </FormLabel>
+                                            </FormItem>
+                                        );
                                         }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                      {dept}
-                                    </FormLabel>
-                                  </FormItem>
-                                ))}
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                                    />
+                                    ))}
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
                       </div>
                     </div>
                   ) : (
@@ -478,16 +516,9 @@ export default function UserManagementModal({
                     </div>
                   )}
                    <DialogFooter className="pt-4 flex-row justify-end gap-2">
-                    {currentUser?.permissions.canManageAdmins && mode === 'edit' && (
-                       <Button type="button" variant="ghost" onClick={handleSetAddMode}>
-                           Cancel Edit & Add New
-                       </Button>
-                    )}
-                    {(mode === 'add' && currentUser?.permissions.canManageAdmins) && (
-                        <Button type="button" variant="ghost" onClick={handleSetAddMode}>
-                            Clear Form
-                        </Button>
-                    )}
+                    <Button type="button" variant="ghost" onClick={handleSetAddMode}>
+                        {mode === 'edit' ? 'Cancel Edit & Add New' : 'Clear Form'}
+                    </Button>
 
                     <Button type="submit">
                       {mode === 'edit' ? 'Save Changes' : 'Add User'}
@@ -502,3 +533,5 @@ export default function UserManagementModal({
     </Dialog>
   )
 }
+
+    
