@@ -143,8 +143,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         </TableCell>
       )}
       {columnVisibility.documentId && (
-        <TableCell className="font-medium">
-            <div className="font-semibold text-foreground">{doc.id}</div>
+        <TableCell>
+            <div className="text-foreground">{doc.id}</div>
             {doc.secondaryId && <div className="text-xs text-muted-foreground">Sec: {doc.secondaryId}</div>}
             {doc.tertiaryId && <div className="text-xs text-muted-foreground">Ter: {doc.tertiaryId}</div>}
             {doc.quaternaryId && <div className="text-xs text-muted-foreground">Qua: {doc.quaternaryId}</div>}
