@@ -54,7 +54,7 @@ export interface User {
   firestoreId: string;
   username: string;
   passwordHash: string;
-  role: 'Super Admin' | 'Admin' | 'User';
+  role: 'Admin' | 'User';
   permissions: { [key: string]: boolean };
   departmentPermissions: string[];
 }

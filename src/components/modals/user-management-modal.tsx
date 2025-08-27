@@ -47,7 +47,7 @@ const formSchema = z
     id: z.string().optional(),
     username: z.string().min(1, 'Username is required.'),
     password: z.string().optional(),
-    role: z.enum(['Super Admin', 'Admin', 'User']),
+    role: z.enum(['Admin', 'User']),
     permissions: permissionsSchema,
     departmentPermissions: z.array(z.string()).default([]),
   })
@@ -149,11 +149,6 @@ export default function UserManagementModal({
       toast({ title: 'Error', description: 'You cannot edit your own account from this panel.', variant: 'destructive' });
       return;
     }
-    // Super Admin can edit anyone. Admin can only edit Users.
-    if (currentUser?.role === 'Admin' && (user.role === 'Admin' || user.role === 'Super Admin')) {
-        toast({ title: 'Permission Denied', description: 'You can only edit users with the "User" role.', variant: 'destructive' });
-        return;
-    }
     setEditingUserId(user.id)
     form.reset({
       id: user.id,
@@ -182,9 +177,11 @@ export default function UserManagementModal({
         toast({ title: 'Error', description: 'You cannot delete your own account.', variant: 'destructive' });
         return;
     }
-     if (currentUser?.role === 'Admin' && (user.role === 'Admin' || user.role === 'Super Admin')) {
-        toast({ title: 'Permission Denied', description: 'You can only delete users with the "User" role.', variant: 'destructive' });
-        return;
+     if (currentUser?.role === 'Admin' && user.role === 'Admin') {
+        if(!currentUser.permissions.canManageAdmins) {
+            toast({ title: 'Permission Denied', description: 'You do not have permission to delete other admins.', variant: 'destructive' });
+            return;
+        }
     }
 
     dispatch({
@@ -216,10 +213,12 @@ export default function UserManagementModal({
         return;
     }
     
-    // Prevent Admin from creating/promoting to Admin or Super Admin
-    if (currentUser?.role === 'Admin' && (values.role === 'Admin' || values.role === 'Super Admin')) {
-        toast({ title: 'Permission Denied', description: 'You cannot create or promote users to Admin or Super Admin roles.', variant: 'destructive' });
-        return;
+    if (currentUser?.role === 'Admin' && isUpdating && values.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
+        const targetUser = state.users.find(u => u.id === values.id);
+        if(targetUser?.role === 'Admin') {
+            toast({ title: 'Permission Denied', description: 'You cannot edit other Admin users.', variant: 'destructive' });
+            return;
+        }
     }
 
     let passwordHash = isUpdating ? state.users.find(u => u.id === values.id)?.passwordHash : undefined;
@@ -256,8 +255,7 @@ export default function UserManagementModal({
   const canManageUser = (user: User) => {
     if (!currentUser) return false;
     if (currentUser.id === user.id) return false; // Cannot manage self
-    if (currentUser.role === 'Super Admin') return true;
-    if (currentUser.role === 'Admin') return user.role === 'User';
+    if (currentUser.role === 'Admin') return true;
     return false;
   }
   
@@ -373,7 +371,6 @@ export default function UserManagementModal({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
-                            disabled={currentUser?.role === 'Admin'}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -381,7 +378,6 @@ export default function UserManagementModal({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Super Admin">Super Admin</SelectItem>
                               <SelectItem value="Admin">Admin</SelectItem>
                               <SelectItem value="User">User</SelectItem>
                             </SelectContent>
@@ -481,14 +477,18 @@ export default function UserManagementModal({
                       </div>
                     </div>
                   )}
-                  <DialogFooter className="pt-4 flex-row justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={handleSetAddMode}
-                    >
-                      {mode === 'edit' ? 'Cancel Edit' : 'Clear'}
-                    </Button>
+                   <DialogFooter className="pt-4 flex-row justify-end gap-2">
+                    {currentUser?.permissions.canManageAdmins && mode === 'edit' && (
+                       <Button type="button" variant="ghost" onClick={handleSetAddMode}>
+                           Cancel Edit & Add New
+                       </Button>
+                    )}
+                    {(mode === 'add' && currentUser?.permissions.canManageAdmins) && (
+                        <Button type="button" variant="ghost" onClick={handleSetAddMode}>
+                            Clear Form
+                        </Button>
+                    )}
+
                     <Button type="submit">
                       {mode === 'edit' ? 'Save Changes' : 'Add User'}
                     </Button>

@@ -75,7 +75,7 @@ export default function DashboardSidebar() {
               <span>Release Document</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {(currentUser.role === 'Admin' || currentUser.role === 'Super Admin') && (
+          {currentUser.role === 'Admin' && (
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="User Management" onClick={openUserManagement}>
                 <Users />

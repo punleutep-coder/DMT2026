@@ -166,7 +166,7 @@ export default function DocumentManagement() {
             <Combine /> Combine Selected
           </Button>
         )}
-        {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && (
+        {currentUser?.role === 'Admin' && (
             <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white">
                 <Library /> Manage Departments
             </Button>
@@ -181,7 +181,7 @@ export default function DocumentManagement() {
                 <Download /> Export Data (JSON)
             </Button>
         )}
-         {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && (
+         {currentUser?.role === 'Admin' && (
             <>
                 <Button variant="outline" onClick={handleImportClick}>
                     <Upload /> Import Data (JSON)

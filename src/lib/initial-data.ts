@@ -25,7 +25,6 @@ const DEFAULT_LOGS: { [key: string]: Omit<Log, 'id'> } = {
 };
 
 const DEFAULT_USERS: { [key: string]: Omit<User, 'id'> } = {
-    'user-super-admin': { firestoreId: 'user-super-admin', username: 'superadmin', passwordHash: '1314d5612849482d921e97601da8c6511b0583a6a9b44a83151624c9d9361735', role: 'Super Admin', permissions: {}, departmentPermissions: [] },
     'user-admin': { firestoreId: 'user-admin', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: {}, departmentPermissions: [] }
 };
 
