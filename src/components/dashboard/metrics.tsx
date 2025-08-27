@@ -39,7 +39,7 @@ export default function Metrics() {
     const docs = state.documents;
 
     const activeDocs = docs.filter(d => d.status !== 'Combined' && d.status !== 'Split')
-    const inProgressDocs = activeDocs.filter(d => !d.isDelayed && !d.status.startsWith('Completed'))
+    const inProgressDocs = activeDocs.filter(d => !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed'))
     const delayedDocs = activeDocs.filter(d => d.isDelayed && !d.releaseDateReached)
     const releaseReachedDocs = activeDocs.filter(d => d.releaseDateReached)
     const completedSuccessDocs = activeDocs.filter(d => d.status === 'Completed (Success)')

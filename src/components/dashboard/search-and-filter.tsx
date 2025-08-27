@@ -55,7 +55,7 @@ export default function SearchAndFilter() {
   }
   
   const handleCalculatePeriod = () => {
-    dispatch({ type: 'SET_FILTER', payload: { periodValue, periodUnit, mainFilter: 'Exceeding Period' } })
+    dispatch({ type: 'SET_FILTER', payload: { periodValue, periodUnit, mainFilter: 'Exceeding Period', departmentSpecificFilter: 'All' } })
   }
 
   const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All';
