@@ -1,3 +1,4 @@
+
 import type { Document } from './types';
 
 export const isDocumentExceedingPeriod = (doc: Document, value: number, unit: 'days' | 'hours' | 'minutes') => {
