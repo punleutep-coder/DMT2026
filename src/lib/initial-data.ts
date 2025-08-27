@@ -25,7 +25,7 @@ const DEFAULT_LOGS: { [key: string]: Omit<Log, 'id'> } = {
 };
 
 const DEFAULT_USERS: { [key: string]: Omit<User, 'id'> } = {
-    'user-super-admin': { firestoreId: 'user-super-admin', username: 'superadmin', passwordHash: '1b4f0e9851971998e732078544c96b36c3d01cedf7caa332359d6f1d83567014', role: 'Super Admin', permissions: {}, departmentPermissions: [] },
+    'user-super-admin': { firestoreId: 'user-super-admin', username: 'superadmin', passwordHash: 'b5b76c8e03e5a5a39a3f456157f4955f2658875567b4549f05698b671a5c687e', role: 'Super Admin', permissions: {}, departmentPermissions: [] },
     'user-admin': { firestoreId: 'user-admin', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: {}, departmentPermissions: [] }
 };
 
@@ -46,19 +46,23 @@ export const initialColumnVisibility = Object.keys(COLUMN_CONFIG).reduce((acc, k
 }, {} as { [key: string]: boolean });
 
 
-export const PERMISSIONS_CONFIG = {
+export const PERMISSIONS_CONFIG: { [key: string]: string } = {
     canAddDocument: 'Add New Document',
     canCombineDocuments: 'Combine Documents',
     canManageColumns: 'Manage Columns',
     canExportData: 'Export Data',
+    canViewLog: 'View Log',
     canSplitDocument: 'Split Document',
-    canDelayDocument: 'Delay Document',
+    canEditCurrentNote: 'Edit Current Note',
     canMoveDocument: 'Move Document (Advance/Back)',
+    canDelayDocument: 'Delay Document',
+    canReleaseDocument: 'Release Document from Delay',
     canCompleteDocument: 'Complete Document',
     canDeleteDocument: 'Delete Document',
-    canReleaseDocument: 'Release Document from Delay',
-    canEditCurrentNote: 'Edit Current Note',
-    canViewLog: 'View Log',
+    canOpenDocumentLink1: 'Open Document (Link 1)',
+    canOpenDocumentLink2: 'Open Document (Link 2)',
+    canOpenDocumentLink3: 'Open Document (Link 3)',
+    canOpenDocumentLink4: 'Open Document (Link 4)',
     canEditDocumentId: 'Edit Document ID (Primary)',
     canEditDocumentName: 'Edit Document Name',
     canEditOffice: 'Edit Office',
@@ -66,10 +70,6 @@ export const PERMISSIONS_CONFIG = {
     canEditTertiaryId: 'Edit Tertiary ID',
     canEditQuaternaryId: 'Edit Quaternary ID',
     canEditAssignedDepartment: 'Edit Assigned Department',
-    canOpenDocumentLink1: 'Open Document Link 1',
-    canOpenDocumentLink2: 'Open Document Link 2',
-    canOpenDocumentLink3: 'Open Document Link 3',
-    canOpenDocumentLink4: 'Open Document Link 4',
     canEditDocumentLink1: 'Edit Document Link 1',
     canEditDocumentLink2: 'Edit Document Link 2',
     canEditDocumentLink3: 'Edit Document Link 3',
