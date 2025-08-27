@@ -43,10 +43,10 @@ import { FormDescription } from '../ui/form'
 const permissionsSchema = z.object(
   Object.keys(PERMISSIONS_CONFIG).reduce(
     (acc, key) => {
-      acc[key] = z.boolean().optional() // Make each permission optional
+      acc[key] = z.boolean().default(false).optional()
       return acc
     },
-    {} as Record<string, z.ZodOptional<z.ZodBoolean>>
+    {} as Record<string, z.ZodOptional<z.ZodDefault<z.ZodBoolean>>>
   )
 )
 
@@ -79,17 +79,9 @@ interface UserManagementModalProps {
   userId?: string
 }
 
-const hashPassword = async (password: string): Promise<string> => {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
 const permissionGroups = {
     'Document Permissions': Object.entries(PERMISSIONS_CONFIG)
-      .filter(([key]) => !key.startsWith('canOpenDocumentLink'))
+      .filter(([key]) => !key.startsWith('canOpenDocumentLink') && key !== 'canManageAdmins')
       .map(([key, name]) => ({ key, name })),
     'Open Document Link Permissions': Object.entries(PERMISSIONS_CONFIG)
       .filter(([key]) => key.startsWith('canOpenDocumentLink'))
@@ -118,7 +110,7 @@ export default function UserManagementModal({
       username: '',
       password: '',
       role: 'User' as const,
-      permissions: {},
+      permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       departmentPermissions: [],
     },
   })
@@ -133,7 +125,7 @@ export default function UserManagementModal({
           username: user.username,
           password: '',
           role: user.role,
-          permissions: user.permissions || {},
+          permissions: user.permissions || Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
           departmentPermissions: user.departmentPermissions || [],
         })
       }
@@ -144,7 +136,7 @@ export default function UserManagementModal({
         username: '',
         password: '',
         role: 'User' as const,
-        permissions: {},
+        permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
         departmentPermissions: [],
       })
     }
@@ -169,7 +161,7 @@ export default function UserManagementModal({
       username: user.username,
       password: '',
       role: user.role,
-      permissions: user.permissions || {},
+      permissions: user.permissions || Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       departmentPermissions: user.departmentPermissions || [],
     })
   }
@@ -181,7 +173,7 @@ export default function UserManagementModal({
       username: '',
       password: '',
       role: 'User' as const,
-      permissions: {},
+      permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       departmentPermissions: [],
     })
   }
@@ -241,8 +233,15 @@ export default function UserManagementModal({
         form.setError('password', { message: 'Password is required for new users.' });
         return;
     }
+    
+    const allPermissionKeys = Object.keys(PERMISSIONS_CONFIG);
+    const finalPermissions: { [key: string]: boolean } = {};
+    if (values.role === 'User') {
+      allPermissionKeys.forEach(key => {
+        finalPermissions[key] = values.permissions?.[key as keyof typeof values.permissions] || false;
+      });
+    }
 
-    const finalPermissions = values.role === 'Admin' ? {} : values.permissions;
     const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
     
     const userData: User = {
@@ -254,6 +253,11 @@ export default function UserManagementModal({
         departmentPermissions: finalDepartmentPermissions,
         passwordHash: passwordHash!,
     };
+    
+    // Add canManageAdmins permission for admins
+    if (userData.role === 'Admin') {
+        userData.permissions.canManageAdmins = true;
+    }
     
     if (isUpdating) {
         dispatch({ type: 'UPDATE_USER', payload: userData });
@@ -398,7 +402,6 @@ export default function UserManagementModal({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
-                            disabled={!canSetRole('Admin') && !canSetRole('User')}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -464,7 +467,7 @@ export default function UserManagementModal({
                         <FormField
                             control={form.control}
                             name="departmentPermissions"
-                            render={({ field }) => (
+                            render={() => (
                                 <FormItem>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {state.departments.map((dept) => (
@@ -482,10 +485,11 @@ export default function UserManagementModal({
                                                 <Checkbox
                                                 checked={field.value?.includes(dept)}
                                                 onCheckedChange={(checked) => {
+                                                    const currentValue = field.value || [];
                                                     return checked
-                                                    ? field.onChange([...(field.value || []), dept])
+                                                    ? field.onChange([...currentValue, dept])
                                                     : field.onChange(
-                                                        (field.value || []).filter(
+                                                        currentValue.filter(
                                                             (value) => value !== dept
                                                         )
                                                         );
@@ -533,5 +537,6 @@ export default function UserManagementModal({
     </Dialog>
   )
 }
+    
 
     
