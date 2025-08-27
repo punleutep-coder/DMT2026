@@ -41,14 +41,14 @@ import { FormDescription } from '../ui/form'
 
 // Create a schema for permissions dynamically from PERMISSIONS_CONFIG
 const permissionsSchema = z.object(
-  Object.keys(PERMISSIONS_CONFIG).reduce(
-    (acc, key) => {
-      acc[key] = z.boolean().default(false).optional()
-      return acc
-    },
-    {} as Record<string, z.ZodOptional<z.ZodDefault<z.ZodBoolean>>>
-  )
-)
+    Object.keys(PERMISSIONS_CONFIG).reduce(
+      (acc, key) => {
+        acc[key] = z.boolean().default(false).optional()
+        return acc
+      },
+      {} as Record<string, z.ZodOptional<z.ZodDefault<z.ZodBoolean>>>
+    )
+  ).optional()
 
 const formSchema = z
   .object({
@@ -87,6 +87,14 @@ const permissionGroups = {
       .filter(([key]) => key.startsWith('canOpenDocumentLink'))
       .map(([key, name]) => ({ key, name })),
   }
+
+const hashPassword = async (password: string): Promise<string> => {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(password)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
 
 export default function UserManagementModal({
   isOpen,
@@ -236,12 +244,13 @@ export default function UserManagementModal({
     
     const allPermissionKeys = Object.keys(PERMISSIONS_CONFIG);
     const finalPermissions: { [key: string]: boolean } = {};
+
     if (values.role === 'User') {
       allPermissionKeys.forEach(key => {
-        finalPermissions[key] = values.permissions?.[key as keyof typeof values.permissions] || false;
+        finalPermissions[key] = values.permissions?.[key as keyof typeof values.permissions] ?? false;
       });
     }
-
+    
     const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
     
     const userData: User = {
@@ -254,7 +263,7 @@ export default function UserManagementModal({
         passwordHash: passwordHash!,
     };
     
-    // Add canManageAdmins permission for admins
+    // Add/ensure canManageAdmins permission for admins
     if (userData.role === 'Admin') {
         userData.permissions.canManageAdmins = true;
     }
@@ -537,6 +546,4 @@ export default function UserManagementModal({
     </Dialog>
   )
 }
-    
-
     
