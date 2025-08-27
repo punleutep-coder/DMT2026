@@ -33,7 +33,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { PERMISSIONS_CONFIG } from '@/lib/initial-data'
 import { Checkbox } from '../ui/checkbox'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Shield, Trash2 } from 'lucide-react'
 import type { User } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { v4 as uuidv4 } from 'uuid'
@@ -47,7 +47,7 @@ const formSchema = z
     id: z.string().optional(),
     username: z.string().min(1, 'Username is required.'),
     password: z.string().optional(),
-    role: z.enum(['Admin', 'User']),
+    role: z.enum(['Super Admin', 'Admin', 'User']),
     permissions: permissionsSchema,
     departmentPermissions: z.array(z.string()).default([]),
   })
@@ -81,7 +81,7 @@ const hashPassword = async (password: string): Promise<string> => {
 
 const permissionGroups = {
   'Document Permissions': Object.entries(PERMISSIONS_CONFIG)
-    .filter(([key]) => !key.startsWith('canOpenDocumentLink'))
+    .filter(([key]) => !key.startsWith('canOpenDocumentLink') && key !== 'canManageAdmins')
     .map(([key, name]) => ({ key, name })),
   'Open Document Link Permissions': Object.entries(PERMISSIONS_CONFIG)
     .filter(([key]) => key.startsWith('canOpenDocumentLink'))
@@ -94,6 +94,7 @@ export default function UserManagementModal({
   userId: initialUserId,
 }: UserManagementModalProps) {
   const { state, dispatch } = useAppContext()
+  const { currentUser } = state
   const { toast } = useToast()
   const [editingUserId, setEditingUserId] = useState<string | undefined>(
     initialUserId
@@ -144,17 +145,14 @@ export default function UserManagementModal({
   const role = form.watch('role')
 
   const handleSetEditMode = (user: User) => {
-    if (state.currentUser?.id === user.id) {
-      dispatch({
-        type: 'SET_DIALOG',
-        payload: {
-          isOpen: true,
-          title: 'Error',
-          message: 'You cannot edit your own account from this panel.',
-          isAlert: true,
-        },
-      })
-      return
+    if (currentUser?.id === user.id) {
+      toast({ title: 'Error', description: 'You cannot edit your own account from this panel.', variant: 'destructive' });
+      return;
+    }
+    // Super Admin can edit anyone. Admin can only edit Users.
+    if (currentUser?.role === 'Admin' && (user.role === 'Admin' || user.role === 'Super Admin')) {
+        toast({ title: 'Permission Denied', description: 'You can only edit users with the "User" role.', variant: 'destructive' });
+        return;
     }
     setEditingUserId(user.id)
     form.reset({
@@ -180,18 +178,15 @@ export default function UserManagementModal({
   }
 
   const handleDeleteUser = (user: User) => {
-    if (state.currentUser?.id === user.id) {
-      dispatch({
-        type: 'SET_DIALOG',
-        payload: {
-          isOpen: true,
-          title: 'Error',
-          message: 'You cannot delete your own account.',
-          isAlert: true,
-        },
-      })
-      return
+    if (currentUser?.id === user.id) {
+        toast({ title: 'Error', description: 'You cannot delete your own account.', variant: 'destructive' });
+        return;
     }
+     if (currentUser?.role === 'Admin' && (user.role === 'Admin' || user.role === 'Super Admin')) {
+        toast({ title: 'Permission Denied', description: 'You can only delete users with the "User" role.', variant: 'destructive' });
+        return;
+    }
+
     dispatch({
       type: 'SET_DIALOG',
       payload: {
@@ -220,6 +215,12 @@ export default function UserManagementModal({
         form.setError('username', { message: 'This username is already taken.' });
         return;
     }
+    
+    // Prevent Admin from creating/promoting to Admin or Super Admin
+    if (currentUser?.role === 'Admin' && (values.role === 'Admin' || values.role === 'Super Admin')) {
+        toast({ title: 'Permission Denied', description: 'You cannot create or promote users to Admin or Super Admin roles.', variant: 'destructive' });
+        return;
+    }
 
     let passwordHash = isUpdating ? state.users.find(u => u.id === values.id)?.passwordHash : undefined;
     if (values.password && values.password.length > 0) {
@@ -236,11 +237,11 @@ export default function UserManagementModal({
         firestoreId: isUpdating ? state.users.find(u=>u.id === values.id)!.firestoreId : `user-${uuidv4()}`,
         username: values.username,
         role: values.role,
-        permissions: values.role === 'Admin' ? {} : values.permissions,
-        departmentPermissions: values.role === 'Admin' ? [] : values.departmentPermissions,
+        permissions: values.role === 'User' ? values.permissions : {},
+        departmentPermissions: values.role === 'User' ? values.departmentPermissions : [],
         passwordHash: passwordHash!,
     };
-
+    
     if (isUpdating) {
         dispatch({ type: 'UPDATE_USER', payload: userData });
         toast({ title: 'Success', description: 'User updated successfully.' });
@@ -251,19 +252,31 @@ export default function UserManagementModal({
 
     handleSetAddMode();
   }
+  
+  const canManageUser = (user: User) => {
+    if (!currentUser) return false;
+    if (currentUser.id === user.id) return false; // Cannot manage self
+    if (currentUser.role === 'Super Admin') return true;
+    if (currentUser.role === 'Admin') return user.role === 'User';
+    return false;
+  }
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>User Management</DialogTitle>
+          <DialogDescription>
+            Add, edit, or remove users and manage their roles and permissions.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Existing Users</h3>
             <ScrollArea className="h-[60vh] p-2 border rounded-md">
               <div className="space-y-2">
-                {state.users.map((user) => (
+                {state.users.sort((a,b) => a.username.localeCompare(b.username)).map((user) => (
                   <div
                     key={user.id}
                     className="flex items-center justify-between rounded-md p-2 bg-muted/50"
@@ -274,24 +287,26 @@ export default function UserManagementModal({
                         ({user.role})
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleSetEditMode(user)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteUser(user)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {canManageUser(user) && (
+                      <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleSetEditMode(user)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteUser(user)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -358,6 +373,7 @@ export default function UserManagementModal({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
+                            disabled={currentUser?.role === 'Admin'}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -365,6 +381,7 @@ export default function UserManagementModal({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="Super Admin">Super Admin</SelectItem>
                               <SelectItem value="Admin">Admin</SelectItem>
                               <SelectItem value="User">User</SelectItem>
                             </SelectContent>
@@ -457,8 +474,11 @@ export default function UserManagementModal({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-40 text-muted-foreground p-4 border rounded-md">
-                      Admins have all permissions by default.
+                    <div className="flex items-center justify-center h-40 text-muted-foreground p-4 border rounded-md bg-muted/30">
+                      <div className='text-center'>
+                        <Shield className="mx-auto h-8 w-8 text-primary" />
+                        <p className="mt-2 font-medium">{role}s have all permissions by default.</p>
+                      </div>
                     </div>
                   )}
                   <DialogFooter className="pt-4 flex-row justify-end gap-2">
@@ -482,5 +502,3 @@ export default function UserManagementModal({
     </Dialog>
   )
 }
-
-    

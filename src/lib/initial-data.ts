@@ -24,18 +24,9 @@ const DEFAULT_LOGS: { [key: string]: Omit<Log, 'id'> } = {
     'log-3': { firestoreId: 'log-3', docId: 'REQ-003', oldStatus: 'Department G', newStatus: 'Completed (Success)', user: 'admin', timestamp: '2025-07-15T14:00:00Z' }
 };
 
-const adminPermissions = {
-    canAddDocument: true, canCombineDocuments: true, canManageColumns: true, canExportData: true,
-    canSplitDocument: true, canDelayDocument: true, canMoveDocument: true, canCompleteDocument: true,
-    canDeleteDocument: true, canEditDocumentDetails: true, canReleaseDocument: true, canEditCurrentNote: true,
-    canViewLog: true, canOpenDocumentLink1: true, canOpenDocumentLink2: true, canOpenDocumentLink3: true,
-    canOpenDocumentLink4: true, canEditDocumentId: true, canEditDocumentName: true, canEditOffice: true,
-    canEditSecondaryId: true, canEditTertiaryId: true, canEditQuaternaryId: true, canEditDocumentLink1: true,
-    canEditDocumentLink2: true, canEditDocumentLink3: true, canEditDocumentLink4: true, canEditAssignedDepartment: true,
-};
-
 const DEFAULT_USERS: { [key: string]: Omit<User, 'id'> } = {
-    'user-admin': { firestoreId: 'user-admin', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: adminPermissions, departmentPermissions: [] }
+    'user-super-admin': { firestoreId: 'user-super-admin', username: 'superadmin', passwordHash: '1b4f0e9851971998e732078544c96b36c3d01cedf7caa332359d6f1d83567014', role: 'Super Admin', permissions: {}, departmentPermissions: [] },
+    'user-admin': { firestoreId: 'user-admin', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: {}, departmentPermissions: [] }
 };
 
 export const COLUMN_CONFIG: { [key: string]: { name: string } } = {
@@ -83,6 +74,7 @@ export const PERMISSIONS_CONFIG = {
     canEditDocumentLink2: 'Edit Document Link 2',
     canEditDocumentLink3: 'Edit Document Link 3',
     canEditDocumentLink4: 'Edit Document Link 4',
+    canManageAdmins: 'Can Manage Admins',
 };
 
 export const initialData = {

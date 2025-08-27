@@ -1,3 +1,4 @@
+
 'use client'
 import {
   Sidebar,
@@ -21,6 +22,7 @@ import {
   PlayCircle,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
+import { hasPermission } from '@/lib/permissions'
 
 export default function DashboardSidebar() {
   const { state, dispatch } = useAppContext()
@@ -73,7 +75,7 @@ export default function DashboardSidebar() {
               <span>Release Document</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {currentUser.role === 'Admin' && (
+          {(currentUser.role === 'Admin' || currentUser.role === 'Super Admin') && (
              <SidebarMenuItem>
               <SidebarMenuButton tooltip="User Management" onClick={openUserManagement}>
                 <Users />
