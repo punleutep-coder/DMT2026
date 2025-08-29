@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AppProvider } from '@/context/app-context'
 import { Toaster } from '@/components/ui/toaster'
+import ThemeProvider from '@/context/theme-provider'
 
 export const metadata: Metadata = {
   title: 'DocuFlow',
@@ -14,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -29,8 +30,10 @@ export default function RootLayout({
       </head>
       <body>
         <AppProvider>
-          {children}
-          <Toaster />
+          <ThemeProvider>
+            {children}
+            <Toaster />
+          </ThemeProvider>
         </AppProvider>
       </body>
     </html>

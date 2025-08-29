@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
+import ThemeToggle from './theme-toggle'
 
 export default function DashboardSidebar() {
   const { state, dispatch } = useAppContext()
@@ -86,11 +87,13 @@ export default function DashboardSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-         <div className="text-center text-muted-foreground text-sm mb-4">
-            Logged in as:{' '}
-            <strong className="text-primary">{currentUser.username}</strong> (
-            {currentUser.role})
-          </div>
+        <div className="flex items-center justify-between p-2">
+          <div className="text-center text-muted-foreground text-sm">
+              Logged in as:{' '}
+              <strong className="text-primary">{currentUser.username}</strong>
+            </div>
+          <ThemeToggle />
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout} variant="outline">

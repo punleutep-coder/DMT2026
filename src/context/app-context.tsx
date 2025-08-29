@@ -4,7 +4,7 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db } from '@/lib/firebase'
 import { ref, onValue, set, push, get, update } from 'firebase/database'
-import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
+import type { AppState, User, Document, Log, DialogState, ModalState, Theme } from '@/lib/types'
 import {
   initialColumnVisibility,
 } from '@/lib/initial-data'
@@ -35,6 +35,8 @@ type Action =
   | { type: 'SET_DOCUMENTS'; payload: Document[] }
   | { type: 'SET_LOGS'; payload: Log[] }
   | { type: 'SET_USERS'; payload: User[] }
+  | { type: 'SET_THEME'; payload: Theme }
+  | { type: 'TOGGLE_THEME' }
   | { type: 'SET_INITIALIZED'; payload: boolean };
 
 
@@ -63,6 +65,7 @@ const getInitialState = (): AppState => ({
     isInitialized: false,
     dialog: { isOpen: false, title: '', message: '' },
     modal: { type: null },
+    theme: 'dark',
 })
 
 
@@ -114,7 +117,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
       // Keep users and departments on logout so the login page works
-      return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true };
+      return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true, theme: state.theme };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload }, pagination: {...state.pagination, currentPage: 1} };
     case 'SET_PAGINATION':
@@ -218,6 +221,18 @@ const appReducer = (state: AppState, action: Action): AppState => {
         set(ref(db, 'columnVisibility'), action.payload);
         return { ...state, columnVisibility: action.payload };
     }
+    case 'SET_THEME':
+      localStorage.setItem('docuflow-theme', action.payload);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(action.payload);
+      return { ...state, theme: action.payload };
+    case 'TOGGLE_THEME': {
+      const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('docuflow-theme', newTheme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(newTheme);
+      return { ...state, theme: newTheme };
+    }
     default:
       return state
   }
@@ -254,6 +269,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         sessionStorage.removeItem('currentUser');
         dispatch({ type: 'SET_INITIALIZED', payload: true });
     }
+    const storedTheme = localStorage.getItem('docuflow-theme') as Theme | null
+    if (storedTheme) {
+      dispatch({ type: 'SET_THEME', payload: storedTheme })
+    }
+
   }, []);
 
   useEffect(() => {

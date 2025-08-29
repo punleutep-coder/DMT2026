@@ -1,5 +1,7 @@
 
 
+export type Theme = 'dark' | 'light'
+
 export interface HistoryEntry {
   department: string;
   start: string;
@@ -84,6 +86,7 @@ export interface AppState {
   isInitialized: boolean;
   dialog: DialogState;
   modal: ModalState;
+  theme: Theme;
 }
 
 export interface DialogState {
