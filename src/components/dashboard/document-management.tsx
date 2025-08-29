@@ -193,7 +193,7 @@ export default function DocumentManagement() {
 
       <SearchAndFilter />
       
-      <div className="overflow-x-auto rounded-lg border-2 border-blue-800/50 dark:border-blue-400/50">
+      <div className="overflow-x-auto rounded-lg border-2 border-gray-400/50 dark:border-gray-600/50">
         <DocumentTable />
       </div>
     </section>
