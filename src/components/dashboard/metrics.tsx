@@ -33,32 +33,7 @@ const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primar
 }
 
 export default function Metrics() {
-  const { state } = useAppContext()
-
-  const metrics = useMemo(() => {
-    const docs = state.documents;
-
-    const activeDocs = docs.filter(d => d.status !== 'Combined' && d.status !== 'Split')
-    const inProgressDocs = activeDocs.filter(d => !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed'))
-    const delayedDocs = activeDocs.filter(d => d.isDelayed && !d.releaseDateReached)
-    const releaseReachedDocs = activeDocs.filter(d => d.releaseDateReached)
-    const completedSuccessDocs = activeDocs.filter(d => d.status === 'Completed (Success)')
-    const completedUnsuccessDocs = activeDocs.filter(d => d.status === 'Completed (Unsuccess)')
-    const completedDocs = [...completedSuccessDocs, ...completedUnsuccessDocs]
-
-    const exceedingDocs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
-
-    return {
-      total: activeDocs.length,
-      inProgress: inProgressDocs.length,
-      delayed: delayedDocs.length,
-      releaseReached: releaseReachedDocs.length,
-      completed: completedDocs.length,
-      completedSuccess: completedSuccessDocs.length,
-      completedUnsuccess: completedUnsuccessDocs.length,
-      exceeding: exceedingDocs.length,
-    }
-  }, [state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment])
+  const { metrics } = useAppContext()
 
   const metricItems = [
     { title: 'Total Documents', filter: 'All', metric: metrics.total, valueColorClass: 'text-blue-400' },

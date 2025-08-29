@@ -387,16 +387,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // Date filtering logic
     if (state.filter.startDate && state.filter.endDate) {
         docs = docs.filter(doc => {
-            if (doc.history && Array.isArray(doc.history)) {
-                for (const entry of doc.history) {
-                    const entryStart = new Date(entry.start)
-                    const entryEnd = entry.end ? new Date(entry.end) : new Date()
-                    const overlap =
-                        entryStart <= state.filter.endDate! && entryEnd >= state.filter.startDate!
-                    if (overlap) {
-                        return true
-                    }
-                }
+            if (doc.history && doc.history.length > 0) {
+                const firstEntryStart = new Date(doc.history[0].start);
+                // The document is considered "received" if its first history entry start date
+                // is within the selected range.
+                return firstEntryStart >= state.filter.startDate! && firstEntryStart <= state.filter.endDate!;
             }
             return false;
         });
@@ -424,8 +419,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             docs = docs.filter(d => d.status === state.filter.mainFilter);
         }
     } else if (state.filter.departmentSpecificFilter === 'All') {
-        docs = docs.filter(doc => doc.status !== 'Combined' && doc.status !== 'Split');
+        // When no main filter is active, and no department-specific filter is active,
+        // show all documents that are not in a terminal state (Combined/Split).
+        // If a date filter IS active, we want to show all documents within that range, regardless of status.
+        if (!state.filter.startDate) {
+            docs = docs.filter(doc => doc.status !== 'Combined' && doc.status !== 'Split');
+        }
     }
+
 
     if(state.filter.departmentSpecificFilter !== 'All'){
         docs = docs.filter(d => d.status === state.filter.departmentSpecificFilter)
@@ -433,9 +434,44 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     return docs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
   }, [state.documents, state.logs, state.filter, state.currentUser, state.isInitialized])
+  
+  const activeDocs = useMemo(() => {
+    // If a date filter is applied, the "Total Documents" card should reflect the count from that filter.
+    // Otherwise, it should show all documents not in a 'Combined' or 'Split' state.
+    if (state.filter.startDate && state.filter.endDate) {
+        return filteredDocs;
+    }
+    return state.documents.filter(d => d.status !== 'Combined' && d.status !== 'Split');
+  }, [filteredDocs, state.documents, state.filter.startDate, state.filter.endDate]);
+
+
+  const metrics = useMemo(() => {
+    const docs = state.documents; // Base all metrics on the complete, unfiltered dataset
+    const inProgressDocs = docs.filter(d => !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split')
+    const delayedDocs = docs.filter(d => d.isDelayed && !d.releaseDateReached)
+    const releaseReachedDocs = docs.filter(d => d.releaseDateReached)
+    const completedSuccessDocs = docs.filter(d => d.status === 'Completed (Success)')
+    const completedUnsuccessDocs = docs.filter(d => d.status === 'Completed (Unsuccess)')
+    const completedDocs = [...completedSuccessDocs, ...completedUnsuccessDocs]
+
+    // The "Exceeding" metric should respect the department filter from its own control section
+    const exceedingDocs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
+
+    return {
+      total: activeDocs.length,
+      inProgress: inProgressDocs.length,
+      delayed: delayedDocs.length,
+      releaseReached: releaseReachedDocs.length,
+      completed: completedDocs.length,
+      completedSuccess: completedSuccessDocs.length,
+      completedUnsuccess: completedUnsuccessDocs.length,
+      exceeding: exceedingDocs.length,
+    }
+  }, [activeDocs, state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
+
 
   return (
-    <AppContext.Provider value={{ state, dispatch, filteredDocs }}>
+    <AppContext.Provider value={{ state, dispatch, filteredDocs, metrics }}>
       {children}
     </AppContext.Provider>
   )
