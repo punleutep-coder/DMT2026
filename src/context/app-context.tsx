@@ -7,7 +7,6 @@ import { ref, onValue, set, push, get, update } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
-  initialData,
 } from '@/lib/initial-data'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
@@ -92,12 +91,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_USERS':
         const users = action.payload;
         let liveCurrentUser = state.currentUser;
+        // If a user is logged in, check if their data has been updated (e.g., permissions change)
         if (liveCurrentUser) {
             const updatedUser = users.find(u => u.id === liveCurrentUser!.id);
-            if (!updatedUser) { // User was deleted
+            if (!updatedUser) { // User was deleted from another session
                 sessionStorage.removeItem('currentUser');
                 liveCurrentUser = null;
-            } else {
+            } else if (JSON.stringify(updatedUser) !== JSON.stringify(liveCurrentUser)) {
+                // User data changed, update session storage and state
                 liveCurrentUser = updatedUser;
                 sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
             }
@@ -193,16 +194,16 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'ADD_USER': {
         const newUser = action.payload;
         set(ref(db, `users/${newUser.id}`), newUser);
-        return state; // Rely on onValue listener to update state
+        return state;
     }
     case 'UPDATE_USER': {
         const updatedUser = action.payload;
         set(ref(db, `users/${updatedUser.id}`), updatedUser);
-        return state; // Rely on onValue listener to update state
+        return state;
     }
     case 'DELETE_USER': {
         set(ref(db, `users/${action.payload.id}`), null);
-        return state; // Rely on onValue listener to update state
+        return state;
     }
     case 'ADD_LOG': {
         const newLogRef = push(ref(db, 'logs'));
@@ -238,12 +239,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    // Try to load user from session storage right away.
+    // Try to load user from session storage on initial load.
+    // This makes the app feel faster by avoiding a flicker on page refresh.
     try {
         const storedUser = sessionStorage.getItem('currentUser');
         if (storedUser) {
             dispatch({ type: 'LOGIN', payload: { user: JSON.parse(storedUser) } });
         } else {
+            // If no user in session, we are definitely logged out.
             dispatch({ type: 'SET_INITIALIZED', payload: true });
         }
     } catch (e) {
@@ -260,15 +263,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const listeners = [
         { path: 'documents', actionType: 'SET_DOCUMENTS' },
         { path: 'logs', actionType: 'SET_LOGS' },
-        { path: 'users', actionType: 'SET_USERS' },
         { path: 'departments', actionType: 'SET_DEPARTMENTS' },
         { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
+        // User listener is now in the login form to ensure data is ready before login.
     ];
 
     const unsubscribes = listeners.map(({ path, actionType }) => 
         onValue(ref(db, path), (snapshot) => {
             const data = snapshot.val();
-            if (path === 'documents' || path === 'logs' || path === 'users') {
+            if (path === 'documents' || path === 'logs') {
                  dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
             } else {
                  dispatch({ type: actionType, payload: data || (path === 'departments' ? [] : initialColumnVisibility) } as any);

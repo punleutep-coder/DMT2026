@@ -21,9 +21,8 @@ import AnimatedBackground from '../ui/animated-background'
 import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
-import { get, ref, set } from 'firebase/database'
+import { get, ref, set, onValue } from 'firebase/database'
 import { db } from '@/lib/firebase'
-import type { Document, Log } from '@/lib/types'
 import { initialData } from '@/lib/initial-data'
 
 const formSchema = z.object({
@@ -43,6 +42,7 @@ export default function LoginForm() {
   const { state, dispatch } = useAppContext()
   const [error, setError] = useState<string | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
   const { toast } = useToast()
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,24 +53,37 @@ export default function LoginForm() {
     },
   })
 
-  // This effect will run when the component mounts and ensure the DB is seeded if necessary.
+  // This effect will run when the component mounts.
+  // It's responsible for fetching the users list and seeding the DB if necessary.
   useEffect(() => {
-    // We can only check for users if the state has been initialized.
-    // The users array might be empty initially until the listener fetches it.
-    if (state.isInitialized) {
-      const usersRef = ref(db, 'users');
-      get(usersRef).then((snapshot) => {
+    const usersRef = ref(db, 'users');
+    
+    // Check for users and seed if necessary on first load.
+    get(usersRef).then((snapshot) => {
         if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
           console.log("No users found in DB. Seeding database...");
-          set(ref(db), initialData).then(() => {
-            console.log("Database seeded successfully.");
-          }).catch(error => {
+          // Seed the entire initial dataset if users are missing.
+          set(ref(db), initialData).catch(error => {
             console.error("Failed to seed database:", error);
           });
         }
-      });
-    }
-  }, [state.isInitialized, state.users]); // Depend on users array as well
+    });
+
+    // Set up a listener for real-time updates to the users table.
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+        const usersData = snapshot.val();
+        const usersList = usersData ? Object.keys(usersData).map(key => ({ id: key, ...usersData[key] })) : [];
+        dispatch({ type: 'SET_USERS', payload: usersList });
+        setIsDataReady(true); // Mark data as ready once loaded.
+    }, (error) => {
+        console.error("Firebase onValue error for users:", error);
+        setError("Could not connect to the database to fetch user data.");
+        setIsDataReady(true); // Still allow login attempt if offline
+    });
+
+    // Clean up the listener when the component unmounts.
+    return () => unsubscribe();
+  }, [dispatch]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -101,7 +114,7 @@ export default function LoginForm() {
     setIsLoggingIn(false);
   }
 
-  const isInitializing = !state.isInitialized;
+  const isInitializing = !isDataReady;
 
   return (
     <>
