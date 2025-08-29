@@ -47,6 +47,11 @@ export default function WorkflowChart() {
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 20, right: 20, bottom: 60, left: 0 }}>
+             <defs>
+              <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="rgba(0,0,0,0.2)" />
+              </filter>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="name"
@@ -78,6 +83,7 @@ export default function WorkflowChart() {
               dataKey="total"
               fill="hsl(var(--primary))"
               radius={[4, 4, 0, 0]}
+              filter="url(#shadow)"
             >
               <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={14} fontWeight="bold" />
             </Bar>
