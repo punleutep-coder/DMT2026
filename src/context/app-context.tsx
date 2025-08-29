@@ -55,6 +55,7 @@ const getInitialState = (): AppState => ({
         assignedDepartment: 'All',
         periodValue: 3,
         periodUnit: 'days',
+        periodDepartment: 'All',
     },
     pagination: {
         currentPage: 1,
@@ -408,7 +409,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     if (state.filter.mainFilter !== 'All') {
         if (state.filter.mainFilter === 'Exceeding Period') {
-            docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit));
+            docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
         } else if (state.filter.mainFilter === 'In Progress') {
             docs = docs.filter(d => !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
         } else if (state.filter.mainFilter === 'Delayed') {

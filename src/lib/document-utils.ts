@@ -1,12 +1,12 @@
 
 import type { Document } from './types';
 
-export const isDocumentExceedingPeriod = (doc: Document, value: number, unit: 'days' | 'hours' | 'minutes') => {
-    // Only check documents that are currently in progress
-    if (doc.status.startsWith('Completed') || doc.status === 'Combined' || doc.status === 'Split' || doc.isDelayed || doc.releaseDateReached) {
-        return false;
-    }
-
+export const isDocumentExceedingPeriod = (
+    doc: Document, 
+    value: number, 
+    unit: 'days' | 'hours' | 'minutes',
+    department: string = 'All' // 'All' or a specific department name
+) => {
     let thresholdInMs = 0;
     switch (unit) {
         case 'minutes': thresholdInMs = value * 60 * 1000; break;
@@ -17,15 +17,23 @@ export const isDocumentExceedingPeriod = (doc: Document, value: number, unit: 'd
   
     const now = new Date().getTime();
     
-    const lastHistoryEntry = doc.history[doc.history.length - 1];
-    
-    // Check if the last history entry corresponds to the current status and is not finished
-    if (lastHistoryEntry && lastHistoryEntry.department === doc.status && lastHistoryEntry.end === null) {
-        const startTime = new Date(lastHistoryEntry.start).getTime();
-        const duration = now - startTime;
-        return duration > thresholdInMs;
+    // Iterate over all history entries
+    for (const entry of doc.history) {
+        // If a specific department is selected, only check entries for that department
+        if (department !== 'All' && entry.department !== department) {
+            continue;
+        }
+
+        const startTime = new Date(entry.start).getTime();
+        // If the step is finished, compare against its end time. If it's ongoing, compare against now.
+        const endTime = entry.end ? new Date(entry.end).getTime() : now;
+        const duration = endTime - startTime;
+
+        if (duration > thresholdInMs) {
+            return true; // Found at least one step that exceeded the period
+        }
     }
     
-    return false;
+    return false; // No step exceeded the period
   }
 

@@ -76,6 +76,7 @@ export interface AppState {
     assignedDepartment: string;
     periodValue: number;
     periodUnit: 'days' | 'hours' | 'minutes';
+    periodDepartment: string;
   };
   pagination: {
     currentPage: number;

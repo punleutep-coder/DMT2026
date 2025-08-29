@@ -46,7 +46,7 @@ export default function Metrics() {
     const completedUnsuccessDocs = activeDocs.filter(d => d.status === 'Completed (Unsuccess)')
     const completedDocs = [...completedSuccessDocs, ...completedUnsuccessDocs]
 
-    const exceedingDocs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit));
+    const exceedingDocs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
 
     return {
       total: activeDocs.length,
@@ -58,7 +58,7 @@ export default function Metrics() {
       completedUnsuccess: completedUnsuccessDocs.length,
       exceeding: exceedingDocs.length,
     }
-  }, [state.documents, state.filter.periodValue, state.filter.periodUnit])
+  }, [state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment])
 
   const metricItems = [
     { title: 'Total Documents', filter: 'All', metric: metrics.total, valueColorClass: 'text-blue-400' },
