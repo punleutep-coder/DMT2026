@@ -70,7 +70,7 @@ export default function SearchAndFilter() {
               id="search-id"
               type="text"
               placeholder="Search..."
-              className="w-full pr-24"
+              className="w-full pr-24 shadow-md"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -85,19 +85,19 @@ export default function SearchAndFilter() {
         </div>
         <div>
           <Label htmlFor="date-from">History From:</Label>
-          <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full" />
+          <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full shadow-md" />
         </div>
         <div>
           <Label htmlFor="date-to">History To:</Label>
-          <Input type="date" id="date-to" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full" />
+          <Input type="date" id="date-to" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full shadow-md" />
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
             <Label>Documents exceeding:</Label>
-            <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-card" />
+            <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-card shadow-md" />
             <Select value={periodUnit} onValueChange={setPeriodUnit}>
-                <SelectTrigger className="w-[120px] bg-card">
+                <SelectTrigger className="w-[120px] bg-card shadow-md">
                     <SelectValue placeholder="Unit" />
                 </SelectTrigger>
                 <SelectContent>
@@ -106,13 +106,14 @@ export default function SearchAndFilter() {
                     <SelectItem value="minutes">Minutes</SelectItem>
                 </SelectContent>
             </Select>
-            <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white">Calculate</Button>
+            <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">Calculate</Button>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={handleDateFilter} className="bg-teal-600 hover:bg-teal-700 text-white">Filter</Button>
+          <Button onClick={handleDateFilter} className="bg-teal-600 hover:bg-teal-700 text-white shadow-md">Filter</Button>
           <Button variant="ghost" onClick={clearDateFilter}>Clear</Button>
         </div>
       </div>
     </div>
   )
 }
+
