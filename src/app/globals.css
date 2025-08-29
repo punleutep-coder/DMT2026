@@ -130,7 +130,7 @@
 }
 
 .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-300 ease-in-out border border-[#03126A] bg-background/20 shadow-md;
+  @apply cursor-pointer transition-all duration-300 ease-in-out border border-gray-400 bg-background/20 shadow-md;
 }
 .dashboard-metric-box:hover {
   @apply -translate-y-2 shadow-xl;
@@ -140,7 +140,7 @@
 }
 
 .dark .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-300 ease-in-out border border-[#03126A] bg-black/20 shadow-md;
+  @apply cursor-pointer transition-all duration-300 ease-in-out border border-gray-400 bg-black/20 shadow-md;
 }
 .dark .dashboard-metric-box:hover {
   @apply -translate-y-2 shadow-xl;
