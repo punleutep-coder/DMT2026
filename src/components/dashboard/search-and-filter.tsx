@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useState, useEffect } from 'react'
-import { format } from 'date-fns';
+import { format as formatDate } from 'date-fns';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 
 export default function SearchAndFilter() {
@@ -21,8 +22,9 @@ export default function SearchAndFilter() {
 
   useEffect(() => {
     setSearchTerm(state.filter.search);
-    setDateFrom(state.filter.startDate ? format(state.filter.startDate, 'yyyy-MM-dd') : '');
-    setDateTo(state.filter.endDate ? format(state.filter.endDate, 'yyyy-MM-dd') : '');
+    const timeZone = 'UTC';
+    setDateFrom(state.filter.startDate ? formatInTimeZone(state.filter.startDate, timeZone, 'yyyy-MM-dd') : '');
+    setDateTo(state.filter.endDate ? formatInTimeZone(state.filter.endDate, timeZone, 'yyyy-MM-dd') : '');
     setPeriodValue(state.filter.periodValue);
     setPeriodUnit(state.filter.periodUnit);
     setPeriodDepartment(state.filter.periodDepartment);
@@ -42,10 +44,9 @@ export default function SearchAndFilter() {
 
   const handleDateFilter = () => {
     if (dateFrom && dateTo) {
-      const start = new Date(dateFrom)
-      start.setHours(0, 0, 0, 0)
-      const end = new Date(dateTo)
-      end.setHours(23, 59, 59, 999)
+      // Construct date strings at midnight UTC to avoid timezone shifts
+      const start = new Date(`${dateFrom}T00:00:00Z`);
+      const end = new Date(`${dateTo}T23:59:59.999Z`);
       dispatch({ type: 'SET_FILTER', payload: { startDate: start, endDate: end } })
     }
   }
