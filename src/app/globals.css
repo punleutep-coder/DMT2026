@@ -82,7 +82,7 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'PT Sans', sans-serif;
-    background-image: url('https://storage.googleapis.com/aifire.appspot.com/images/bg-bubbles.jpg');
+    background-image: url('https://storage.googleapis.com/aifire.appspot.com/images/bg-bubbles-light.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
