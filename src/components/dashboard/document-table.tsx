@@ -25,6 +25,8 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '../ui/button'
 import { ListFilter, SearchX, ChevronLeft, ChevronRight } from 'lucide-react'
