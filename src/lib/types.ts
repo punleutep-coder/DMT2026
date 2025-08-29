@@ -75,6 +75,10 @@ export interface AppState {
     periodValue: number;
     periodUnit: 'days' | 'hours' | 'minutes';
   };
+  pagination: {
+    currentPage: number;
+    rowsPerPage: number;
+  };
   columnVisibility: { [key: string]: boolean };
   selectedDocIds: string[];
   isInitialized: boolean;

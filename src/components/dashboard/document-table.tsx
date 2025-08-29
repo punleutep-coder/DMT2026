@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -8,8 +9,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useAppContext } from '@/hooks/use-app-context'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import DocumentTableRow from './document-table-row'
 import { Checkbox } from '../ui/checkbox'
 import {
@@ -19,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '../ui/button'
-import { ListFilter, SearchX } from 'lucide-react'
+import { ListFilter, SearchX, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const EmptyState = () => {
     const { dispatch } = useAppContext();
@@ -50,13 +58,25 @@ const EmptyState = () => {
 
 export default function DocumentTable() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { columnVisibility, selectedDocIds } = state
+  const { columnVisibility, selectedDocIds, pagination } = state
+
+  const totalPages = Math.ceil(filteredDocs.length / pagination.rowsPerPage);
+  const paginatedDocs = useMemo(() => {
+    const startIndex = (pagination.currentPage - 1) * pagination.rowsPerPage;
+    const endIndex = startIndex + pagination.rowsPerPage;
+    return filteredDocs.slice(startIndex, endIndex);
+  }, [filteredDocs, pagination.currentPage, pagination.rowsPerPage]);
 
   const handleSelectAll = (checked: boolean) => {
-    const ids = checked ? filteredDocs.map(d => d.id) : []
+    const ids = checked ? paginatedDocs.map(d => d.id) : []
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: ids })
   }
 
+  const handleSelectAllFiltered = (checked: boolean) => {
+    const ids = checked ? filteredDocs.map(d => d.id) : []
+    dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: ids });
+  };
+  
   const uniqueAssignedDepts = useMemo(() => {
     return [...new Set(state.documents.map(d => d.assignedDepartment).filter(Boolean))].sort()
   }, [state.documents])
@@ -65,6 +85,18 @@ export default function DocumentTable() {
     const newDept = state.filter.assignedDepartment === dept ? 'All' : dept
     dispatch({ type: 'SET_FILTER', payload: { assignedDepartment: newDept }})
   }
+
+  const handleRowsPerPageChange = (value: string) => {
+    dispatch({ type: 'SET_PAGINATION', payload: { rowsPerPage: parseInt(value, 10), currentPage: 1 }});
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+        dispatch({ type: 'SET_PAGINATION', payload: { currentPage: newPage }});
+    }
+  };
+
+  const areAllOnPageSelected = paginatedDocs.length > 0 && paginatedDocs.every(doc => selectedDocIds.includes(doc.id));
 
   const columns = [
     { key: 'select', name: '' },
@@ -78,6 +110,7 @@ export default function DocumentTable() {
   ]
   
   return (
+    <>
     <Table>
       <TableHeader>
         <TableRow>
@@ -86,10 +119,20 @@ export default function DocumentTable() {
               <TableHead key={col.key} className={col.key === 'actions' ? 'text-right' : ''}>
                 <div className="flex items-center gap-2">
                   {col.key === 'select' ? (
-                    <Checkbox
-                      checked={selectedDocIds.length > 0 && selectedDocIds.length === filteredDocs.length && filteredDocs.length > 0}
-                      onCheckedChange={handleSelectAll}
-                    />
+                     <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Checkbox
+                            checked={areAllOnPageSelected}
+                            onCheckedChange={() => handleSelectAll(!areAllOnPageSelected)}
+                          />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem onSelect={() => handleSelectAll(true)}>Select all on this page ({paginatedDocs.length})</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleSelectAllFiltered(true)}>Select all matching filter ({filteredDocs.length})</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleSelectAll(false)}>Deselect all</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   ) : (
                     <span>{col.name}</span>
                   )}
@@ -126,8 +169,8 @@ export default function DocumentTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredDocs.length > 0 ? (
-          filteredDocs.map((doc, index) => (
+        {paginatedDocs.length > 0 ? (
+          paginatedDocs.map((doc, index) => (
             <DocumentTableRow key={doc.id} doc={doc} index={index} />
           ))
         ) : (
@@ -135,5 +178,54 @@ export default function DocumentTable() {
         )}
       </TableBody>
     </Table>
+    <div className="flex items-center justify-between p-4 border-t">
+        <div className="text-sm text-muted-foreground">
+          {state.selectedDocIds.length} of {filteredDocs.length} row(s) selected.
+        </div>
+        <div className="flex items-center space-x-6 lg:space-x-8">
+            <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium">Rows per page</p>
+                <Select
+                    value={`${pagination.rowsPerPage}`}
+                    onValueChange={handleRowsPerPageChange}
+                >
+                    <SelectTrigger className="h-8 w-[70px]">
+                        <SelectValue placeholder={pagination.rowsPerPage} />
+                    </SelectTrigger>
+                    <SelectContent side="top">
+                        {[10, 30, 50, 100].map((pageSize) => (
+                            <SelectItem key={pageSize} value={`${pageSize}`}>
+                            {pageSize}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                Page {pagination.currentPage} of {totalPages}
+            </div>
+            <div className="flex items-center space-x-2">
+                <Button
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                >
+                    <span className="sr-only">Go to previous page</span>
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === totalPages}
+                >
+                    <span className="sr-only">Go to next page</span>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    </div>
+    </>
   )
 }

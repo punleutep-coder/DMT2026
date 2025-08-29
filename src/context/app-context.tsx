@@ -18,6 +18,7 @@ type Action =
   | { type: 'LOGIN'; payload: { user: User } }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
+  | { type: 'SET_PAGINATION'; payload: Partial<AppState['pagination']> }
   | { type: 'SET_MODAL'; payload: ModalState }
   | { type: 'SET_DIALOG'; payload: Partial<DialogState> }
   | { type: 'CLOSE_DIALOG' }
@@ -54,6 +55,10 @@ const getInitialState = (): AppState => ({
         periodValue: 3,
         periodUnit: 'days',
     },
+    pagination: {
+        currentPage: 1,
+        rowsPerPage: 30,
+    },
     columnVisibility: initialColumnVisibility,
     selectedDocIds: [],
     isInitialized: false,
@@ -81,7 +86,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             isInitialized: true,
         };
     case 'SET_DOCUMENTS':
-        return { ...state, documents: action.payload };
+        return { ...state, documents: action.payload, pagination: {...state.pagination, currentPage: 1} };
     case 'SET_LOGS':
         return { ...state, logs: action.payload };
     case 'SET_USERS':
@@ -110,7 +115,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
       // Keep users and departments on logout so the login page works
       return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true };
     case 'SET_FILTER':
-      return { ...state, filter: { ...state.filter, ...action.payload } };
+      return { ...state, filter: { ...state.filter, ...action.payload }, pagination: {...state.pagination, currentPage: 1} };
+    case 'SET_PAGINATION':
+        return { ...state, pagination: { ...state.pagination, ...action.payload } };
     case 'SET_MODAL':
       return { ...state, modal: action.payload };
     case 'SET_DIALOG':
