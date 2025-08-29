@@ -473,8 +473,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     // The "Exceeding" metric should respect its own UI controls, but be based on the set of active documents
     // to avoid counting combined/split docs.
-    const activeDocuments = allDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
-    const exceedingDocs = activeDocuments.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
+    const exceedingDocs = activeDocs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
 
     return {
       total: activeDocs.length,
@@ -486,7 +485,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       completedUnsuccess: allDocs.filter(d => d.status === 'Completed (Unsuccess)').length,
       exceeding: exceedingDocs.length,
     }
-  }, [activeDocs.length, state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
+  }, [activeDocs, state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
 
 
   return (
