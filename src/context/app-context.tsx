@@ -243,12 +243,32 @@ interface AppContextValue {
   state: AppState;
   dispatch: Dispatch<Action>;
   filteredDocs: Document[];
+  metrics: {
+      total: number;
+      inProgress: number;
+      delayed: number;
+      releaseReached: number;
+      completed: number;
+      completedSuccess: number;
+      completedUnsuccess: number;
+      exceeding: number;
+  };
 }
 
 export const AppContext = createContext<AppContextValue>({
   state: getInitialState(),
   dispatch: () => null,
   filteredDocs: [],
+  metrics: {
+    total: 0,
+    inProgress: 0,
+    delayed: 0,
+    releaseReached: 0,
+    completed: 0,
+    completedSuccess: 0,
+    completedUnsuccess: 0,
+    exceeding: 0
+  },
 })
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
