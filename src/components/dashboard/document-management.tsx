@@ -212,7 +212,7 @@ export default function DocumentManagement() {
         })}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="overflow-x-auto rounded-lg border-2 border-blue-800/50 dark:border-blue-400/50">
         <DocumentTable />
       </div>
     </section>
