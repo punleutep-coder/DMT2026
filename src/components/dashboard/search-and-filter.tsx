@@ -100,7 +100,7 @@ export default function SearchAndFilter() {
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handleDateFilter} className="bg-teal-600 hover:bg-teal-700 text-white shadow-md">Filter by Date</Button>
-          <Button variant="ghost" onClick={clearDateFilter}>Clear</Button>
+          <Button variant="outline" onClick={clearDateFilter} className="shadow-md">Clear</Button>
         </div>
       </div>
       
@@ -130,10 +130,9 @@ export default function SearchAndFilter() {
               </SelectContent>
           </Select>
           <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">Calculate</Button>
-          <Button variant="ghost" onClick={clearPeriodFilter}>Clear</Button>
+          <Button variant="outline" onClick={clearPeriodFilter} className="shadow-md">Clear</Button>
       </div>
 
     </div>
   )
 }
-
