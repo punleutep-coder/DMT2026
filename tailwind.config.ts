@@ -1,3 +1,4 @@
+
 import type { Config } from 'tailwindcss'
 
 export default {
@@ -10,8 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        headline: ['"PT Sans"', 'sans-serif'],
+        body: ['"Khmer OS Battambang"', '"PT Sans"', 'sans-serif'],
+        headline: ['"Khmer OS Battambang"', '"PT Sans"', 'sans-serif'],
         code: ['"Source Code Pro"', 'monospace'],
       },
       colors: {
