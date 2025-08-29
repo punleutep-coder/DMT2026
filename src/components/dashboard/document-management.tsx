@@ -193,25 +193,6 @@ export default function DocumentManagement() {
 
       <SearchAndFilter />
       
-      <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-        {processFlowButtons.map(btn => {
-            const isActive = state.filter.mainFilter === 'All' && state.filter.departmentSpecificFilter === btn.filter;
-            const isCompletedActive = state.filter.mainFilter.startsWith('Completed') && btn.filter === 'Completed';
-
-            return (
-                <Button
-                    key={btn.filter}
-                    variant={(isActive || isCompletedActive) ? 'default' : 'outline'}
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => handleProcessFlowClick(btn.filter)}
-                >
-                    {btn.label}
-                </Button>
-            )
-        })}
-      </div>
-
       <div className="overflow-x-auto rounded-lg border-2 border-blue-800/50 dark:border-blue-400/50">
         <DocumentTable />
       </div>
