@@ -58,7 +58,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
             Review the complete journey and all changes made to this document.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[70vh] p-4">
+        <ScrollArea className="h-[60vh] p-4">
           {sourceDocuments.length > 0 && (
               <div className="space-y-4 mb-8">
                 <h3 className="text-lg font-semibold text-foreground">Source Documents</h3>
