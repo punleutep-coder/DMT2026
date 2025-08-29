@@ -1,3 +1,4 @@
+
 'use client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -63,9 +64,9 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                 <h3 className="text-lg font-semibold text-foreground">Source Documents</h3>
                 <div className="space-y-4">
                     {sourceDocuments.map(sourceDoc => sourceDoc && (
-                        <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4 border-green-500">
+                        <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4" style={{ borderColor: '#000099' }}>
                            <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id, sourceDoc.firestoreId)}>
-                             <span className="text-green-400">{sourceDoc.id}</span> - {sourceDoc.name}
+                             <span style={{ color: '#000099' }}>{sourceDoc.id}</span> - {sourceDoc.name}
                            </h4>
                            <p className="text-sm text-muted-foreground">Department: {sourceDoc.assignedDepartment}</p>
                            {sourceDoc.secondaryId && <p className="text-sm text-muted-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
