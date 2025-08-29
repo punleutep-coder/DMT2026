@@ -17,7 +17,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { useToast } from '@/hooks/use-toast'
-import AnimatedBackground from '../ui/animated-background'
 import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
@@ -118,7 +117,6 @@ export default function LoginForm() {
 
   return (
     <>
-      <AnimatedBackground />
       <div className="flex items-center justify-center min-h-screen">
         <div className="modal-content w-full max-w-sm p-8 space-y-6 glassmorphic-card">
           <div className="text-center space-y-4">

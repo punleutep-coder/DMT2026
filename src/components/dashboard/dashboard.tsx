@@ -4,7 +4,6 @@
 import { SidebarProvider } from '@/components/ui/sidebar'
 import DashboardSidebar from './sidebar'
 import DashboardHeader from './header'
-import AnimatedBackground from '../ui/animated-background'
 import Metrics from './metrics'
 import WorkflowChart from './workflow-chart'
 import DocumentManagement from './document-management'
@@ -16,7 +15,6 @@ export default function Dashboard() {
   const { state } = useAppContext()
   return (
     <SidebarProvider>
-      <AnimatedBackground />
       <DashboardSidebar />
       <div className="relative flex min-h-svh flex-1 flex-col bg-transparent">
         <DashboardHeader />

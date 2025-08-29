@@ -4,45 +4,34 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    --background: 220 14.3% 95.9%;
     --foreground: 224 71.4% 4.1%;
-
-    --card: 0 0% 100%;
+    --card: 220 14.3% 95.9%;
     --card-foreground: 224 71.4% 4.1%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-
+    --primary: 156 72% 63%;
+    --primary-foreground: 224 71.4% 4.1%;
     --secondary: 220 13% 91%;
     --secondary-foreground: 220.9 39.3% 11%;
-
     --muted: 220 13% 91%;
     --muted-foreground: 220 8.9% 46.1%;
-
-    --accent: 220 13% 91%;
+    --accent: 190 78% 69%;
     --accent-foreground: 220.9 39.3% 11%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    
-    --border: 220 13% 91%;
+    --border: 220 13% 85%;
     --input: 220 13% 91%;
     --ring: 224 71.4% 4.1%;
-
     --radius: 0.5rem;
-
     --chart-1: 220.9 39.3% 11%;
     --chart-2: 190 78% 69%;
     --chart-3: 156 72% 63%;
     --chart-4: 220 70% 50%;
     --chart-5: 280 65% 60%;
-    
     --sidebar-background: 220 14.3% 95.9%;
     --sidebar-foreground: 224 71.4% 4.1%;
-    --sidebar-primary: 220.9 39.3% 11%;
+    --sidebar-primary: 156 72% 63%;
     --sidebar-primary-foreground: 210 20% 98%;
     --sidebar-accent: 220 13% 91%;
     --sidebar-accent-foreground: 220.9 39.3% 11%;
@@ -51,43 +40,33 @@
   }
 
   .dark {
-    --background: 222 84% 4.9%;
+    --background: 223 27% 12%;
     --foreground: 210 40% 98%;
-
-    --card: 222 84% 6%;
+    --card: 223 27% 15%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 217 91% 60%;
+    --primary: 156 72% 63%;
     --primary-foreground: 210 40% 98%;
-
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217 33% 25%;
     --muted-foreground: 215 20% 65%;
-
-    --accent: 217 33% 17%;
+    --accent: 190 78% 69%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217 33% 22%;
     --input: 217 33% 20%;
     --ring: 217 91% 60%;
-
     --chart-1: 217 91% 60%;
     --chart-2: 190 78% 69%;
     --chart-3: 156 72% 63%;
     --chart-4: 220 70% 50%;
     --chart-5: 280 65% 60%;
-    
-    --sidebar-background: 222 84% 4.9%;
+    --sidebar-background: 223 27% 12%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 156 72% 63%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 210 40% 98%;
@@ -102,22 +81,32 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Roboto', 'Khmer OS Battambang', sans-serif;
+    font-family: 'PT Sans', sans-serif;
+    background-image: url('https://storage.googleapis.com/aifire.appspot.com/images/bg-bubbles.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
   }
 }
 
 @layer components {
   .glassmorphic-card {
-    @apply bg-card/20 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
+    @apply bg-card/60 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
   }
   .dark .glassmorphic-card {
-    @apply bg-card/20 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
+    @apply bg-card/60 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
   }
 }
 
 @keyframes fadeInRow {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-in-row {
@@ -129,8 +118,13 @@
 }
 
 @keyframes highlight {
-  0%, 100% { @apply bg-transparent; }
-  50% { background-color: hsla(var(--primary) / 0.3); }
+  0%,
+  100% {
+    @apply bg-transparent;
+  }
+  50% {
+    background-color: hsla(var(--primary) / 0.3);
+  }
 }
 
 .dashboard-metric-box {
