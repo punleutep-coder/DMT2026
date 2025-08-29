@@ -83,11 +83,11 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
               <div className="space-y-4">
                 {document?.history?.map((entry, index) => (
                   <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/50">
-                    <h4 className="font-bold text-primary mb-2">{entry.department}</h4>
+                    <h4 className="font-bold text-blue-600 mb-2">{entry.department}</h4>
                     <div className="text-sm space-y-1 text-muted-foreground">
                        <p><strong className="text-foreground/80">Start:</strong> {entry.start ? format(new Date(entry.start), 'PPp') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">End:</strong> {entry.end ? format(new Date(entry.end), 'PPp') : 'N/A'}</p>
-                       <p><strong className="text-foreground/80">Period:</strong> <span className="text-primary font-medium">{formatDuration(entry.start, entry.end)}</span></p>
+                       <p><strong className="text-foreground/80">Period:</strong> <span className="text-blue-600 font-medium">{formatDuration(entry.start, entry.end)}</span></p>
                        <p><strong className="text-foreground/80">Receiver Name:</strong> {entry.receiver}</p>
                        <p><strong className="text-foreground/80">Note:</strong> {entry.note || 'N/A'}</p>
                     </div>
