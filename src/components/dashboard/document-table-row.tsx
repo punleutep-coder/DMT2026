@@ -154,11 +154,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         </TableCell>
       )}
        {columnVisibility.department && (
-        <TableCell className="text-muted-foreground">{doc.assignedDepartment || 'N/A'}</TableCell>
+        <TableCell className="text-foreground">{doc.assignedDepartment || 'N/A'}</TableCell>
       )}
-      {columnVisibility.name && <TableCell className="text-muted-foreground">{doc.name}</TableCell>}
+      {columnVisibility.name && <TableCell className="text-foreground">{doc.name}</TableCell>}
       {columnVisibility.office && (
-        <TableCell className="text-muted-foreground">{doc.office || 'N/A'}</TableCell>
+        <TableCell className="text-foreground">{doc.office || 'N/A'}</TableCell>
       )}
       {columnVisibility.currentStatus && (
         <TableCell>
@@ -168,7 +168,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         </TableCell>
       )}
       {columnVisibility.lastUpdate && (
-        <TableCell className="text-muted-foreground">{format(new Date(doc.lastUpdate), 'PPp')}</TableCell>
+        <TableCell className="text-foreground">{format(new Date(doc.lastUpdate), 'PPp')}</TableCell>
       )}
       {columnVisibility.actions && (
         <TableCell>
