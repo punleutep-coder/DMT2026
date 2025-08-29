@@ -11,6 +11,7 @@ import {
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
 import { sanitizeFirebaseKey } from '@/lib/utils'
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 type Action =
   | { type: 'SET_INITIAL_STATE'; payload: Partial<AppState> }
@@ -408,7 +409,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (state.filter.startDate && state.filter.endDate) {
         docs = docs.filter(doc => {
             if (doc.history && doc.history.length > 0) {
-                const firstEntryStart = new Date(doc.history[0].start);
+                const firstEntryStart = fromZonedTime(doc.history[0].start, 'UTC');
                 // The document is considered "received" if its first history entry start date
                 // is within the selected range.
                 return firstEntryStart >= state.filter.startDate! && firstEntryStart <= state.filter.endDate!;
@@ -466,28 +467,26 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 
   const metrics = useMemo(() => {
-    const docs = state.documents; // Base all metrics on the complete, unfiltered dataset
-    const inProgressDocs = docs.filter(d => !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split')
-    const delayedDocs = docs.filter(d => d.isDelayed && !d.releaseDateReached)
-    const releaseReachedDocs = docs.filter(d => d.releaseDateReached)
-    const completedSuccessDocs = docs.filter(d => d.status === 'Completed (Success)')
-    const completedUnsuccessDocs = docs.filter(d => d.status === 'Completed (Unsuccess)')
-    const completedDocs = [...completedSuccessDocs, ...completedUnsuccessDocs]
-
-    // The "Exceeding" metric should respect the department filter from its own control section
-    const exceedingDocs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
+    // Base all metrics on the complete, unfiltered dataset for consistency,
+    // except for "Total" which is dynamic based on filters.
+    const allDocs = state.documents; 
+    
+    // The "Exceeding" metric should respect its own UI controls, but be based on the set of active documents
+    // to avoid counting combined/split docs.
+    const activeDocuments = allDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
+    const exceedingDocs = activeDocuments.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
 
     return {
       total: activeDocs.length,
-      inProgress: inProgressDocs.length,
-      delayed: delayedDocs.length,
-      releaseReached: releaseReachedDocs.length,
-      completed: completedDocs.length,
-      completedSuccess: completedSuccessDocs.length,
-      completedUnsuccess: completedUnsuccessDocs.length,
+      inProgress: allDocs.filter(d => !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split').length,
+      delayed: allDocs.filter(d => d.isDelayed && !d.releaseDateReached).length,
+      releaseReached: allDocs.filter(d => d.releaseDateReached).length,
+      completed: allDocs.filter(d => d.status.startsWith('Completed')).length,
+      completedSuccess: allDocs.filter(d => d.status === 'Completed (Success)').length,
+      completedUnsuccess: allDocs.filter(d => d.status === 'Completed (Unsuccess)').length,
       exceeding: exceedingDocs.length,
     }
-  }, [activeDocs, state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
+  }, [activeDocs.length, state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
 
 
   return (
