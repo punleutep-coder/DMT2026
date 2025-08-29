@@ -80,14 +80,17 @@
     @apply border-border;
   }
   body {
-    @apply text-foreground;
-    font-family: 'PT Sans', sans-serif;
+    @apply bg-background text-foreground font-body;
     background: #FFEFBA; /* fallback for old browsers */
     background: -webkit-linear-gradient(to bottom, #FFFFFF, #FFEFBA); /* Chrome 10-25, Safari 5.1-6 */
     background: linear-gradient(to bottom, #FFFFFF, #FFEFBA); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
   }
 }
 
