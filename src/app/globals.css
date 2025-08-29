@@ -128,7 +128,7 @@
 }
 
 .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-background/20;
+  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-background/20 shadow-[0_8px_15px_-5px_hsla(var(--primary)_/_0.2)];
 }
 .dashboard-metric-box:hover {
   @apply -translate-y-2 shadow-[0_12px_20px_-10px_hsla(var(--primary)_/_0.4)];
@@ -138,7 +138,7 @@
 }
 
 .dark .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-black/20;
+  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-black/20 shadow-[0_8px_15px_-5px_hsla(var(--primary)_/_0.2)];
 }
 .dark .dashboard-metric-box:hover {
   @apply -translate-y-2 shadow-[0_12px_20px_-10px_hsla(var(--primary)_/_0.4)];
