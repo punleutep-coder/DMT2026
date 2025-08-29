@@ -157,33 +157,33 @@ export default function DocumentManagement() {
 
       <div className="flex flex-wrap gap-2">
         {hasPermission(currentUser, 'canAddDocument') && (
-          <Button onClick={() => openModal('addDocument')} className="bg-primary/80 hover:bg-primary/90 text-white">
+          <Button onClick={() => openModal('addDocument')} className="bg-primary/80 hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-shadow">
             <FilePlus /> Add New Document
           </Button>
         )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
-          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-blue-800 hover:bg-blue-800/90 text-white">
+          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-blue-800 hover:bg-blue-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
             <Combine /> Combine Selected
           </Button>
         )}
         {currentUser?.role === 'Admin' && (
-            <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white">
+            <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <Library /> Manage Departments
             </Button>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (
-            <Button variant="secondary" onClick={() => openModal('manageColumns')} className="bg-purple-800 hover:bg-purple-800/90 text-white">
+            <Button variant="secondary" onClick={() => openModal('manageColumns')} className="bg-purple-800 hover:bg-purple-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <Columns /> Manage Columns
             </Button>
         )}
          {hasPermission(currentUser, 'canExportData') && (
-            <Button variant="outline" onClick={handleExport}>
+            <Button variant="outline" onClick={handleExport} className="shadow-lg hover:shadow-xl transition-shadow">
                 <Download /> Export Data (JSON)
             </Button>
         )}
          {currentUser?.role === 'Admin' && (
             <>
-                <Button variant="outline" onClick={handleImportClick}>
+                <Button variant="outline" onClick={handleImportClick} className="shadow-lg hover:shadow-xl transition-shadow">
                     <Upload /> Import Data (JSON)
                 </Button>
                 <input type="file" id="json-file-input" accept=".json" className="hidden" onChange={handleImportFile} />
