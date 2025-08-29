@@ -15,7 +15,7 @@ import { sanitizeFirebaseKey } from '@/lib/utils'
 
 type Action =
   | { type: 'SET_INITIAL_STATE'; payload: Partial<AppState> }
-  | { type: 'LOGIN'; payload: { user: User, documents: Document[], logs: Log[], columnVisibility: any } }
+  | { type: 'LOGIN'; payload: { user: User } }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
   | { type: 'SET_MODAL'; payload: ModalState }
@@ -32,7 +32,9 @@ type Action =
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
-  | { type: 'SET_DATA_FROM_SNAPSHOT'; payload: any }
+  | { type: 'SET_DOCUMENTS'; payload: Document[] }
+  | { type: 'SET_LOGS'; payload: Log[] }
+  | { type: 'SET_USERS'; payload: User[] }
   | { type: 'SET_INITIALIZED'; payload: boolean };
 
 
@@ -78,18 +80,12 @@ const appReducer = (state: AppState, action: Action): AppState => {
             currentUser: finalUser,
             isInitialized: true,
         };
-    case 'SET_DATA_FROM_SNAPSHOT':
-        const data = action.payload;
-        if (!data) {
-             return { ...state, users: [], documents: [], logs: [], departments: [], columnVisibility: initialColumnVisibility, isInitialized: true };
-        }
-
-        const documents = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-        const logs = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-        const users = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-        const departments = data.departments || [];
-        const columnVisibility = data.columnVisibility || initialColumnVisibility;
-        
+    case 'SET_DOCUMENTS':
+        return { ...state, documents: action.payload };
+    case 'SET_LOGS':
+        return { ...state, logs: action.payload };
+    case 'SET_USERS':
+        const users = action.payload;
         let liveCurrentUser = state.currentUser;
         if (liveCurrentUser) {
             const updatedUser = users.find(u => u.id === liveCurrentUser!.id);
@@ -101,25 +97,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
             }
         }
-
-        return {
-            ...state,
-            documents,
-            logs,
-            users,
-            departments,
-            columnVisibility,
-            currentUser: liveCurrentUser,
-            isInitialized: true, // Set initialized to true once we have data
-        };
+        return { ...state, users, currentUser: liveCurrentUser };
     case 'LOGIN':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
       return { 
         ...state, 
         currentUser: action.payload.user,
-        documents: action.payload.documents,
-        logs: action.payload.logs,
-        columnVisibility: action.payload.columnVisibility,
+        isInitialized: true,
       };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
@@ -220,11 +204,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
     case 'SET_DEPARTMENTS': {
         set(ref(db, 'departments'), action.payload);
-        return state;
+        return { ...state, departments: action.payload };
     }
     case 'SET_COLUMN_VISIBILITY': {
         set(ref(db, 'columnVisibility'), action.payload);
-        return state;
+        return { ...state, columnVisibility: action.payload };
     }
     default:
       return state
@@ -247,41 +231,56 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    const dbRef = ref(db);
-    const unsubscribe = onValue(dbRef, (snapshot) => {
-        const data = snapshot.val();
-        dispatch({ type: 'SET_DATA_FROM_SNAPSHOT', payload: data });
-    }, (error) => {
-        console.error("Firebase onValue listener error:", error);
-        // Even on error, we should initialize to not block the UI.
-        if (!state.isInitialized) {
+    // Try to load user from session storage right away.
+    try {
+        const storedUser = sessionStorage.getItem('currentUser');
+        if (storedUser) {
+            dispatch({ type: 'LOGIN', payload: { user: JSON.parse(storedUser) } });
+        } else {
             dispatch({ type: 'SET_INITIALIZED', payload: true });
         }
-    });
-
-    // Try to load user from session storage right away.
-    const storedUser = sessionStorage.getItem('currentUser');
-    if (storedUser) {
-        try {
-            const user = JSON.parse(storedUser);
-            dispatch({ type: 'SET_INITIAL_STATE', payload: { currentUser: user } });
-        } catch (e) {
-            console.error("Could not parse user from session storage:", e);
-            sessionStorage.removeItem('currentUser');
-        }
+    } catch (e) {
+        console.error("Could not parse user from session storage:", e);
+        sessionStorage.removeItem('currentUser');
+        dispatch({ type: 'SET_INITIALIZED', payload: true });
     }
-
-    return () => unsubscribe();
-  }, []); // Empty dependency array ensures this runs only once on mount.
-
+  }, []);
 
   useEffect(() => {
-    if (!state.isInitialized || !state.currentUser) return;
+    // These listeners are active only when a user is logged in.
+    if (!state.currentUser) return;
+
+    const listeners = [
+        { path: 'documents', actionType: 'SET_DOCUMENTS' },
+        { path: 'logs', actionType: 'SET_LOGS' },
+        { path: 'users', actionType: 'SET_USERS' },
+        { path: 'departments', actionType: 'SET_DEPARTMENTS' },
+        { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
+    ];
+
+    const unsubscribes = listeners.map(({ path, actionType }) => 
+        onValue(ref(db, path), (snapshot) => {
+            const data = snapshot.val();
+            if (path === 'documents' || path === 'logs' || path === 'users') {
+                 dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
+            } else {
+                 dispatch({ type: actionType, payload: data || (path === 'departments' ? [] : initialColumnVisibility) } as any);
+            }
+        }, (error) => {
+            console.error(`Firebase onValue error for ${path}:`, error);
+        })
+    );
+    
+    // Set up interval for checking delayed documents
     const interval = setInterval(() => {
       dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
     }, 60000);
-    return () => clearInterval(interval);
-  }, [state.isInitialized, state.currentUser]);
+
+    return () => {
+        unsubscribes.forEach(unsubscribe => unsubscribe());
+        clearInterval(interval);
+    };
+  }, [state.currentUser]);
 
 
   const filteredDocs = useMemo(() => {

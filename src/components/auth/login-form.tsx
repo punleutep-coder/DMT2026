@@ -55,10 +55,12 @@ export default function LoginForm() {
 
   // This effect will run when the component mounts and ensure the DB is seeded if necessary.
   useEffect(() => {
+    // We can only check for users if the state has been initialized.
+    // The users array might be empty initially until the listener fetches it.
     if (state.isInitialized) {
       const usersRef = ref(db, 'users');
       get(usersRef).then((snapshot) => {
-        if (!snapshot.exists()) {
+        if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
           console.log("No users found in DB. Seeding database...");
           set(ref(db), initialData).then(() => {
             console.log("Database seeded successfully.");
@@ -68,25 +70,19 @@ export default function LoginForm() {
         }
       });
     }
-  }, [state.isInitialized]);
+  }, [state.isInitialized, state.users]); // Depend on users array as well
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
     setIsLoggingIn(true);
+
     const user = state.users.find((u) => u.username === values.username)
     if (user) {
       const passwordHash = await hashPassword(values.password)
       if (passwordHash === user.passwordHash) {
         try {
-          // Fetch all data on successful login
-          const dataSnapshot = await get(ref(db));
-          const data = dataSnapshot.val();
-          const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, firestoreId: key, ...data.documents[key] })) : [];
-          const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-          const columnVisibility = data.columnVisibility || state.columnVisibility;
-
-          dispatch({ type: 'LOGIN', payload: { user, documents, logs, columnVisibility } })
+          dispatch({ type: 'LOGIN', payload: { user } })
           toast({
             title: `Welcome, ${user.username}!`,
             description: 'You have successfully logged in.',
