@@ -22,7 +22,7 @@
     --destructive-foreground: 210 20% 98%;
     --border: 220 13% 85%;
     --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
+    --ring: 224 71.4% 41.1%;
     --radius: 0.5rem;
     --chart-1: 220.9 39.3% 11%;
     --chart-2: 190 78% 69%;
@@ -128,21 +128,21 @@
 }
 
 .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-background/20 shadow-lg shadow-black/10;
+  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-background/20 shadow-md;
 }
 .dashboard-metric-box:hover {
-  @apply -translate-y-2 shadow-xl shadow-black/20;
+  @apply -translate-y-2 shadow-xl;
 }
 .dashboard-metric-box.active {
-  @apply bg-primary/20 shadow-2xl shadow-black/30 -translate-y-1;
+  @apply bg-primary/20 shadow-2xl -translate-y-1;
 }
 
 .dark .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-black/20 shadow-lg shadow-black/20;
+  @apply cursor-pointer transition-all duration-300 ease-in-out border border-primary/30 bg-black/20 shadow-md;
 }
 .dark .dashboard-metric-box:hover {
-  @apply -translate-y-2 shadow-xl shadow-black/30;
+  @apply -translate-y-2 shadow-xl;
 }
 .dark .dashboard-metric-box.active {
-  @apply bg-primary/20 shadow-2xl shadow-black/40 -translate-y-1;
+  @apply bg-primary/20 shadow-2xl -translate-y-1;
 }
