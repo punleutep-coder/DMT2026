@@ -1,3 +1,4 @@
+
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,10 +15,7 @@ import { useToast } from '@/hooks/use-toast'
 import { sanitizeFirebaseKey } from '@/lib/utils'
 
 const formSchema = z.object({
-  id: z.string().min(1, 'Document ID is required.').refine(
-    (val) => !/[.#$\[\]/]/.test(val),
-    { message: 'Document ID cannot contain ".", "#", "$", "[", "]", or "/".' }
-  ),
+  id: z.string().min(1, 'Document ID is required.'),
   name: z.string().min(1, 'Document name is required.'),
   office: z.string().optional(),
   secondaryId: z.string().optional(),
@@ -64,18 +62,18 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
-    if (sanitizedId !== docToUpdate.id && state.documents.some(d => d.id === sanitizedId)) {
+    if (sanitizedId !== sanitizeFirebaseKey(docToUpdate.id) && state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
         form.setError('id', { message: 'This Document ID already exists.' });
         return;
     }
     
     // If the ID has changed, we need to create a new record and delete the old one,
     // as Firebase doesn't allow renaming keys.
-    if (sanitizedId !== docToUpdate.id) {
+    if (sanitizedId !== sanitizeFirebaseKey(docToUpdate.id)) {
         // Create the new document object with the new ID
         const newDoc: Document = {
             ...docToUpdate,
-            id: sanitizedId, // Use the new sanitized ID
+            id: values.id, // Use the new original ID
             name: values.name,
             office: values.office || null,
             assignedDepartment: values.assignedDepartment || null,
@@ -92,7 +90,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         // Dispatch action to delete the old document
         dispatch({ type: 'DELETE_DOCUMENT', payload: { id: docToUpdate.id } });
         
-        toast({ title: "Success", description: `Document ID changed to ${sanitizedId}.` });
+        toast({ title: "Success", description: `Document ID changed to ${values.id}.` });
 
     } else {
         const updatedFields: Partial<Document> & {id: string} = {

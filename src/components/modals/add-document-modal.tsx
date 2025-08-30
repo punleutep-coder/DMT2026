@@ -16,6 +16,7 @@ import { Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
 import { sanitizeFirebaseKey } from '@/lib/utils'
+import { hasPermission } from '@/lib/permissions'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -42,6 +43,7 @@ interface AddDocumentModalProps {
 
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
+  const { currentUser } = state
   const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
 
@@ -140,24 +142,24 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
-                <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input placeholder="e.g. Finance" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditAssignedDepartment') && <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input placeholder="e.g. Finance" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel>Initial Receiver Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>Document Link 3</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>Document Link 4</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink2') && <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink3') && <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>Document Link 3</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink4') && <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>Document Link 4</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
-                <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel>Keywords</FormLabel><FormControl><Input placeholder="For better search results..." {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="docTags" render={({ field }) => (
+                {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel>Keywords</FormLabel><FormControl><Input placeholder="For better search results..." {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tags (comma-separated)</FormLabel>
                     <div className="flex gap-2">
@@ -168,8 +170,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                     </div>
                     <FormMessage />
                   </FormItem>
-                )} />
-                <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel>Initial Note</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />
+                )} />}
+                {hasPermission(currentUser, 'canEditInitialNote') && <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel>Initial Note</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />}
               </div>
             </ScrollArea>
             <DialogFooter className="pt-4">

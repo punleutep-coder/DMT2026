@@ -65,14 +65,17 @@ export const PERMISSIONS_CONFIG: { [key: string]: string } = {
     canEditDocumentId: 'Edit Document ID (Primary)',
     canEditDocumentName: 'Edit Document Name',
     canEditOffice: 'Edit Office',
+    canEditAssignedDepartment: 'Edit Assigned Department',
     canEditSecondaryId: 'Edit Secondary ID',
     canEditTertiaryId: 'Edit Tertiary ID',
     canEditQuaternaryId: 'Edit Quaternary ID',
-    canEditAssignedDepartment: 'Edit Assigned Department',
     canEditDocumentLink1: 'Edit Document Link 1',
     canEditDocumentLink2: 'Edit Document Link 2',
     canEditDocumentLink3: 'Edit Document Link 3',
     canEditDocumentLink4: 'Edit Document Link 4',
+    canEditKeywords: 'Edit Keywords',
+    canEditTags: 'Edit Tags',
+    canEditInitialNote: 'Edit Initial Note',
     canManageAdmins: 'Can Manage Admins',
 };
 

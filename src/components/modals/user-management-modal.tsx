@@ -80,13 +80,24 @@ interface UserManagementModalProps {
 }
 
 const permissionGroups = {
-    'Document Permissions': Object.entries(PERMISSIONS_CONFIG)
-      .filter(([key]) => !key.startsWith('canOpenDocumentLink') && key !== 'canManageAdmins')
-      .map(([key, name]) => ({ key, name })),
-    'Open Document Link Permissions': Object.entries(PERMISSIONS_CONFIG)
-      .filter(([key]) => key.startsWith('canOpenDocumentLink'))
-      .map(([key, name]) => ({ key, name })),
-  }
+  'General Document Permissions': [
+    'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 
+    'canViewLog', 'canExportData', 'canManageColumns'
+  ],
+  'Document Action Permissions': [
+    'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote'
+  ],
+  'Document Field Edit Permissions': [
+    'canEditDocumentId', 'canEditDocumentName', 'canEditOffice', 'canEditAssignedDepartment', 'canEditSecondaryId',
+    'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote'
+  ],
+  'Document Link Permissions': [
+    'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4',
+    'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4'
+  ],
+  'Admin Permissions': ['canManageAdmins']
+};
+
 
 const hashPassword = async (password: string): Promise<string> => {
     const encoder = new TextEncoder()
@@ -431,7 +442,7 @@ export default function UserManagementModal({
                   {role === 'User' ? (
                     <div className="space-y-6">
                       {Object.entries(permissionGroups).map(
-                        ([groupName, permissions]) => (
+                        ([groupName, permissionKeys]) => (
                           <div
                             key={groupName}
                             className="space-y-4 p-4 border rounded-md"
@@ -440,7 +451,7 @@ export default function UserManagementModal({
                               {groupName}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {permissions.map(({ key, name }) => (
+                              {permissionKeys.map((key) => (
                                 <FormField
                                   key={key}
                                   control={form.control}
@@ -454,7 +465,7 @@ export default function UserManagementModal({
                                         />
                                       </FormControl>
                                       <FormLabel className="font-normal">
-                                        {name}
+                                        {PERMISSIONS_CONFIG[key]}
                                       </FormLabel>
                                     </FormItem>
                                   )}
@@ -553,3 +564,4 @@ export default function UserManagementModal({
     
 
     
+
