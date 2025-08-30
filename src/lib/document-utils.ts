@@ -17,6 +17,11 @@ export const isDocumentExceedingPeriod = (
   
     const now = new Date().getTime();
     
+    // Check if doc.history is a valid array before iterating
+    if (!Array.isArray(doc.history)) {
+        return false;
+    }
+
     // Iterate over all history entries
     for (const entry of doc.history) {
         // If a specific department is selected, only check entries for that department
