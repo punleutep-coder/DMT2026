@@ -92,7 +92,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
 
     } else if (type === 'back') {
       const currentDeptIndex = state.departments.indexOf(doc.status)
-      if (currentDeptIndex > 0 || doc.status.startsWith('Completed')) {
+      if (currentDeptIndex > 0 || (doc.status && doc.status.startsWith('Completed'))) {
         const newHistory = [...doc.history]
         newHistory.pop() // Remove current step
         const prevHistoryEntry = newHistory[newHistory.length - 1]
@@ -119,7 +119,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
     }
   }
 
-  const isCompleted = doc.status.startsWith('Completed');
+  const isCompleted = doc.status && doc.status.startsWith('Completed');
   const isCombinedOrSplit = doc.status === 'Combined' || doc.status === 'Split';
   const isTerminal = isCompleted || isCombinedOrSplit;
   
