@@ -463,13 +463,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (state.filter.mainFilter === 'Exceeding Period') {
             docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
         } else if (state.filter.mainFilter === 'In Progress') {
-            docs = docs.filter(d => !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
+            docs = docs.filter(d => !d.isDelayed && d.status && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
         } else if (state.filter.mainFilter === 'Delayed') {
             docs = docs.filter(d => d.isDelayed && !d.releaseDateReached);
         } else if (state.filter.mainFilter === 'Release Date Reached') {
             docs = docs.filter(d => d.releaseDateReached === true);
         } else if (state.filter.mainFilter === 'Completed') {
-            docs = docs.filter(d => d.status.startsWith('Completed'));
+            docs = docs.filter(d => d.status && d.status.startsWith('Completed'));
         } else if (state.filter.mainFilter.startsWith('Completed (')) {
             docs = docs.filter(d => d.status === state.filter.mainFilter);
         } else if (state.filter.mainFilter === 'Combined' || state.filter.mainFilter === 'Split') {
@@ -508,10 +508,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     return {
       total: activeDocs.length,
-      inProgress: allDocs.filter(d => !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split').length,
+      inProgress: allDocs.filter(d => d.status && !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split').length,
       delayed: allDocs.filter(d => d.isDelayed && !d.releaseDateReached).length,
       releaseReached: allDocs.filter(d => d.releaseDateReached).length,
-      completed: allDocs.filter(d => d.status.startsWith('Completed')).length,
+      completed: allDocs.filter(d => d.status && d.status.startsWith('Completed')).length,
       completedSuccess: allDocs.filter(d => d.status === 'Completed (Success)').length,
       completedUnsuccess: allDocs.filter(d => d.status === 'Completed (Unsuccess)').length,
       exceeding: exceedingDocs.length,
