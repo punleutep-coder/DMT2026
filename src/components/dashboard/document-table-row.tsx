@@ -225,7 +225,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     
                     {(hasPermission(currentUser, 'canMoveDocument') || hasPermission(currentUser, 'canCompleteDocument')) && !isTerminal && <DropdownMenuSeparator />}
                     
-                    {!isTerminal && hasPermission(currentUser, 'canMoveDocument') && doc.history.length > 1 && (
+                    {!isTerminal && hasPermission(currentUser, 'canMoveDocument') && Array.isArray(doc.history) && doc.history.length > 1 && (
                         <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
                             <Undo2 className="mr-2 h-4 w-4" />Move Back
                         </DropdownMenuItem>
