@@ -18,15 +18,12 @@ import type { Document } from '@/lib/types';
 import { sanitizeFirebaseKey } from '@/lib/utils'
 
 const formSchema = z.object({
-  docId: z.string().min(1, 'Document ID is required.').refine(
-    (val) => !/[.#$\[\]/]/.test(val),
-    { message: 'Document ID cannot contain ".", "#", "$", "[", "]", or "/".' }
-  ),
+  id: z.string().min(1, 'Document ID is required.'),
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
   assignedDepartment: z.string().optional(),
-  docName: z.string().min(1, 'Document Name is required.'),
+  name: z.string().min(1, 'Document Name is required.'),
   office: z.string().optional(),
   documentLink1: z.string().url().optional().or(z.literal('')),
   documentLink2: z.string().url().optional().or(z.literal('')),
@@ -51,12 +48,12 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      docId: '',
+      id: '',
       secondaryId: '',
       tertiaryId: '',
       quaternaryId: '',
       assignedDepartment: '',
-      docName: '',
+      name: '',
       office: '',
       documentLink1: '',
       documentLink2: '',
@@ -70,9 +67,9 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   })
 
   const handleSuggestTags = async () => {
-    const docName = form.getValues('docName')
+    const docName = form.getValues('name')
     if (!docName) {
-      form.setError('docName', { message: 'Please enter a name first.' })
+      form.setError('name', { message: 'Please enter a name first.' })
       return
     }
     setIsSuggesting(true)
@@ -87,9 +84,9 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const sanitizedId = sanitizeFirebaseKey(values.docId);
-    if (state.documents.some(d => d.id === sanitizedId)) {
-        form.setError('docId', { message: 'This Document ID already exists.' });
+    const sanitizedId = sanitizeFirebaseKey(values.id);
+    if (state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
+        form.setError('id', { message: 'This Document ID already exists.' });
         return;
     }
     
@@ -105,9 +102,9 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
 
     const now = new Date().toISOString()
     const newDoc: Document = {
-        id: sanitizedId,
+        id: values.id, // Store original ID
         firestoreId: `doc-${Date.now()}`,
-        name: values.docName,
+        name: values.name,
         office: values.office || null,
         status: initialDepartment,
         initialDepartment: initialDepartment,
@@ -143,8 +140,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
-                <FormField control={form.control} name="docId" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField control={form.control} name="docName" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />

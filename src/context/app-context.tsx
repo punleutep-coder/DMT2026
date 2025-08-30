@@ -32,6 +32,7 @@ type Action =
   | { type: 'DELETE_USER'; payload: { id: string } }
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
+  | { type: 'UPDATE_DEPARTMENT_NAME'; payload: { oldName: string, newName: string } }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_DOCUMENTS'; payload: Document[] }
   | { type: 'SET_LOGS'; payload: Log[] }
@@ -160,8 +161,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return state;
     }
      case 'ADD_DOCUMENT': {
-        const { id, firestoreId, ...docData } = action.payload;
-        const sanitizedId = sanitizeFirebaseKey(id);
+        const { firestoreId, ...docData } = action.payload;
+        const sanitizedId = sanitizeFirebaseKey(action.payload.id);
         set(ref(db, `documents/${sanitizedId}`), docData);
         return state;
       }
@@ -218,6 +219,41 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_DEPARTMENTS': {
         set(ref(db, 'departments'), action.payload);
         return { ...state, departments: action.payload };
+    }
+    case 'UPDATE_DEPARTMENT_NAME': {
+        const { oldName, newName } = action.payload;
+        const updates: { [key: string]: any } = {};
+
+        // 1. Update the departments list
+        const newDepartments = state.departments.map(d => d === oldName ? newName : d);
+        updates['/departments'] = newDepartments;
+
+        // 2. Update all documents
+        state.documents.forEach(doc => {
+            let docNeedsUpdate = false;
+            const sanitizedId = sanitizeFirebaseKey(doc.id);
+            // Update current status if it matches
+            if (doc.status === oldName) {
+                updates[`/documents/${sanitizedId}/status`] = newName;
+                docNeedsUpdate = true;
+            }
+            // Update history entries
+            const newHistory = doc.history.map(h => {
+                if (h.department === oldName) {
+                    docNeedsUpdate = true;
+                    return { ...h, department: newName };
+                }
+                return h;
+            });
+            if (docNeedsUpdate) { // only update history if something changed
+              updates[`/documents/${sanitizedId}/history`] = newHistory;
+            }
+        });
+        
+        update(ref(db), updates);
+        
+        // No need to return a new state, Firebase listener will do it
+        return state;
     }
     case 'SET_COLUMN_VISIBILITY': {
         set(ref(db, 'columnVisibility'), action.payload);
@@ -313,7 +349,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribes = listeners.map(({ path, actionType }) => 
         onValue(ref(db, path), (snapshot) => {
             const data = snapshot.val();
-            if (path === 'documents' || path === 'logs') {
+            if (path === 'documents' || path === 'logs' || path === 'users') {
                  dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
             } else {
                  dispatch({ type: actionType, payload: data || (path === 'departments' ? [] : initialColumnVisibility) } as any);
@@ -467,12 +503,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 
   const metrics = useMemo(() => {
-    // Base all metrics on the complete, unfiltered dataset for consistency,
-    // except for "Total" which is dynamic based on filters.
     const allDocs = state.documents; 
-    
-    // The "Exceeding" metric should respect its own UI controls, but be based on the set of active documents
-    // to avoid counting combined/split docs.
     const exceedingDocs = activeDocs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
 
     return {
