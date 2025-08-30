@@ -290,16 +290,21 @@ export default function UserManagementModal({
     handleSetAddMode();
   }
   
-  const canManageUser = (user: User) => {
+  const canManageUser = (userToManage: User) => {
     if (!currentUser) return false;
-    if (currentUser.id === user.id) return false; // Cannot manage self
-    // Admins with canManageAdmins can manage anyone except themselves
-    if (currentUser.role === 'Admin' && currentUser.permissions.canManageAdmins) return true;
-    // Standard Admins cannot manage other Admins
-    if (currentUser.role === 'Admin' && user.role === 'Admin') return false;
-    // Standard Admins can manage Users
-    if (currentUser.role === 'Admin' && user.role === 'User') return true;
+    if (currentUser.id === userToManage.id) return false; // Cannot manage self
+
+    // An admin with canManageAdmins permission can manage any other user.
+    if (currentUser.role === 'Admin' && currentUser.permissions?.canManageAdmins) {
+      return true;
+    }
     
+    // A standard admin (without canManageAdmins) can only manage users, not other admins.
+    if (currentUser.role === 'Admin' && userToManage.role === 'User') {
+      return true;
+    }
+
+    // In all other cases (user trying to manage anyone, or admin trying to manage another admin without permission), it's not allowed.
     return false;
   }
   
@@ -564,4 +569,3 @@ export default function UserManagementModal({
     
 
     
-
