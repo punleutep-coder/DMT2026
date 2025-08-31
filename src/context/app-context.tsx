@@ -28,6 +28,7 @@ type Action =
   | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
   | { type: 'DELETE_DOCUMENT'; payload: { id: string } }
   | { type: 'DELETE_SELECTED_DOCUMENTS'; payload: string[] }
+  | { type: 'DELETE_ALL_DOCUMENTS' }
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
@@ -185,13 +186,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         updates[`/documents/${sanitizedId}`] = null;
         
+        // Find logs associated with the original (unsanitized) document ID
         state.logs.forEach(log => {
             if (log.docId === id) {
                 updates[`/logs/${log.id}`] = null;
             }
         });
 
-        if(Object.keys(updates).length > 1 || updates[`/documents/${sanitizedId}`] === null) {
+        if(Object.keys(updates).length > 0) {
             update(ref(db), updates);
         }
         return state;
@@ -206,6 +208,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
 
         state.logs.forEach(log => {
+            // Check against the original (unsanitized) document IDs
             if (idsToDelete.includes(log.docId)) {
                 updates[`/logs/${log.id}`] = null;
             }
@@ -215,6 +218,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
             update(ref(db), updates);
         }
 
+        return { ...state, selectedDocIds: [] };
+      }
+      case 'DELETE_ALL_DOCUMENTS': {
+        const updates: {[key: string]: any} = {};
+        updates['/documents'] = null;
+        updates['/logs'] = null;
+        update(ref(db), updates);
         return { ...state, selectedDocIds: [] };
       }
     case 'ADD_USER': {
