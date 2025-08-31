@@ -28,7 +28,6 @@ type Action =
   | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
   | { type: 'DELETE_DOCUMENT'; payload: { id: string } }
   | { type: 'DELETE_SELECTED_DOCUMENTS'; payload: string[] }
-  | { type: 'DELETE_ALL_DOCUMENTS' }
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
@@ -186,7 +185,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         updates[`/documents/${sanitizedId}`] = null;
         
-        // Use the original ID for matching logs
         state.logs.forEach(log => {
             if (log.docId === id) {
                 updates[`/logs/${log.id}`] = null;
@@ -207,7 +205,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
           updates[`/documents/${sanitizedId}`] = null;
         });
 
-        // Use original IDs for matching logs
         state.logs.forEach(log => {
             if (idsToDelete.includes(log.docId)) {
                 updates[`/logs/${log.id}`] = null;
@@ -220,14 +217,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
 
         return { ...state, selectedDocIds: [] };
       }
-    case 'DELETE_ALL_DOCUMENTS': {
-        const updates: {[key: string]: any} = {
-            '/documents': null,
-            '/logs': null,
-        };
-        update(ref(db), updates);
-        return state;
-    }
     case 'ADD_USER': {
         const newUser = action.payload;
         set(ref(db, `users/${newUser.id}`), newUser);
