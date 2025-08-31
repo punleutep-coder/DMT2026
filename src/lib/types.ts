@@ -98,7 +98,8 @@ export interface DialogState {
   onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
-isAlert?: boolean;
+  isAlert?: boolean;
+  requiresConfirmationText?: boolean;
 }
 
 export type ModalType =

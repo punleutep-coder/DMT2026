@@ -141,6 +141,23 @@ export default function DocumentManagement() {
     })
   }
 
+  const handleDeleteAllDocuments = () => {
+    dispatch({
+      type: 'SET_DIALOG',
+      payload: {
+        isOpen: true,
+        title: 'Permanently Delete All Documents',
+        message: `This is a highly destructive action that will permanently erase all documents and their associated logs from the database. This cannot be undone. To proceed, please type DELETE below.`,
+        confirmText: 'Delete All Documents',
+        requiresConfirmationText: true,
+        onConfirm: () => {
+          dispatch({ type: 'DELETE_ALL_DOCUMENTS' });
+          toast({ title: "Success", description: "All documents and logs have been deleted." });
+        },
+      },
+    })
+  }
+
   const processFlowButtons = useMemo(() => {
     const buttons = [
         { label: 'All', filter: 'All' },
@@ -214,6 +231,9 @@ export default function DocumentManagement() {
                     <Upload /> Import Data (JSON)
                 </Button>
                 <input type="file" id="json-file-input" accept=".json" className="hidden" onChange={handleImportFile} />
+                <Button variant="destructive" onClick={handleDeleteAllDocuments} className="shadow-lg hover:shadow-xl transition-shadow">
+                    <Trash2 /> Remove All Documents
+                </Button>
             </>
         )}
       </div>

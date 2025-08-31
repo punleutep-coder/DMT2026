@@ -1,5 +1,6 @@
-'use client'
 
+'use client'
+import React, { useState, useEffect } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,10 +12,28 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { useAppContext } from '@/hooks/use-app-context'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 
 export default function ConfirmDialog() {
   const { state, dispatch } = useAppContext()
-  const { isOpen, title, message, onConfirm, onCancel, confirmText, cancelText, isAlert } = state.dialog
+  const { isOpen, title, message, onConfirm, onCancel, confirmText, cancelText, isAlert, requiresConfirmationText } = state.dialog
+  const [confirmationInput, setConfirmationInput] = useState('')
+  const [isConfirmed, setIsConfirmed] = useState(!requiresConfirmationText)
+
+  useEffect(() => {
+    if (requiresConfirmationText) {
+      setIsConfirmed(confirmationInput === 'DELETE');
+    }
+  }, [confirmationInput, requiresConfirmationText]);
+
+  useEffect(() => {
+    // Reset state when dialog opens
+    if (isOpen) {
+      setConfirmationInput('');
+      setIsConfirmed(!requiresConfirmationText);
+    }
+  }, [isOpen, requiresConfirmationText]);
 
   const handleCancel = () => {
     if (onCancel) onCancel();
@@ -22,8 +41,10 @@ export default function ConfirmDialog() {
   }
 
   const handleConfirm = () => {
-    if (onConfirm) onConfirm();
-    dispatch({ type: 'CLOSE_DIALOG' })
+    if (isConfirmed) {
+      if (onConfirm) onConfirm();
+      dispatch({ type: 'CLOSE_DIALOG' })
+    }
   }
 
   return (
@@ -35,13 +56,24 @@ export default function ConfirmDialog() {
             {message}
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {requiresConfirmationText && (
+          <div className="space-y-2 py-2">
+            <Label htmlFor="confirmation-input">Type <span className="font-bold text-destructive">DELETE</span> to confirm.</Label>
+            <Input 
+              id="confirmation-input"
+              value={confirmationInput}
+              onChange={(e) => setConfirmationInput(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+        )}
         <AlertDialogFooter>
           {!isAlert && (
              <AlertDialogCancel onClick={handleCancel}>
                 {cancelText || 'Cancel'}
              </AlertDialogCancel>
           )}
-          <AlertDialogAction onClick={handleConfirm}>
+          <AlertDialogAction onClick={handleConfirm} disabled={!isConfirmed}>
             {confirmText || 'Confirm'}
           </AlertDialogAction>
         </AlertDialogFooter>

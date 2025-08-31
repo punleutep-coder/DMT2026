@@ -28,6 +28,7 @@ type Action =
   | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
   | { type: 'DELETE_DOCUMENT'; payload: { id: string } }
   | { type: 'DELETE_SELECTED_DOCUMENTS'; payload: string[] }
+  | { type: 'DELETE_ALL_DOCUMENTS' }
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
@@ -185,17 +186,16 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         updates[`/documents/${sanitizedId}`] = null;
         
-        get(ref(db, 'logs')).then(snapshot => {
-            if (snapshot.exists()) {
-                const logs = snapshot.val();
-                for (const logId in logs) {
-                    if (logs[logId].docId === id) { // Use original ID for matching
-                        updates[`/logs/${logId}`] = null;
-                    }
-                }
+        // Use the original ID for matching logs
+        state.logs.forEach(log => {
+            if (log.docId === id) {
+                updates[`/logs/${log.id}`] = null;
             }
-            update(ref(db), updates);
         });
+
+        if(Object.keys(updates).length > 1 || updates[`/documents/${sanitizedId}`] === null) {
+            update(ref(db), updates);
+        }
         return state;
       }
       case 'DELETE_SELECTED_DOCUMENTS': {
@@ -207,20 +207,27 @@ const appReducer = (state: AppState, action: Action): AppState => {
           updates[`/documents/${sanitizedId}`] = null;
         });
 
-        get(ref(db, 'logs')).then(snapshot => {
-            if (snapshot.exists()) {
-                const logs = snapshot.val();
-                for (const logId in logs) {
-                    if (idsToDelete.includes(logs[logId].docId)) { // Use original IDs for matching
-                        updates[`/logs/${logId}`] = null;
-                    }
-                }
+        // Use original IDs for matching logs
+        state.logs.forEach(log => {
+            if (idsToDelete.includes(log.docId)) {
+                updates[`/logs/${log.id}`] = null;
             }
-            update(ref(db), updates);
         });
+
+        if(Object.keys(updates).length > 0) {
+            update(ref(db), updates);
+        }
 
         return { ...state, selectedDocIds: [] };
       }
+    case 'DELETE_ALL_DOCUMENTS': {
+        const updates: {[key: string]: any} = {
+            '/documents': null,
+            '/logs': null,
+        };
+        update(ref(db), updates);
+        return state;
+    }
     case 'ADD_USER': {
         const newUser = action.payload;
         set(ref(db, `users/${newUser.id}`), newUser);
@@ -255,11 +262,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
         // 2. Update all documents
         state.documents.forEach(doc => {
             const sanitizedId = sanitizeFirebaseKey(doc.id);
-            const docUpdates: Partial<Document> = {};
             let docNeedsUpdate = false;
         
             if (doc.status === oldName) {
-                docUpdates.status = newName;
+                updates[`/documents/${sanitizedId}/status`] = newName;
                 docNeedsUpdate = true;
             }
         
@@ -269,15 +275,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 );
                 // Only update if history actually changed
                 if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
-                    docUpdates.history = newHistory;
+                    updates[`/documents/${sanitizedId}/history`] = newHistory;
                     docNeedsUpdate = true;
                 }
-            }
-        
-            if (docNeedsUpdate) {
-                Object.keys(docUpdates).forEach(key => {
-                    updates[`/documents/${sanitizedId}/${key}`] = (docUpdates as any)[key];
-                });
             }
         });
         
