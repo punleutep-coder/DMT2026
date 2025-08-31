@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppContext } from '@/hooks/use-app-context'
@@ -40,11 +40,12 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
 
   if (!doc) return null
 
-  const currentDeptIndex = state.departments.indexOf(doc.status)
-  const availableNextDepts = state.departments.slice(currentDeptIndex + 1)
+  // Allow moving to any department except the current one.
+  const availableNextDepts = state.departments.filter(dept => dept !== doc.status)
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const now = new Date().toISOString()
+    const oldStatus = doc.status
     
     const newHistory = [...doc.history]
     const lastEntry = newHistory[newHistory.length - 1]
@@ -58,10 +59,13 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
       status: values.nextDepartment,
       lastUpdate: now,
       history: newHistory,
+      isDelayed: false, 
+      releaseDate: null, 
+      releaseDateReached: false
     }
 
     dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus: doc.status, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now } });
+    dispatch({ type: 'ADD_LOG', payload: { docId, oldStatus, newStatus: values.nextDepartment, user: state.currentUser!.username, timestamp: now } });
 
     onClose()
   }
@@ -70,7 +74,8 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Advance Document: {doc.id}</DialogTitle>
+          <DialogTitle>Move Document: {doc.id}</DialogTitle>
+          <DialogDescription>Current department: {doc.status}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -101,7 +106,7 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button type="submit">Advance</Button>
+              <Button type="submit">Move Document</Button>
             </DialogFooter>
           </form>
         </Form>
