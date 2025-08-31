@@ -183,16 +183,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const { id } = action.payload;
         const sanitizedId = sanitizeFirebaseKey(id);
         const updates: {[key: string]: any} = {};
-        updates[`documents/${sanitizedId}`] = null;
+        updates[`/documents/${sanitizedId}`] = null;
         
-        // Find and delete associated logs
         get(ref(db, 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
                 for (const logId in logs) {
-                    // Check original ID, as that's what's stored in the log
-                    if (logs[logId].docId === id) {
-                        updates[`logs/${logId}`] = null;
+                    if (logs[logId].docId === id) { // Use original ID for matching
+                        updates[`/logs/${logId}`] = null;
                     }
                 }
             }
@@ -204,19 +202,17 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const idsToDelete = action.payload;
         const updates: {[key: string]: any} = {};
         
-        // Mark documents for deletion
         idsToDelete.forEach(id => {
           const sanitizedId = sanitizeFirebaseKey(id);
-          updates[`documents/${sanitizedId}`] = null;
+          updates[`/documents/${sanitizedId}`] = null;
         });
 
-        // Find and mark associated logs for deletion
         get(ref(db, 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
                 for (const logId in logs) {
-                    if (idsToDelete.includes(logs[logId].docId)) {
-                        updates[`logs/${logId}`] = null;
+                    if (idsToDelete.includes(logs[logId].docId)) { // Use original IDs for matching
+                        updates[`/logs/${logId}`] = null;
                     }
                 }
             }
@@ -258,30 +254,27 @@ const appReducer = (state: AppState, action: Action): AppState => {
 
         // 2. Update all documents
         state.documents.forEach(doc => {
-            let docNeedsUpdate = false;
             const sanitizedId = sanitizeFirebaseKey(doc.id);
             const docUpdates: Partial<Document> = {};
-
+            let docNeedsUpdate = false;
+        
             if (doc.status === oldName) {
                 docUpdates.status = newName;
                 docNeedsUpdate = true;
             }
+        
             if (Array.isArray(doc.history)) {
-                const newHistory = doc.history.map(h => {
-                    if (h.department === oldName) {
-                        return { ...h, department: newName };
-                    }
-                    return h;
-                });
+                const newHistory = doc.history.map(h => 
+                    h.department === oldName ? { ...h, department: newName } : h
+                );
                 // Only update if history actually changed
                 if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
-                     docUpdates.history = newHistory;
-                     docNeedsUpdate = true;
+                    docUpdates.history = newHistory;
+                    docNeedsUpdate = true;
                 }
             }
-
+        
             if (docNeedsUpdate) {
-                // Apply updates to the main updates object
                 Object.keys(docUpdates).forEach(key => {
                     updates[`/documents/${sanitizedId}/${key}`] = (docUpdates as any)[key];
                 });
