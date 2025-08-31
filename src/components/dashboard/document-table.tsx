@@ -69,15 +69,26 @@ export default function DocumentTable() {
     return filteredDocs.slice(startIndex, endIndex);
   }, [filteredDocs, pagination.currentPage, pagination.rowsPerPage]);
 
-  const handleSelectAll = (checked: boolean) => {
-    const ids = checked ? paginatedDocs.map(d => d.id) : []
-    dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: ids })
-  }
+  const handleSelectAllOnPage = (checked: boolean) => {
+    const pageIds = paginatedDocs.map(d => d.id);
+    let newSelectedIds = [...selectedDocIds];
+    if (checked) {
+      newSelectedIds = [...new Set([...newSelectedIds, ...pageIds])];
+    } else {
+      newSelectedIds = newSelectedIds.filter(id => !pageIds.includes(id));
+    }
+    dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: newSelectedIds });
+  };
+  
 
-  const handleSelectAllFiltered = (checked: boolean) => {
-    const ids = checked ? filteredDocs.map(d => d.id) : []
+  const handleSelectAllFiltered = () => {
+    const ids = filteredDocs.map(d => d.id)
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: ids });
   };
+
+  const handleDeselectAll = () => {
+    dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: [] });
+  }
   
   const uniqueAssignedDepts = useMemo(() => {
     return [...new Set(state.documents.map(d => d.assignedDepartment).filter(Boolean))].sort()
@@ -125,14 +136,15 @@ export default function DocumentTable() {
                       <DropdownMenuTrigger asChild>
                           <Checkbox
                             checked={areAllOnPageSelected}
-                            onCheckedChange={() => handleSelectAll(!areAllOnPageSelected)}
+                            onCheckedChange={() => handleSelectAllOnPage(!areAllOnPageSelected)}
+                            aria-label="Select all documents on this page"
                           />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
-                        <DropdownMenuItem onSelect={() => handleSelectAll(true)}>Select all on this page ({paginatedDocs.length})</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleSelectAllFiltered(true)}>Select all matching filter ({filteredDocs.length})</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleSelectAllOnPage(true)}>Select all on this page ({paginatedDocs.length})</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleSelectAllFiltered}>Select all matching filter ({filteredDocs.length})</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handleSelectAll(false)}>Deselect all</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleDeselectAll}>Deselect all ({selectedDocIds.length})</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
