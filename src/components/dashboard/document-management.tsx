@@ -12,6 +12,7 @@ import {
   Columns,
   Download,
   Upload,
+  Trash2,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -21,7 +22,7 @@ import { ref, set } from 'firebase/database'
 
 export default function DocumentManagement() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { currentUser } = state
+  const { currentUser, selectedDocIds } = state
   const { toast } = useToast()
 
   const openModal = (type: any, docId?: string, firestoreId?: string) => {
@@ -124,6 +125,22 @@ export default function DocumentManagement() {
     }
   }
 
+  const handleDeleteSelected = () => {
+    dispatch({
+      type: 'SET_DIALOG',
+      payload: {
+        isOpen: true,
+        title: `Delete ${selectedDocIds.length} Documents`,
+        message: `Are you sure you want to delete ${selectedDocIds.length} selected documents? This will also remove all associated logs. This action cannot be undone.`,
+        confirmText: 'Delete Selected',
+        onConfirm: () => {
+          dispatch({ type: 'DELETE_SELECTED_DOCUMENTS', payload: selectedDocIds });
+          toast({ title: "Success", description: `${selectedDocIds.length} documents have been deleted.` });
+        },
+      },
+    })
+  }
+
   const processFlowButtons = useMemo(() => {
     const buttons = [
         { label: 'All', filter: 'All' },
@@ -164,6 +181,16 @@ export default function DocumentManagement() {
         {hasPermission(currentUser, 'canCombineDocuments') && (
           <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-blue-800 hover:bg-blue-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
             <Combine /> Combine Selected
+          </Button>
+        )}
+        {hasPermission(currentUser, 'canDeleteDocument') && (
+          <Button
+            variant="destructive"
+            onClick={handleDeleteSelected}
+            disabled={state.selectedDocIds.length === 0}
+            className="shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <Trash2 /> Delete Selected
           </Button>
         )}
         {currentUser?.role === 'Admin' && (

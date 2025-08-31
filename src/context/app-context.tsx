@@ -27,6 +27,7 @@ type Action =
   | { type: 'ADD_DOCUMENT'; payload: Document }
   | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
   | { type: 'DELETE_DOCUMENT'; payload: { id: string } }
+  | { type: 'DELETE_SELECTED_DOCUMENTS'; payload: string[] }
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
@@ -197,6 +198,32 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
         return state;
       }
+      case 'DELETE_SELECTED_DOCUMENTS': {
+        const idsToDelete = action.payload;
+        const updates: {[key: string]: any} = {};
+        
+        // Mark documents for deletion
+        idsToDelete.forEach(id => {
+          const sanitizedId = sanitizeFirebaseKey(id);
+          updates[`documents/${sanitizedId}`] = null;
+        });
+
+        // Find and mark associated logs for deletion
+        get(ref(db, 'logs')).then(snapshot => {
+            if (snapshot.exists()) {
+                const logs = snapshot.val();
+                for (const logId in logs) {
+                    // Note: `logs[logId].docId` should already be sanitized if it was saved correctly
+                    if (idsToDelete.includes(logs[logId].docId) || idsToDelete.map(sanitizeFirebaseKey).includes(logs[logId].docId)) {
+                        updates[`logs/${logId}`] = null;
+                    }
+                }
+            }
+            update(ref(db), updates);
+        });
+
+        return { ...state, selectedDocIds: [] };
+      }
     case 'ADD_USER': {
         const newUser = action.payload;
         set(ref(db, `users/${newUser.id}`), newUser);
@@ -237,16 +264,18 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 updates[`/documents/${sanitizedId}/status`] = newName;
                 docNeedsUpdate = true;
             }
-            // Update history entries
-            const newHistory = doc.history.map(h => {
-                if (h.department === oldName) {
-                    docNeedsUpdate = true;
-                    return { ...h, department: newName };
+            if (Array.isArray(doc.history)) {
+                // Update history entries
+                const newHistory = doc.history.map(h => {
+                    if (h.department === oldName) {
+                        docNeedsUpdate = true;
+                        return { ...h, department: newName };
+                    }
+                    return h;
+                });
+                 if (docNeedsUpdate) { // only update history if something changed
+                    updates[`/documents/${sanitizedId}/history`] = newHistory;
                 }
-                return h;
-            });
-            if (docNeedsUpdate) { // only update history if something changed
-              updates[`/documents/${sanitizedId}/history`] = newHistory;
             }
         });
         
