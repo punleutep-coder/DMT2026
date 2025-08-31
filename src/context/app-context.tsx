@@ -269,14 +269,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
             if (Array.isArray(doc.history)) {
                 const newHistory = doc.history.map(h => {
                     if (h.department === oldName) {
-                        docNeedsUpdate = true;
                         return { ...h, department: newName };
                     }
                     return h;
                 });
+                // Only update if history actually changed
                 if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
-                    docUpdates.history = newHistory;
-                    docNeedsUpdate = true;
+                     docUpdates.history = newHistory;
+                     docNeedsUpdate = true;
                 }
             }
 
