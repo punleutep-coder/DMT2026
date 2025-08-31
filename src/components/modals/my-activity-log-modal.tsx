@@ -3,9 +3,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
 import { useAppContext } from '@/hooks/use-app-context'
 import { format } from 'date-fns'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 interface MyActivityLogModalProps {
   isOpen: boolean
@@ -15,13 +16,23 @@ interface MyActivityLogModalProps {
 export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogModalProps) {
   const { state } = useAppContext()
   const { logs, currentUser } = state
+  const [searchTerm, setSearchTerm] = useState('')
 
   const userLogs = useMemo(() => {
     if (!currentUser) return []
-    return logs
+    
+    let filteredLogs = logs
       .filter(log => log.user === currentUser.username)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-  }, [logs, currentUser])
+    
+    if (searchTerm) {
+        filteredLogs = filteredLogs.filter(log => 
+            log.docId.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+      
+    return filteredLogs
+  }, [logs, currentUser, searchTerm])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -32,7 +43,15 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
             A record of all the actions you have performed in the system.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[60vh] p-4">
+        <div className="py-4">
+            <Input 
+                placeholder="Search by Document ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+            />
+        </div>
+        <ScrollArea className="h-[50vh]">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -54,7 +73,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                         </TableRow>
                     )) : (
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center h-24">No activity recorded yet.</TableCell>
+                            <TableCell colSpan={4} className="text-center h-24">No activity found.</TableCell>
                         </TableRow>
                     )}
                 </TableBody>
