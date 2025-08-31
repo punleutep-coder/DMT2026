@@ -147,9 +147,8 @@ export default function DocumentManagement() {
       payload: {
         isOpen: true,
         title: 'Permanently Delete All Documents',
-        message: `This is a highly destructive action that will permanently erase all documents and their associated logs from the database. This cannot be undone. To proceed, please type DELETE below.`,
+        message: `This is a highly destructive action that will permanently erase all documents and their associated logs from the database. This cannot be undone.`,
         confirmText: 'Delete All Documents',
-        requiresConfirmationText: true,
         onConfirm: () => {
           dispatch({ type: 'DELETE_ALL_DOCUMENTS' });
           toast({ title: "Success", description: "All documents and logs have been deleted." });
