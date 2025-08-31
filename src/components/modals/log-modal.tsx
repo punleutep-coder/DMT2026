@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { format } from 'date-fns'
+import type { Document } from '@/lib/types'
 
 interface LogModalProps {
   isOpen: boolean
@@ -42,11 +43,15 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
   const document = state.documents.find(doc => doc.id === docId)
 
   const sourceDocuments = document?.combinedFrom
-    ? document.combinedFrom.map(id => state.documents.find(d => d.id === id)).filter(Boolean)
+    ? document.combinedFrom.map(id => state.documents.find(d => d.id === id)).filter((d): d is Document => !!d)
     : [];
 
   const handleSourceDocClick = (sourceDocId: string, sourceFirestoreId: string) => {
-    dispatch({ type: 'SET_MODAL', payload: { type: 'viewLog', docId: sourceDocId, firestoreId: sourceFirestoreId }});
+    onClose(); // Close the current modal
+    // Dispatch needs a moment to allow the UI to close the modal before opening a new one.
+    setTimeout(() => {
+      dispatch({ type: 'SET_MODAL', payload: { type: 'viewLog', docId: sourceDocId, firestoreId: sourceFirestoreId }});
+    }, 100);
   }
 
   return (

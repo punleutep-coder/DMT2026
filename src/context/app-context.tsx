@@ -378,7 +378,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     // <<<<<<<<<<<<<<<< START: PERMISSION FILTERING (HIGHEST PRIORITY) >>>>>>>>>>>>>>>>
     if (state.currentUser?.role !== 'Admin' && Array.isArray(state.currentUser?.departmentPermissions) && state.currentUser.departmentPermissions.length > 0) {
-        docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status));
+        docs = docs.filter(doc => doc.status && hasDepartmentPermission(state.currentUser, doc.status));
     }
     // <<<<<<<<<<<<<<<< END: PERMISSION FILTERING >>>>>>>>>>>>>>>>
 
@@ -463,7 +463,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (state.filter.mainFilter === 'Exceeding Period') {
             docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
         } else if (state.filter.mainFilter === 'In Progress') {
-            docs = docs.filter(d => !d.isDelayed && d.status && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
+            docs = docs.filter(d => d.status && !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
         } else if (state.filter.mainFilter === 'Delayed') {
             docs = docs.filter(d => d.isDelayed && !d.releaseDateReached);
         } else if (state.filter.mainFilter === 'Release Date Reached') {
