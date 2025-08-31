@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useAppContext } from "@/hooks/use-app-context"
@@ -13,6 +14,7 @@ import DelayDocumentModal from "./delay-document-modal"
 import EditNoteModal from "./edit-note-modal"
 import AdvanceDocumentModal from "./advance-document-modal"
 import CompleteDocumentModal from "./complete-document-modal"
+import MyActivityLogModal from "./my-activity-log-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -31,6 +33,8 @@ export default function ModalManager() {
             return <EditDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'viewLog':
             return <LogModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
+        case 'myActivityLog':
+            return <MyActivityLogModal isOpen={true} onClose={handleClose} />
         case 'addUser':
             return <UserManagementModal isOpen={true} onClose={handleClose} />
         case 'editUser':

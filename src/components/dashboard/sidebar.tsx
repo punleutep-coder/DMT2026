@@ -37,6 +37,10 @@ export default function DashboardSidebar() {
     dispatch({ type: 'SET_MODAL', payload: { type: 'addUser' } })
   }
 
+  const openMyActivityLog = () => {
+    dispatch({ type: 'SET_MODAL', payload: { type: 'myActivityLog' } })
+  }
+
   const handleReleaseFilter = () => {
     dispatch({
       type: 'SET_FILTER',
@@ -74,6 +78,12 @@ export default function DashboardSidebar() {
             >
               <PlayCircle />
               <span>Release Document</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="My Activity Log" onClick={openMyActivityLog}>
+              <FileText />
+              <span>My Activity</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           {currentUser.role === 'Admin' && (

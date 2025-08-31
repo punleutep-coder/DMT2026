@@ -98,7 +98,7 @@ export interface DialogState {
   onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
-  isAlert?: boolean;
+isAlert?: boolean;
 }
 
 export type ModalType =
@@ -107,6 +107,7 @@ export type ModalType =
   | 'addDocument'
   | 'editDocument'
   | 'viewLog'
+  | 'myActivityLog'
   | 'manageDepartments'
   | 'manageColumns'
   | 'combineDocuments'
