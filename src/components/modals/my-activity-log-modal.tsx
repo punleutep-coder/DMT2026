@@ -81,7 +81,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl glassmorphic-card">
+      <DialogContent className="max-w-2xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>My Activity Log</DialogTitle>
           <DialogDescription>
@@ -89,7 +89,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-4">
+        <div className="space-y-4 my-4">
             {/* Reporting Section */}
             <div className="space-y-4 p-4 border rounded-lg">
                 <h3 className="font-semibold text-lg">Generate Report</h3>
@@ -157,7 +157,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
             </div>
         </div>
 
-        <ScrollArea className="h-[40vh] border rounded-lg">
+        <ScrollArea className="h-[30vh] border rounded-lg">
             <Table>
                 <TableHeader>
                     <TableRow>
