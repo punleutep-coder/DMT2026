@@ -185,11 +185,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         updates[`documents/${sanitizedId}`] = null;
         
+        // Find and delete associated logs
         get(ref(db, 'logs')).then(snapshot => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
                 for (const logId in logs) {
-                    if (logs[logId].docId === sanitizedId) {
+                    // Check original ID, as that's what's stored in the log
+                    if (logs[logId].docId === id) {
                         updates[`logs/${logId}`] = null;
                     }
                 }
@@ -213,8 +215,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             if (snapshot.exists()) {
                 const logs = snapshot.val();
                 for (const logId in logs) {
-                    // Note: `logs[logId].docId` should already be sanitized if it was saved correctly
-                    if (idsToDelete.includes(logs[logId].docId) || idsToDelete.map(sanitizeFirebaseKey).includes(logs[logId].docId)) {
+                    if (idsToDelete.includes(logs[logId].docId)) {
                         updates[`logs/${logId}`] = null;
                     }
                 }
@@ -259,13 +260,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
         state.documents.forEach(doc => {
             let docNeedsUpdate = false;
             const sanitizedId = sanitizeFirebaseKey(doc.id);
-            // Update current status if it matches
+            const docUpdates: Partial<Document> = {};
+
             if (doc.status === oldName) {
-                updates[`/documents/${sanitizedId}/status`] = newName;
+                docUpdates.status = newName;
                 docNeedsUpdate = true;
             }
             if (Array.isArray(doc.history)) {
-                // Update history entries
                 const newHistory = doc.history.map(h => {
                     if (h.department === oldName) {
                         docNeedsUpdate = true;
@@ -273,15 +274,22 @@ const appReducer = (state: AppState, action: Action): AppState => {
                     }
                     return h;
                 });
-                 if (docNeedsUpdate) { // only update history if something changed
-                    updates[`/documents/${sanitizedId}/history`] = newHistory;
+                if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
+                    docUpdates.history = newHistory;
+                    docNeedsUpdate = true;
                 }
+            }
+
+            if (docNeedsUpdate) {
+                // Apply updates to the main updates object
+                Object.keys(docUpdates).forEach(key => {
+                    updates[`/documents/${sanitizedId}/${key}`] = (docUpdates as any)[key];
+                });
             }
         });
         
         update(ref(db), updates);
         
-        // No need to return a new state, Firebase listener will do it
         return state;
     }
     case 'SET_COLUMN_VISIBILITY': {
