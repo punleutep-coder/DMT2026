@@ -28,7 +28,6 @@ type Action =
   | { type: 'UPDATE_DOCUMENT'; payload: Partial<Document> & { id: string } }
   | { type: 'DELETE_DOCUMENT'; payload: { id: string } }
   | { type: 'DELETE_SELECTED_DOCUMENTS'; payload: string[] }
-  | { type: 'DELETE_ALL_DOCUMENTS' }
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
@@ -218,13 +217,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
             update(ref(db), updates);
         }
 
-        return { ...state, selectedDocIds: [] };
-      }
-      case 'DELETE_ALL_DOCUMENTS': {
-        const updates: {[key: string]: any} = {};
-        updates['/documents'] = null;
-        updates['/logs'] = null;
-        update(ref(db), updates);
         return { ...state, selectedDocIds: [] };
       }
     case 'ADD_USER': {
