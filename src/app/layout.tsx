@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AppProvider } from '@/context/app-context'
 import { Toaster } from '@/components/ui/toaster'
-import ThemeProvider from '@/context/theme-provider'
 
 export const metadata: Metadata = {
   title: 'DocuFlow',
@@ -31,10 +30,8 @@ export default function RootLayout({
       </head>
       <body className="font-body">
         <AppProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          {children}
+          <Toaster />
         </AppProvider>
       </body>
     </html>

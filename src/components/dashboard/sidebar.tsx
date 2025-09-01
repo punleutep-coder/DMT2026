@@ -22,7 +22,6 @@ import {
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
-import ThemeToggle from './theme-toggle'
 
 export default function DashboardSidebar() {
   const { state, dispatch } = useAppContext()
@@ -84,7 +83,6 @@ export default function DashboardSidebar() {
               Logged in as:{' '}
               <strong className="text-primary">{currentUser.username}</strong>
             </div>
-          <ThemeToggle />
         </div>
         <SidebarMenu>
           <SidebarMenuItem>

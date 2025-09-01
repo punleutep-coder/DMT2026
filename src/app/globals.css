@@ -38,41 +38,6 @@
     --sidebar-border: 220 13% 85%;
     --sidebar-ring: 224 71.4% 4.1%;
   }
-
-  .dark {
-    --background: 223 27% 12%;
-    --foreground: 210 40% 98%;
-    --card: 223 27% 15%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 156 72% 63%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 25%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 190 78% 69%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 22%;
-    --input: 217 33% 20%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
-    --chart-2: 190 78% 69%;
-    --chart-3: 156 72% 63%;
-    --chart-4: 220 70% 50%;
-    --chart-5: 280 65% 60%;
-    --sidebar-background: 223 27% 12%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 156 72% 63%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 22%;
-    --sidebar-ring: 217 91% 60%;
-  }
 }
 
 @layer base {
@@ -96,9 +61,6 @@
 
 @layer components {
   .glassmorphic-card {
-    @apply bg-card/60 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
-  }
-  .dark .glassmorphic-card {
     @apply bg-card/60 backdrop-blur-lg border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
   }
 }
@@ -139,15 +101,5 @@
   @apply -translate-y-2 shadow-xl;
 }
 .dashboard-metric-box.active {
-  @apply bg-primary/20 shadow-2xl -translate-y-1;
-}
-
-.dark .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-300 ease-in-out border border-gray-400 bg-black/20 shadow-md;
-}
-.dark .dashboard-metric-box:hover {
-  @apply -translate-y-2 shadow-xl;
-}
-.dark .dashboard-metric-box.active {
   @apply bg-primary/20 shadow-2xl -translate-y-1;
 }
