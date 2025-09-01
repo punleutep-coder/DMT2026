@@ -45,8 +45,8 @@ export default function DashboardSidebar() {
     <Sidebar>
       <SidebarHeader className="shadow-md">
         <div className="flex items-center gap-2">
-          <Workflow className="size-8 text-primary" />
-          <h2 className="text-2xl font-bold text-primary">DocuFlow</h2>
+          <Workflow className="size-8 text-[#000066]" />
+          <h2 className="text-2xl font-bold text-[#000066]">DocuFlow</h2>
         </div>
       </SidebarHeader>
       <SidebarContent>

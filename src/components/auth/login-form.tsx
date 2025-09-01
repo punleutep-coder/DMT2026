@@ -82,9 +82,9 @@ export default function LoginForm() {
         <div className="modal-content w-full max-w-sm p-8 space-y-6 glassmorphic-card">
           <div className="text-center space-y-4">
             <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full">
-              <Workflow className="w-8 h-8 text-primary" />
+              <Workflow className="w-8 h-8 text-[#000066]" />
             </div>
-            <h1 className="text-3xl font-bold text-primary">DocuFlow</h1>
+            <h1 className="text-3xl font-bold text-[#000066]">DocuFlow</h1>
             <p className="text-muted-foreground">Please sign in to continue</p>
           </div>
           <Form {...form}>
