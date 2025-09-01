@@ -19,6 +19,7 @@ import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { db } from '@/lib/firebase'
 import { ref, set } from 'firebase/database'
+import { sanitizeFirebaseKey } from '@/lib/utils'
 
 export default function DocumentManagement() {
   const { state, dispatch, filteredDocs } = useAppContext()
@@ -57,6 +58,17 @@ export default function DocumentManagement() {
               onConfirm: () => {
                 try {
                   toast({ title: "Importing...", description: "Please wait while we import your data." });
+                  
+                  // Sanitize document keys before setting them in Firebase
+                  if (importedData.documents) {
+                    const sanitizedDocuments: { [key: string]: any } = {};
+                    for (const key in importedData.documents) {
+                      const sanitizedKey = sanitizeFirebaseKey(key);
+                      sanitizedDocuments[sanitizedKey] = importedData.documents[key];
+                    }
+                    importedData.documents = sanitizedDocuments;
+                  }
+
                   // Instead of dispatching, we write directly to Firebase
                   set(ref(db), importedData).then(() => {
                     toast({ title: 'Success', description: 'Data imported successfully.' })

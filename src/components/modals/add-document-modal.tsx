@@ -67,7 +67,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
       initialNote: '',
     },
   })
-
+  
   const handleSuggestTags = async () => {
     const docName = form.getValues('name')
     if (!docName) {
@@ -142,8 +142,20 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
+                {hasPermission(currentUser, 'canEditDocumentName') && 
+                  <FormField 
+                    control={form.control} 
+                    name="name" 
+                    render={({ field }) => ( 
+                      <FormItem>
+                        <FormLabel>Document Name</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem> 
+                    )} 
+                  />
+                }
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
