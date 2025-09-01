@@ -169,7 +169,7 @@ export default function UserManagementModal({
       return;
     }
     // Prevent Admins from editing other Admins unless they have the canManageAdmins permission
-    if (user.role === 'Admin' && currentUser?.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
+    if (user.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
        toast({ title: 'Permission Denied', description: 'You do not have permission to edit other Admins.', variant: 'destructive' });
        return;
     }
@@ -202,7 +202,7 @@ export default function UserManagementModal({
         toast({ title: 'Error', description: 'You cannot delete your own account.', variant: 'destructive' });
         return;
     }
-     if (user.role === 'Admin' && currentUser?.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
+     if (user.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
         toast({ title: 'Permission Denied', description: 'You do not have permission to delete other Admins.', variant: 'destructive' });
         return;
     }
@@ -237,7 +237,7 @@ export default function UserManagementModal({
     }
     
     const targetUser = isUpdating ? state.users.find(u => u.id === values.id) : null;
-    if (isUpdating && targetUser?.role === 'Admin' && currentUser?.role === 'Admin' && !currentUser.permissions.canManageAdmins) {
+    if (isUpdating && targetUser?.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
         toast({ title: 'Permission Denied', description: 'You cannot edit other Admin users.', variant: 'destructive' });
         return;
     }
@@ -310,7 +310,7 @@ export default function UserManagementModal({
   
   const canSetRole = (roleToSet: 'Admin' | 'User') => {
       if (!currentUser) return false;
-      if (currentUser.role === 'Admin' && currentUser.permissions.canManageAdmins) return true;
+      if (currentUser.role === 'Admin' && currentUser.permissions?.canManageAdmins) return true;
       if (currentUser.role === 'Admin' && roleToSet === 'User') return true;
       return false;
   }
@@ -567,3 +567,4 @@ export default function UserManagementModal({
     
 
     
+
