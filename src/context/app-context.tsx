@@ -179,7 +179,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         update(ref(db), updates);
         return state;
       }
-      case 'DELETE_DOCUMENT': {
+    case 'DELETE_DOCUMENT': {
         const { id } = action.payload;
         const sanitizedId = sanitizeFirebaseKey(id);
         const updates: {[key: string]: any} = {};
@@ -192,11 +192,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
             }
         });
 
-        if(Object.keys(updates).length > 0) {
+        if(Object.keys(updates).length > 1 || !updates[`/documents/${sanitizedId}`]) {
             update(ref(db), updates);
         }
         return state;
-      }
+    }
       case 'DELETE_SELECTED_DOCUMENTS': {
         const idsToDelete = action.payload;
         const updates: {[key: string]: any} = {};

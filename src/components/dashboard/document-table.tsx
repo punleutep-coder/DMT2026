@@ -50,7 +50,7 @@ const EmptyState = () => {
                 <div className="flex flex-col items-center justify-center gap-4">
                     <SearchX className="h-16 w-16 text-muted-foreground/50" />
                     <h3 className="text-xl font-semibold text-foreground">No Documents Found</h3>
-                    <p className="text-muted-foreground">Your current filter settings returned no results.</p>
+                    <p className="text-muted-foreground">Your filter settings did not match any documents.</p>
                     <Button variant="outline" onClick={handleClearFilter}>Clear All Filters</Button>
                 </div>
             </TableCell>
