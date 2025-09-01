@@ -37,8 +37,8 @@ export default function Metrics() {
 
   const metricItems = [
     { title: 'Total Documents', filter: 'All', metric: metrics.total, valueColorClass: 'text-blue-400' },
-    { title: 'In Progress', filter: 'In Progress', metric: metrics.inProgress, valueColorClass: 'text-yellow-400' },
-    { title: 'Delayed', filter: 'Delayed', metric: metrics.delayed, valueColorClass: 'text-yellow-400' },
+    { title: 'In Progress', filter: 'In Progress', metric: metrics.inProgress, valueColorClass: 'text-blue-400' },
+    { title: 'Delayed', filter: 'Delayed', metric: metrics.delayed, valueColorClass: 'text-blue-400' },
     { title: 'Release Date Reached', filter: 'Release Date Reached', metric: metrics.releaseReached, valueColorClass: 'text-red-500' },
     { title: 'Completed', filter: 'Completed', metric: metrics.completed, valueColorClass: 'text-green-400' },
     { title: 'Completed (Success)', filter: 'Completed (Success)', metric: metrics.completedSuccess, valueColorClass: 'text-green-400' },
