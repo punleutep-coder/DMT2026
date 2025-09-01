@@ -36,12 +36,13 @@ interface DocumentTableRowProps {
   index: number
 }
 
-const getStatusBadgeVariant = (status: string, isDelayed: boolean, releaseDateReached?: boolean): 'default' | 'destructive' | 'secondary' | 'outline' | 'status' => {
+const getStatusBadgeVariant = (status: string, isDelayed: boolean, releaseDateReached?: boolean): 'default' | 'destructive' | 'secondary' | 'outline' | 'status' | 'decision' => {
     if (releaseDateReached) return 'destructive'
     if (isDelayed) return 'outline'
     if (status === 'Completed (Success)') return 'default'
     if (status === 'Completed (Unsuccess)') return 'destructive'
     if (status === 'Combined' || status === 'Split') return 'secondary'
+    if (status === 'ឯកសារសម្រេច') return 'decision'
     return 'status'
 }
 
