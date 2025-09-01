@@ -121,12 +121,10 @@ export default function CombineDocumentsModal({
       });
     });
 
-    const combinedName = `${values.newDocName} (Combined: ${Array.from(allNames).join(', ')})`;
-
     const newDoc: Document = {
       id: values.newDocId,
       firestoreId: `doc-${Date.now()}`,
-      name: combinedName,
+      name: values.newDocName,
       office: values.office || null,
       status: values.targetDepartment,
       initialDepartment: values.targetDepartment,
