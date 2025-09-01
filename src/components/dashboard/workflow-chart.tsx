@@ -81,7 +81,7 @@ export default function WorkflowChart() {
              />
             <Bar
               dataKey="total"
-              fill="hsl(var(--primary))"
+              fill="hsl(var(--chart-4))"
               radius={[4, 4, 0, 0]}
               filter="url(#shadow)"
             >
