@@ -8,7 +8,7 @@ export const hasPermission = (user: User | null, permissionKey: keyof typeof PER
   if (user.role === 'Admin') return true;
   if (!user.permissions) return false;
   
-  return user.permissions[permissionKey] === true;
+  return !!user.permissions[permissionKey];
 };
 
 export const hasDepartmentPermission = (user: User | null, departmentName: string): boolean => {
