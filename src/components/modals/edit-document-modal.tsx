@@ -13,6 +13,9 @@ import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
 import { useToast } from '@/hooks/use-toast'
 import { sanitizeFirebaseKey } from '@/lib/utils'
+import { useState } from 'react'
+import { Sparkles } from 'lucide-react'
+import { suggestTagsAction } from '@/app/actions/ai'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -26,6 +29,7 @@ const formSchema = z.object({
   documentLink3: z.string().url().optional().or(z.literal('')),
   documentLink4: z.string().url().optional().or(z.literal('')),
   assignedDepartment: z.string().optional(),
+  docTags: z.string().optional(),
 })
 
 interface EditDocumentModalProps {
@@ -40,6 +44,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
   const docToUpdate = state.documents.find(d => d.id === docId)
   const { currentUser } = state
   const { toast } = useToast()
+  const [isSuggesting, setIsSuggesting] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,10 +60,28 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
       documentLink3: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[2] || '' : '',
       documentLink4: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[3] || '' : '',
       assignedDepartment: docToUpdate?.assignedDepartment || '',
+      docTags: Array.isArray(docToUpdate?.tags) ? docToUpdate.tags.join(', ') : '',
     },
   })
 
   if (!docToUpdate) return null
+  
+  const handleSuggestTags = async () => {
+    const docName = form.getValues('name')
+    if (!docName) {
+      form.setError('name', { message: 'Please enter a name first.' })
+      return
+    }
+    setIsSuggesting(true)
+    try {
+      const tags = await suggestTagsAction(docName)
+      form.setValue('docTags', tags.join(', '))
+    } catch (error) {
+      console.error('Failed to suggest tags', error)
+    } finally {
+      setIsSuggesting(false)
+    }
+  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
@@ -81,6 +104,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             tertiaryId: values.tertiaryId || null,
             quaternaryId: values.quaternaryId || null,
             documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
+            tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
             lastUpdate: new Date().toISOString(),
         };
 
@@ -105,6 +129,10 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         if (hasPermission(currentUser, 'canEditSecondaryId') && values.secondaryId !== docToUpdate.secondaryId) updatedFields.secondaryId = values.secondaryId || null;
         if (hasPermission(currentUser, 'canEditTertiaryId') && values.tertiaryId !== docToUpdate.tertiaryId) updatedFields.tertiaryId = values.tertiaryId || null;
         if (hasPermission(currentUser, 'canEditQuaternaryId') && values.quaternaryId !== docToUpdate.quaternaryId) updatedFields.quaternaryId = values.quaternaryId || null;
+        if (hasPermission(currentUser, 'canEditTags')) {
+            const newTags = values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [];
+            updatedFields.tags = newTags;
+        }
         
         const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
         updatedFields.documentLink = newLinks;
@@ -136,6 +164,20 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
+
+                {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags (comma-separated)</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl><Input {...field} /></FormControl>
+                      <Button type="button" variant="outline" onClick={handleSuggestTags} disabled={isSuggesting}>
+                        <Sparkles className="mr-2 h-4 w-4" /> {isSuggesting ? 'Suggesting...' : 'Suggest'}
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditDocumentLink2') && <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
