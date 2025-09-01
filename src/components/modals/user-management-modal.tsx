@@ -318,7 +318,7 @@ export default function UserManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl glassmorphic-card">
+      <DialogContent className="sm:max-w-2xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>User Management</DialogTitle>
           <DialogDescription>
@@ -567,3 +567,4 @@ export default function UserManagementModal({
     
 
     
+
