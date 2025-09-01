@@ -20,6 +20,7 @@ import {
   FileEdit,
   Split,
   MoreVertical,
+  Combine,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { format } from 'date-fns'
@@ -100,20 +101,17 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         let newHistory = [...doc.history];
         
         if (isTerminalState) {
-            // When re-opening a terminal document, reset it to the first department
             newStatus = state.departments[0];
-            // Optionally create a new history entry for this action
-            newHistory.push({
+            newHistory = [{
                 department: newStatus,
                 start: new Date().toISOString(),
                 end: null,
                 receiver: currentUser!.username,
                 note: 'Document re-opened by admin.'
-            });
+            }];
 
         } else {
-            // Standard "Move Back" logic
-            newHistory.pop() // Remove current step
+            newHistory.pop() 
             const prevHistoryEntry = newHistory[newHistory.length - 1]
             if (prevHistoryEntry) {
                 prevHistoryEntry.end = null
@@ -139,7 +137,9 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   }
 
   const isCompleted = doc.status && doc.status.startsWith('Completed');
-  const isCombinedOrSplit = doc.status === 'Combined' || doc.status === 'Split';
+  const isCombined = doc.status === 'Combined';
+  const isSplit = doc.status === 'Split';
+  const isCombinedOrSplit = isCombined || isSplit;
   const isTerminal = isCompleted || isCombinedOrSplit;
   
   const editPermissions = [
@@ -175,7 +175,13 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
        {columnVisibility.department && (
         <TableCell className="text-foreground">{doc.assignedDepartment || 'N/A'}</TableCell>
       )}
-      {columnVisibility.name && <TableCell className="text-foreground">{doc.name}</TableCell>}
+      {columnVisibility.name && <TableCell className="text-foreground">
+        <div className="flex items-center gap-2">
+            {isCombined && <Combine className="h-4 w-4 text-blue-500" title="Combined Document" />}
+            {isSplit && <Split className="h-4 w-4 text-purple-500" title="Split Document" />}
+            <span>{doc.name}</span>
+        </div>
+      </TableCell>}
       {columnVisibility.office && (
         <TableCell className="text-foreground">{doc.office || 'N/A'}</TableCell>
       )}
