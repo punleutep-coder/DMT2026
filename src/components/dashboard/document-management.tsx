@@ -186,7 +186,7 @@ export default function DocumentManagement() {
 
       <div className="flex flex-wrap gap-2">
         {hasPermission(currentUser, 'canAddDocument') && (
-          <Button onClick={() => openModal('addDocument')} className="bg-primary/80 hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <Button onClick={() => openModal('addDocument')} className="bg-primary/80 hover:bg-primary/90 text-[#000066] shadow-lg hover:shadow-xl transition-shadow">
             <FilePlus /> Add New Document
           </Button>
         )}
