@@ -11,7 +11,7 @@ export default function DashboardHeader() {
         <Menu />
       </SidebarTrigger>
       <div className="text-left flex-1">
-        <h1 className="text-2xl font-bold text-foreground">
+        <h1 className="text-2xl font-bold text-[#000066]">
           System Overview
         </h1>
       </div>
