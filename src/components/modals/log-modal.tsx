@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import type { Document } from '@/lib/types'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
+import { Split } from 'lucide-react'
 
 interface LogModalProps {
   isOpen: boolean
@@ -109,7 +110,9 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                                 {splitSourceDocument.tertiaryId && <Badge variant="secondary">{splitSourceDocument.tertiaryId}</Badge>}
                               </div>
                           </div>
-                          <Button onClick={() => handleSplitAgain(splitSourceDocument)}>Split Again</Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleSplitAgain(splitSourceDocument)} title="Split Again">
+                            <Split className="h-5 w-5" />
+                          </Button>
                       </div>
                   </div>
               </div>
