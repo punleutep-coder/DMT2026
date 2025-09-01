@@ -92,15 +92,33 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
 
     } else if (type === 'back') {
       const currentDeptIndex = state.departments.indexOf(doc.status)
-      if (currentDeptIndex > 0 || (doc.status && doc.status.startsWith('Completed'))) {
-        const newHistory = [...doc.history]
-        newHistory.pop() // Remove current step
-        const prevHistoryEntry = newHistory[newHistory.length - 1]
-        if (prevHistoryEntry) {
-            prevHistoryEntry.end = null
-        }
+      const isTerminalState = doc.status.startsWith('Completed') || doc.status === 'Combined' || doc.status === 'Split';
+      
+      if (currentDeptIndex > 0 || isTerminalState) {
+        let newStatus: string;
+        let newHistory = [...doc.history];
         
-        const newStatus = prevHistoryEntry ? prevHistoryEntry.department : state.departments[0];
+        if (isTerminalState) {
+            // When re-opening a terminal document, reset it to the first department
+            newStatus = state.departments[0];
+            // Optionally create a new history entry for this action
+            newHistory.push({
+                department: newStatus,
+                start: new Date().toISOString(),
+                end: null,
+                receiver: currentUser!.username,
+                note: 'Document re-opened by admin.'
+            });
+
+        } else {
+            // Standard "Move Back" logic
+            newHistory.pop() // Remove current step
+            const prevHistoryEntry = newHistory[newHistory.length - 1]
+            if (prevHistoryEntry) {
+                prevHistoryEntry.end = null
+            }
+            newStatus = prevHistoryEntry ? prevHistoryEntry.department : state.departments[0];
+        }
 
         const updatedFields = {
           id: docId,
@@ -243,7 +261,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         </DropdownMenuItem>
                     )}
 
-                    {isCompleted && hasPermission(currentUser, 'canMoveDocument') && (
+                    {isTerminal && hasPermission(currentUser, 'canMoveDocument') && (
                         <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
