@@ -10,9 +10,23 @@ import DocumentManagement from './document-management'
 import { useAppContext } from '@/hooks/use-app-context'
 import ConfirmDialog from '../modals/confirm-dialog'
 import ModalManager from '../modals/modal-manager'
+import { Skeleton } from '../ui/skeleton'
 
 export default function Dashboard() {
   const { state } = useAppContext()
+
+  if (!state.isInitialized) {
+    return (
+        <div className="w-full h-screen bg-background flex items-center justify-center p-8">
+            <div className="w-full max-w-lg text-center space-y-4">
+                <Skeleton className="h-10 w-2/3 mx-auto" />
+                <Skeleton className="h-8 w-full" />
+                <p className="text-lg text-muted-foreground animate-pulse">Initializing application, please wait...</p>
+            </div>
+        </div>
+    )
+  }
+
   return (
     <SidebarProvider>
       <DashboardSidebar />

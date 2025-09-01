@@ -20,9 +20,6 @@ import { useToast } from '@/hooks/use-toast'
 import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
-import { get, ref, set, onValue } from 'firebase/database'
-import { db } from '@/lib/firebase'
-import { initialData } from '@/lib/initial-data'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -41,7 +38,6 @@ export default function LoginForm() {
   const { state, dispatch } = useAppContext()
   const [error, setError] = useState<string | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isDataReady, setIsDataReady] = useState(false);
   const { toast } = useToast()
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -51,39 +47,6 @@ export default function LoginForm() {
       password: 'admin',
     },
   })
-
-  // This effect will run when the component mounts.
-  // It's responsible for fetching the users list and seeding the DB if necessary.
-  useEffect(() => {
-    const usersRef = ref(db, 'users');
-    
-    // Check for users and seed if necessary on first load.
-    get(usersRef).then((snapshot) => {
-        if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
-          console.log("No users found in DB. Seeding database...");
-          // Seed the entire initial dataset if users are missing.
-          set(ref(db), initialData).catch(error => {
-            console.error("Failed to seed database:", error);
-          });
-        }
-    });
-
-    // Set up a listener for real-time updates to the users table.
-    const unsubscribe = onValue(usersRef, (snapshot) => {
-        const usersData = snapshot.val();
-        const usersList = usersData ? Object.keys(usersData).map(key => ({ id: key, ...usersData[key] })) : [];
-        dispatch({ type: 'SET_USERS', payload: usersList });
-        setIsDataReady(true); // Mark data as ready once loaded.
-    }, (error) => {
-        console.error("Firebase onValue error for users:", error);
-        setError("Could not connect to the database to fetch user data.");
-        setIsDataReady(true); // Still allow login attempt if offline
-    });
-
-    // Clean up the listener when the component unmounts.
-    return () => unsubscribe();
-  }, [dispatch]);
-
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
@@ -112,8 +75,6 @@ export default function LoginForm() {
     setError('Invalid username or password.')
     setIsLoggingIn(false);
   }
-
-  const isInitializing = !isDataReady;
 
   return (
     <>
@@ -163,8 +124,8 @@ export default function LoginForm() {
                   </AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={isInitializing || isLoggingIn}>
-                {isInitializing ? 'Initializing...' : isLoggingIn ? 'Logging in...' : 'Login'}
+              <Button type="submit" className="w-full" disabled={!state.isInitialized || isLoggingIn}>
+                {isLoggingIn ? 'Logging in...' : 'Login'}
               </Button>
             </form>
           </Form>

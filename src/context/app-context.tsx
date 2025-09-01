@@ -7,6 +7,7 @@ import { ref, onValue, set, push, get, update } from 'firebase/database'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
+  initialData
 } from '@/lib/initial-data'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission } from '@/lib/permissions'
@@ -95,14 +96,12 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_USERS':
         const users = action.payload;
         let liveCurrentUser = state.currentUser;
-        // If a user is logged in, check if their data has been updated (e.g., permissions change)
         if (liveCurrentUser) {
             const updatedUser = users.find(u => u.id === liveCurrentUser!.id);
-            if (!updatedUser) { // User was deleted from another session
+            if (!updatedUser) {
                 sessionStorage.removeItem('currentUser');
                 liveCurrentUser = null;
             } else if (JSON.stringify(updatedUser) !== JSON.stringify(liveCurrentUser)) {
-                // User data changed, update session storage and state
                 liveCurrentUser = updatedUser;
                 sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
             }
@@ -113,12 +112,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { 
         ...state, 
         currentUser: action.payload.user,
-        isInitialized: true,
       };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      // Keep users and departments on logout so the login page works
-      return { ...getInitialState(), users: state.users, departments: state.departments, isInitialized: true };
+      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, columnVisibility: state.columnVisibility };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload }, pagination: {...state.pagination, currentPage: 1} };
     case 'SET_PAGINATION':
@@ -182,7 +179,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         updates[`/documents/${sanitizedId}`] = null;
         
-        // Find logs associated with the original (unsanitized) document ID
         state.logs.forEach(log => {
             if (log.docId === id) {
                 updates[`/logs/${log.id}`] = null;
@@ -204,7 +200,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
 
         state.logs.forEach(log => {
-            // Check against the original (unsanitized) document IDs
             if (idsToDelete.includes(log.docId)) {
                 updates[`/logs/${log.id}`] = null;
             }
@@ -243,11 +238,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const { oldName, newName } = action.payload;
         const updates: { [key: string]: any } = {};
 
-        // 1. Update the departments list
         const newDepartments = state.departments.map(d => d === oldName ? newName : d);
         updates['/departments'] = newDepartments;
 
-        // 2. Update all documents
         state.documents.forEach(doc => {
             const sanitizedId = sanitizeFirebaseKey(doc.id);
             let docNeedsUpdate = false;
@@ -261,7 +254,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 const newHistory = doc.history.map(h => 
                     h.department === oldName ? { ...h, department: newName } : h
                 );
-                // Only update if history actually changed
                 if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
                     updates[`/documents/${sanitizedId}/history`] = newHistory;
                     docNeedsUpdate = true;
@@ -319,39 +311,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Try to load user from session storage on initial load.
-    // This makes the app feel faster by avoiding a flicker on page refresh.
-    try {
-        const storedUser = sessionStorage.getItem('currentUser');
-        if (storedUser) {
-            dispatch({ type: 'LOGIN', payload: { user: JSON.parse(storedUser) } });
-        } else {
-            // If no user in session, we are definitely logged out.
-            dispatch({ type: 'SET_INITIALIZED', payload: true });
-        }
-    } catch (e) {
-        console.error("Could not parse user from session storage:", e);
-        sessionStorage.removeItem('currentUser');
-        dispatch({ type: 'SET_INITIALIZED', payload: true });
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (storedUser) {
+        dispatch({ type: 'LOGIN', payload: { user: JSON.parse(storedUser) } });
     }
 
-  }, []);
-
-  useEffect(() => {
-    // These listeners are active only when a user is logged in.
-    if (!state.currentUser) return;
+    // This listener seeds the database if it's empty.
+    const dbRef = ref(db, 'users');
+    get(dbRef).then((snapshot) => {
+        if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
+            console.log("No users found in DB. Seeding database...");
+            set(ref(db), initialData).catch(error => {
+                console.error("Failed to seed database:", error);
+            });
+        }
+    });
 
     const listeners = [
-        { path: 'documents', actionType: 'SET_DOCUMENTS' },
-        { path: 'logs', actionType: 'SET_LOGS' },
+        { path: 'users', actionType: 'SET_USERS' },
         { path: 'departments', actionType: 'SET_DEPARTMENTS' },
         { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
-        // User listener is now in the login form to ensure data is ready before login.
     ];
 
     const unsubscribes = listeners.map(({ path, actionType }) => 
         onValue(ref(db, path), (snapshot) => {
             const data = snapshot.val();
-            if (path === 'documents' || path === 'logs' || path === 'users') {
+            if (path === 'users') {
                  dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
             } else {
                  dispatch({ type: actionType, payload: data || (path === 'departments' ? [] : initialColumnVisibility) } as any);
@@ -360,14 +345,40 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             console.error(`Firebase onValue error for ${path}:`, error);
         })
     );
+
+    Promise.all(listeners.map(({ path }) => get(ref(db, path)))).then(() => {
+        dispatch({ type: 'SET_INITIALIZED', payload: true });
+    });
+
+    return () => {
+        unsubscribes.forEach(unsubscribe => unsubscribe());
+    };
+  }, []);
+
+  useEffect(() => {
+    // These listeners are active only when a user is logged in.
+    if (!state.currentUser) return;
+
+    const dataListeners = [
+        { path: 'documents', actionType: 'SET_DOCUMENTS' },
+        { path: 'logs', actionType: 'SET_LOGS' },
+    ];
+
+    const dataUnsubscribes = dataListeners.map(({ path, actionType }) => 
+        onValue(ref(db, path), (snapshot) => {
+            const data = snapshot.val();
+            dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
+        }, (error) => {
+            console.error(`Firebase onValue error for ${path}:`, error);
+        })
+    );
     
-    // Set up interval for checking delayed documents
     const interval = setInterval(() => {
       dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
     }, 60000);
 
     return () => {
-        unsubscribes.forEach(unsubscribe => unsubscribe());
+        dataUnsubscribes.forEach(unsubscribe => unsubscribe());
         clearInterval(interval);
     };
   }, [state.currentUser]);
@@ -378,11 +389,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     let docs = state.documents
 
-    // <<<<<<<<<<<<<<<< START: PERMISSION FILTERING (HIGHEST PRIORITY) >>>>>>>>>>>>>>>>
     if (state.currentUser?.role !== 'Admin' && Array.isArray(state.currentUser?.departmentPermissions) && state.currentUser.departmentPermissions.length > 0) {
         docs = docs.filter(doc => doc.status && hasDepartmentPermission(state.currentUser, doc.status));
     }
-    // <<<<<<<<<<<<<<<< END: PERMISSION FILTERING >>>>>>>>>>>>>>>>
 
     if (state.filter.search) {
       const searchLower = state.filter.search.toLowerCase()
@@ -416,7 +425,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             
             if (logSearchMatch) return true;
             
-            // Search within combined source documents
             if (doc.combinedFrom && doc.combinedFrom.length > 0) {
               const sourceDocs = doc.combinedFrom
                 .map(id => state.documents.find(d => d.id === id))
@@ -429,7 +437,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               if (sourceDocMatch) return true;
             }
 
-            // Search within split original document
             if (doc.splitFrom) {
                 const sourceDoc = state.documents.find(d => d.id === doc.splitFrom);
                 if (sourceDoc) {
@@ -443,20 +450,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    // Date filtering logic
     if (state.filter.startDate && state.filter.endDate) {
         docs = docs.filter(doc => {
             if (doc.history && doc.history.length > 0) {
                 const firstEntryStart = fromZonedTime(doc.history[0].start, 'UTC');
-                // The document is considered "received" if its first history entry start date
-                // is within the selected range.
                 return firstEntryStart >= state.filter.startDate! && firstEntryStart <= state.filter.endDate!;
             }
             return false;
         });
     }
   
-    // Assigned Department filtering
     if (state.filter.assignedDepartment !== 'All') {
         docs = docs.filter(doc => doc.assignedDepartment === state.filter.assignedDepartment);
     }
@@ -478,9 +481,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             docs = docs.filter(d => d.status === state.filter.mainFilter);
         }
     } else if (state.filter.departmentSpecificFilter === 'All') {
-        // When no main filter is active, and no department-specific filter is active,
-        // show all documents that are not in a terminal state (Combined/Split).
-        // If a date filter IS active, we want to show all documents within that range, regardless of status.
         if (!state.filter.startDate) {
             docs = docs.filter(doc => doc.status !== 'Combined' && doc.status !== 'Split');
         }
@@ -495,8 +495,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [state.documents, state.logs, state.filter, state.currentUser, state.isInitialized])
   
   const activeDocs = useMemo(() => {
-    // If a date filter is applied, the "Total Documents" card should reflect the count from that filter.
-    // Otherwise, it should show all documents not in a 'Combined' or 'Split' state.
     if (state.filter.startDate && state.filter.endDate) {
         return filteredDocs;
     }
