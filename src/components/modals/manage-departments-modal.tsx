@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useAppContext } from '@/hooks/use-app-context'
 import { GripVertical, Trash2, Pencil, Check, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface ManageDepartmentsModalProps {
   isOpen: boolean
@@ -98,51 +99,53 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
           <DialogTitle>Manage Workflow Departments</DialogTitle>
           <DialogDescription>Add, remove, edit, and reorder the departments in your workflow sequence.</DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-            <ul className="space-y-2">
-                {departments.map((dept, index) => (
-                    <li 
-                        key={index} 
-                        className="flex items-center gap-2 p-2 bg-muted/50 rounded-md"
-                        draggable={editingIndex === null}
-                        onDragStart={() => handleDragStart(index)}
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <GripVertical className="cursor-move text-muted-foreground" />
-                        {editingIndex === index ? (
-                            <Input 
-                                value={editingValue}
-                                onChange={(e) => setEditingValue(e.target.value)}
-                                className="flex-grow h-8"
-                                onKeyDown={(e) => e.key === 'Enter' && handleConfirmEdit(index)}
-                            />
-                        ) : (
-                            <span className="flex-grow">{dept}</span>
-                        )}
-                        
-                        {editingIndex === index ? (
-                             <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-green-500" onClick={() => handleConfirmEdit(index)}>
-                                    <Check className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleCancelEditing}>
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleStartEditing(index, dept)}>
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDepartment(index)} disabled={index === 0}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                            </div>
-                        )}
-                    </li>
-                ))}
-            </ul>
+        <div className="py-4 space-y-4">
+            <ScrollArea className="h-[40vh] p-4 border rounded-md">
+                <ul className="space-y-2">
+                    {departments.map((dept, index) => (
+                        <li 
+                            key={index} 
+                            className="flex items-center gap-2 p-2 bg-muted/50 rounded-md"
+                            draggable={editingIndex === null}
+                            onDragStart={() => handleDragStart(index)}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <GripVertical className="cursor-move text-muted-foreground" />
+                            {editingIndex === index ? (
+                                <Input 
+                                    value={editingValue}
+                                    onChange={(e) => setEditingValue(e.target.value)}
+                                    className="flex-grow h-8"
+                                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmEdit(index)}
+                                />
+                            ) : (
+                                <span className="flex-grow">{dept}</span>
+                            )}
+                            
+                            {editingIndex === index ? (
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-green-500" onClick={() => handleConfirmEdit(index)}>
+                                        <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleCancelEditing}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleStartEditing(index, dept)}>
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDepartment(index)} disabled={index === 0}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            </ScrollArea>
 
             <div className="mt-6 flex gap-2">
                 <Input 
