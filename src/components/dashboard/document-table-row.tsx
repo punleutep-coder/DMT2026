@@ -36,13 +36,13 @@ interface DocumentTableRowProps {
   index: number
 }
 
-const getStatusBadgeVariant = (status: string, isDelayed: boolean, releaseDateReached?: boolean): 'default' | 'destructive' | 'secondary' | 'outline' => {
+const getStatusBadgeVariant = (status: string, isDelayed: boolean, releaseDateReached?: boolean): 'default' | 'destructive' | 'secondary' | 'outline' | 'status' => {
     if (releaseDateReached) return 'destructive'
     if (isDelayed) return 'outline'
     if (status === 'Completed (Success)') return 'default'
     if (status === 'Completed (Unsuccess)') return 'destructive'
     if (status === 'Combined' || status === 'Split') return 'secondary'
-    return 'secondary'
+    return 'status'
 }
 
 const getStatusText = (doc: Document) => {
