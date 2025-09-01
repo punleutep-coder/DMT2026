@@ -19,7 +19,6 @@ import {
   FileText,
   Combine,
   Columns,
-  PlayCircle,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
@@ -41,13 +40,6 @@ export default function DashboardSidebar() {
     dispatch({ type: 'SET_MODAL', payload: { type: 'myActivityLog' } })
   }
 
-  const handleReleaseFilter = () => {
-    dispatch({
-      type: 'SET_FILTER',
-      payload: { mainFilter: 'Release Date Reached', departmentSpecificFilter: 'All' },
-    })
-  }
-  
   if (!currentUser) return null;
 
   return (
@@ -68,16 +60,6 @@ export default function DashboardSidebar() {
             >
               <Home />
               <span>Dashboard</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Release Document"
-              onClick={handleReleaseFilter}
-              isActive={state.filter.mainFilter === 'Release Date Reached'}
-            >
-              <PlayCircle />
-              <span>Release Document</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
