@@ -9,6 +9,7 @@ import {
   Tooltip,
   LabelList,
   CartesianGrid,
+  Cell,
 } from 'recharts'
 import { CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { useAppContext } from '@/hooks/use-app-context'
@@ -81,10 +82,12 @@ export default function WorkflowChart() {
              />
             <Bar
               dataKey="total"
-              fill="hsl(var(--chart-4))"
               radius={[4, 4, 0, 0]}
               filter="url(#shadow)"
             >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.name === 'ឯកសារសម្រេច' ? 'hsl(var(--chart-3))' : 'hsl(var(--chart-4))'} />
+              ))}
               <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={14} fontWeight="bold" />
             </Bar>
           </BarChart>
