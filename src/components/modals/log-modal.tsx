@@ -5,6 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { format } from 'date-fns'
 import type { Document } from '@/lib/types'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
 
 interface LogModalProps {
   isOpen: boolean
@@ -46,11 +48,22 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
     ? document.combinedFrom.map(id => state.documents.find(d => d.id === id)).filter((d): d is Document => !!d)
     : [];
 
+  const splitSourceDocument = document?.splitFrom
+    ? state.documents.find(d => d.id === document.splitFrom)
+    : null;
+
   const handleSourceDocClick = (sourceDocId: string, sourceFirestoreId: string) => {
     onClose(); // Close the current modal
     // Dispatch needs a moment to allow the UI to close the modal before opening a new one.
     setTimeout(() => {
       dispatch({ type: 'SET_MODAL', payload: { type: 'viewLog', docId: sourceDocId, firestoreId: sourceFirestoreId }});
+    }, 100);
+  }
+  
+  const handleSplitAgain = (sourceDoc: Document) => {
+    onClose();
+    setTimeout(() => {
+      dispatch({ type: 'SET_MODAL', payload: { type: 'splitDocument', docId: sourceDoc.id, firestoreId: sourceDoc.firestoreId }});
     }, 100);
   }
 
@@ -78,6 +91,27 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                         </div>
                     ))}
                 </div>
+              </div>
+          )}
+
+          {splitSourceDocument && (
+              <div className="space-y-4 mb-8">
+                  <h3 className="text-lg font-semibold text-foreground">Source Document</h3>
+                  <div className="relative p-4 bg-muted/30 rounded-lg border-l-4" style={{ borderColor: '#000099' }}>
+                      <div className="flex justify-between items-start">
+                          <div>
+                              <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(splitSourceDocument.id, splitSourceDocument.firestoreId)}>
+                                  <span style={{ color: '#000099' }}>{splitSourceDocument.id}</span> - {splitSourceDocument.name}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">Department: {splitSourceDocument.assignedDepartment}</p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {splitSourceDocument.secondaryId && <Badge variant="secondary">{splitSourceDocument.secondaryId}</Badge>}
+                                {splitSourceDocument.tertiaryId && <Badge variant="secondary">{splitSourceDocument.tertiaryId}</Badge>}
+                              </div>
+                          </div>
+                          <Button onClick={() => handleSplitAgain(splitSourceDocument)}>Split Again</Button>
+                      </div>
+                  </div>
               </div>
           )}
 

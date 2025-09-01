@@ -93,7 +93,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
     // Add new documents and their logs
     newDocs.forEach(nd => {
         dispatch({ type: 'ADD_DOCUMENT', payload: nd });
-        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now } });
+        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now, reason: `Split from: ${docId}` } });
     });
     
     onClose();

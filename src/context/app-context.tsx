@@ -32,7 +32,7 @@ type Action =
   | { type: 'ADD_USER'; payload: User }
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
-  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> }
+  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> & {reason?: string | null} }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'UPDATE_DEPARTMENT_NAME'; payload: { oldName: string, newName: string } }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
