@@ -70,7 +70,10 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl glassmorphic-card">
+      <DialogContent 
+        className="max-w-3xl glassmorphic-card"
+        style={{ background: 'rgba(51, 204, 204, 0.1)', borderColor: 'rgba(51, 204, 204, 0.2)' }}
+        >
         <DialogHeader>
           <DialogTitle className="leading-relaxed">History for {document?.id} / {document?.name}</DialogTitle>
           <DialogDescription>
@@ -146,7 +149,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                     <div key={index} className="relative">
                         <div className="absolute -left-[30px] top-1.5 h-4 w-4 rounded-full bg-[#33CCCC] ring-4 ring-background" />
                         <p className="font-medium text-foreground">
-                            From <span className="text-[#33CCCC]">{log.oldStatus}</span> to <span className="text-[#33CCCC]">{log.newStatus}</span>
+                            From <span style={{color: '#33CCCC'}}>{log.oldStatus}</span> to <span style={{color: '#33CCCC'}}>{log.newStatus}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">{format(new Date(log.timestamp), 'PPp')} by {log.user}</p>
                         {log.reason && (
