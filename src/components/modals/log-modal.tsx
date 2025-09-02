@@ -90,8 +90,8 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                            <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id, sourceDoc.firestoreId)}>
                              <span className="text-primary">{sourceDoc.id}</span> - {sourceDoc.name}
                            </h4>
-                           <p className="text-sm text-muted-foreground">Department: {sourceDoc.assignedDepartment}</p>
-                           {sourceDoc.secondaryId && <p className="text-sm text-muted-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
+                           <p className="text-sm text-foreground">Department: {sourceDoc.assignedDepartment}</p>
+                           {sourceDoc.secondaryId && <p className="text-sm text-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
                         </div>
                     ))}
                 </div>
@@ -107,7 +107,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                               <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(splitSourceDocument.id, splitSourceDocument.firestoreId)}>
                                   <span className="text-primary">{splitSourceDocument.id}</span> - {splitSourceDocument.name}
                               </h4>
-                              <p className="text-sm text-muted-foreground">Department: {splitSourceDocument.assignedDepartment}</p>
+                              <p className="text-sm text-foreground">Department: {splitSourceDocument.assignedDepartment}</p>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {splitSourceDocument.secondaryId && <Badge variant="secondary">{splitSourceDocument.secondaryId}</Badge>}
                                 {splitSourceDocument.tertiaryId && <Badge variant="secondary">{splitSourceDocument.tertiaryId}</Badge>}
@@ -129,7 +129,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                 {document?.history?.map((entry, index) => (
                   <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/50">
                     <h4 className="font-bold text-foreground mb-2">{entry.department}</h4>
-                    <div className="text-sm space-y-1 text-muted-foreground">
+                    <div className="text-sm space-y-1">
                        <p><strong className="text-foreground/80">Start:</strong> {entry.start ? format(new Date(entry.start), 'PPp') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">End:</strong> {entry.end ? format(new Date(entry.end), 'PPp') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">Period:</strong> <span className="text-foreground font-medium">{formatDuration(entry.start, entry.end)}</span></p>
@@ -151,7 +151,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                         <p className="font-medium text-foreground">
                             From <span className="text-primary">{log.oldStatus}</span> to <span className="text-primary">{log.newStatus}</span>
                         </p>
-                        <p className="text-xs text-muted-foreground">{format(new Date(log.timestamp), 'PPp')} by {log.user}</p>
+                        <p className="text-xs text-foreground">{format(new Date(log.timestamp), 'PPp')} by {log.user}</p>
                         {log.reason && (
                             <p className="text-sm mt-2 p-2 bg-muted/20 rounded-md border border-border/30">
                                 <strong className="text-foreground/80">Reason:</strong> {log.reason}
@@ -159,7 +159,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                         )}
                     </div>
                 )) : (
-                    <p className="text-muted-foreground">No status changes logged.</p>
+                    <p className="text-foreground">No status changes logged.</p>
                 )}
               </div>
             </div>
