@@ -21,22 +21,13 @@ const formatDuration = (start: string, end: string | null) => {
     const startDate = new Date(start);
     const endDate = end ? new Date(end) : new Date();
     
-    let seconds = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
-    
+    const seconds = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
     const days = Math.floor(seconds / (3600 * 24));
-    seconds -= days * 3600 * 24;
-    const hours = Math.floor(seconds / 3600);
-    seconds -= hours * 3600;
-    const minutes = Math.floor(seconds / 60);
 
-    const parts = [];
-    if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
-    if (hours > 0 && days < 7) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
-    if (minutes > 0 && days === 0 && hours === 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
-
-    if (parts.length === 0 && days > 0) return `${days} day${days > 1 ? 's' : ''}`;
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''}`;
     
-    return parts.join(', ') || '0 minutes';
+    // If less than a day, show as "Less than a day" or similar.
+    return 'Less than a day';
 };
 
 
@@ -128,11 +119,11 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
               <div className="space-y-4">
                 {document?.history?.map((entry, index) => (
                   <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/50">
-                    <h4 className="font-bold text-foreground mb-2">{entry.department}</h4>
+                    <h4 className="font-bold text-foreground mb-2" style={{color: '#0000E2'}}>{entry.department}</h4>
                     <div className="text-sm space-y-1">
                        <p><strong className="text-foreground/80">Start:</strong> {entry.start ? format(new Date(entry.start), 'PPp') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">End:</strong> {entry.end ? format(new Date(entry.end), 'PPp') : 'N/A'}</p>
-                       <p><strong className="text-foreground/80">Period:</strong> <span className="text-foreground font-medium">{formatDuration(entry.start, entry.end)}</span></p>
+                       <p><strong className="text-foreground/80">Period:</strong> <span className="text-foreground font-medium" style={{color: '#0000E2'}}>{formatDuration(entry.start, entry.end)}</span></p>
                        <p><strong className="text-foreground/80">Receiver Name:</strong> {entry.receiver}</p>
                        <p><strong className="text-foreground/80">Note:</strong> {entry.note || 'N/A'}</p>
                     </div>
