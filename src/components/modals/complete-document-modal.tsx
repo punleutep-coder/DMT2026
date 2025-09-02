@@ -9,12 +9,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useAppContext } from '@/hooks/use-app-context'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
+import { CalendarIcon } from 'lucide-react'
+import { Calendar } from '../ui/calendar'
 
 const formSchema = z.object({
   status: z.enum(['Completed (Success)', 'Completed (Unsuccess)'], {
     required_error: "You need to select a completion status."
   }),
   note: z.string().optional(),
+  customDate: z.date().optional(),
 })
 
 interface CompleteDocumentModalProps {
@@ -33,13 +39,14 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
     defaultValues: {
       status: 'Completed (Success)',
       note: '',
+      customDate: undefined,
     },
   })
 
   if (!docToUpdate) return null
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const now = new Date().toISOString();
+    const now = values.customDate ? values.customDate.toISOString() : new Date().toISOString();
     const newHistory = [...docToUpdate.history];
     const lastEntry = newHistory[newHistory.length - 1];
     if (lastEntry) {
@@ -122,6 +129,47 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
                   <FormControl>
                     <Textarea {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="customDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Custom Date (Optional)</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-auto p-0"
+                      align="start"
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
