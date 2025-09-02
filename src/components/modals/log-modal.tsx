@@ -72,7 +72,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
         className="max-w-3xl glassmorphic-card"
-        style={{ background: 'rgba(255, 153, 0, 0.1)', borderColor: 'rgba(255, 153, 0, 0.2)' }}
+        style={{ background: 'rgba(221, 221, 221, 0.1)', borderColor: 'rgba(221, 221, 221, 0.2)' }}
         >
         <DialogHeader>
           <DialogTitle className="leading-relaxed">History for {document?.id} / {document?.name}</DialogTitle>
@@ -86,9 +86,9 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                 <h3 className="text-lg font-semibold text-foreground">Source Documents</h3>
                 <div className="space-y-4">
                     {sourceDocuments.map(sourceDoc => sourceDoc && (
-                        <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4" style={{ borderColor: '#FF9900' }}>
+                        <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4" style={{ borderColor: '#DDDDDD' }}>
                            <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id, sourceDoc.firestoreId)}>
-                             <span style={{ color: '#FF9900' }}>{sourceDoc.id}</span> - {sourceDoc.name}
+                             <span style={{ color: '#DDDDDD' }}>{sourceDoc.id}</span> - {sourceDoc.name}
                            </h4>
                            <p className="text-sm text-muted-foreground">Department: {sourceDoc.assignedDepartment}</p>
                            {sourceDoc.secondaryId && <p className="text-sm text-muted-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
@@ -101,11 +101,11 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
           {splitSourceDocument && (
               <div className="space-y-4 mb-8">
                   <h3 className="text-lg font-semibold text-foreground">Source Document</h3>
-                  <div className="relative p-4 bg-muted/30 rounded-lg border-l-4" style={{ borderColor: '#FF9900' }}>
+                  <div className="relative p-4 bg-muted/30 rounded-lg border-l-4" style={{ borderColor: '#DDDDDD' }}>
                       <div className="flex justify-between items-start">
                           <div>
                               <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(splitSourceDocument.id, splitSourceDocument.firestoreId)}>
-                                  <span style={{ color: '#FF9900' }}>{splitSourceDocument.id}</span> - {splitSourceDocument.name}
+                                  <span style={{ color: '#DDDDDD' }}>{splitSourceDocument.id}</span> - {splitSourceDocument.name}
                               </h4>
                               <p className="text-sm text-muted-foreground">Department: {splitSourceDocument.assignedDepartment}</p>
                               <div className="flex flex-wrap gap-2 mt-2">
@@ -128,11 +128,11 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
               <div className="space-y-4">
                 {document?.history?.map((entry, index) => (
                   <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/50">
-                    <h4 className="font-bold text-[#FF9900] mb-2">{entry.department}</h4>
+                    <h4 className="font-bold text-[#DDDDDD] mb-2">{entry.department}</h4>
                     <div className="text-sm space-y-1 text-muted-foreground">
                        <p><strong className="text-foreground/80">Start:</strong> {entry.start ? format(new Date(entry.start), 'PPp') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">End:</strong> {entry.end ? format(new Date(entry.end), 'PPp') : 'N/A'}</p>
-                       <p><strong className="text-foreground/80">Period:</strong> <span className="text-[#FF9900] font-medium">{formatDuration(entry.start, entry.end)}</span></p>
+                       <p><strong className="text-foreground/80">Period:</strong> <span className="text-[#DDDDDD] font-medium">{formatDuration(entry.start, entry.end)}</span></p>
                        <p><strong className="text-foreground/80">Receiver Name:</strong> {entry.receiver}</p>
                        <p><strong className="text-foreground/80">Note:</strong> {entry.note || 'N/A'}</p>
                     </div>
@@ -144,12 +144,12 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
             {/* Status Change Log Column */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-foreground">Status Change Log</h3>
-              <div className="relative space-y-6 border-l-2 border-[#FF9900]/30 pl-6">
+              <div className="relative space-y-6 border-l-2 border-[#DDDDDD]/30 pl-6">
                  {docLogs.length > 0 ? docLogs.map((log, index) => (
                     <div key={index} className="relative">
-                        <div className="absolute -left-[30px] top-1.5 h-4 w-4 rounded-full bg-[#FF9900] ring-4 ring-background" />
+                        <div className="absolute -left-[30px] top-1.5 h-4 w-4 rounded-full bg-[#DDDDDD] ring-4 ring-background" />
                         <p className="font-medium text-foreground">
-                            From <span style={{color: '#FF9900'}}>{log.oldStatus}</span> to <span style={{color: '#FF9900'}}>{log.newStatus}</span>
+                            From <span style={{color: '#DDDDDD'}}>{log.oldStatus}</span> to <span style={{color: '#DDDDDD'}}>{log.newStatus}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">{format(new Date(log.timestamp), 'PPp')} by {log.user}</p>
                         {log.reason && (
@@ -169,5 +169,3 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
     </Dialog>
   )
 }
-
-    
