@@ -88,7 +88,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                     {sourceDocuments.map(sourceDoc => sourceDoc && (
                         <div key={sourceDoc.id} className="relative p-4 bg-muted/30 rounded-lg border-l-4 border-border">
                            <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(sourceDoc.id, sourceDoc.firestoreId)}>
-                             <span className="text-primary">{sourceDoc.id}</span> - {sourceDoc.name}
+                             <span style={{color: '#0000E2'}}>{sourceDoc.id}</span> - {sourceDoc.name}
                            </h4>
                            <p className="text-sm text-foreground">Department: {sourceDoc.assignedDepartment}</p>
                            {sourceDoc.secondaryId && <p className="text-sm text-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
@@ -105,7 +105,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                       <div className="flex justify-between items-start">
                           <div>
                               <h4 className="font-semibold text-foreground mb-1 cursor-pointer hover:underline" onClick={() => handleSourceDocClick(splitSourceDocument.id, splitSourceDocument.firestoreId)}>
-                                  <span className="text-primary">{splitSourceDocument.id}</span> - {splitSourceDocument.name}
+                                  <span style={{color: '#0000E2'}}>{splitSourceDocument.id}</span> - {splitSourceDocument.name}
                               </h4>
                               <p className="text-sm text-foreground">Department: {splitSourceDocument.assignedDepartment}</p>
                               <div className="flex flex-wrap gap-2 mt-2">
@@ -144,12 +144,12 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
             {/* Status Change Log Column */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-foreground">Status Change Log</h3>
-              <div className="relative space-y-6 border-l-2 border-border/30 pl-6">
+              <div className="relative space-y-6 border-l-2 pl-6" style={{borderColor: 'rgba(0, 0, 226, 0.3)'}}>
                  {docLogs.length > 0 ? docLogs.map((log, index) => (
                     <div key={index} className="relative">
-                        <div className="absolute -left-[30px] top-1.5 h-4 w-4 rounded-full bg-primary ring-4 ring-background" />
+                        <div className="absolute -left-[30px] top-1.5 h-4 w-4 rounded-full ring-4 ring-background" style={{backgroundColor: '#0000E2'}} />
                         <p className="font-medium text-foreground">
-                            From <span className="text-primary">{log.oldStatus}</span> to <span className="text-primary">{log.newStatus}</span>
+                            From <span style={{color: '#0000E2'}}>{log.oldStatus}</span> to <span style={{color: '#0000E2'}}>{log.newStatus}</span>
                         </p>
                         <p className="text-xs text-foreground">{format(new Date(log.timestamp), 'PPp')} by {log.user}</p>
                         {log.reason && (
