@@ -71,8 +71,8 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-3xl glassmorphic-card"
-        style={{ background: 'rgba(255, 255, 255, 0.5)', borderColor: 'rgba(255, 255, 255, 0.2)' }}
+        className="max-w-3xl"
+        style={{ background: 'rgba(255, 255, 255, 0.65)', borderColor: 'rgba(255, 255, 255, 0.2)' }}
         >
         <DialogHeader>
           <DialogTitle className="leading-relaxed">History for {document?.id} / {document?.name}</DialogTitle>
