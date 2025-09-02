@@ -66,7 +66,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
         style={{ background: 'rgba(255, 255, 255, 0.65)', borderColor: 'rgba(255, 255, 255, 0.2)' }}
         >
         <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="leading-relaxed">History for {document?.id} / {document?.name}</DialogTitle>
+          <DialogTitle className="leading-relaxed" style={{ color: '#000099' }}>History for {document?.id} / {document?.name}</DialogTitle>
           <DialogDescription>
             Review the complete journey and all changes made to this document.
           </DialogDescription>
