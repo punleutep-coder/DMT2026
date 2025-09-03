@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -61,7 +62,7 @@
 
 @layer components {
   .glassmorphic-card {
-    @apply bg-transparent backdrop-blur-sm border border-border/20 shadow-lg rounded-xl p-4 sm:p-6;
+    @apply bg-transparent backdrop-blur-sm border-2 border-gray-400/30 shadow-lg rounded-xl p-4 sm:p-6;
   }
 }
 
