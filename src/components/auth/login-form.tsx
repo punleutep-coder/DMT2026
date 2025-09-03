@@ -20,10 +20,13 @@ import { useToast } from '@/hooks/use-toast'
 import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
+import { Checkbox } from '../ui/checkbox'
+import Link from 'next/link'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
+  rememberMe: z.boolean().optional(),
 })
 
 const hashPassword = async (password: string): Promise<string> => {
@@ -45,12 +48,27 @@ export default function LoginForm() {
     defaultValues: {
       username: '',
       password: '',
+      rememberMe: false,
     },
   })
+
+  useEffect(() => {
+    const rememberedUsername = localStorage.getItem('rememberedUsername');
+    if (rememberedUsername) {
+      form.setValue('username', rememberedUsername);
+      form.setValue('rememberMe', true);
+    }
+  }, [form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
     setIsLoggingIn(true);
+
+    if (values.rememberMe) {
+        localStorage.setItem('rememberedUsername', values.username);
+    } else {
+        localStorage.removeItem('rememberedUsername');
+    }
 
     const user = state.users.find((u) => u.username === values.username)
     if (user) {
@@ -115,6 +133,30 @@ export default function LoginForm() {
                   </FormItem>
                 )}
               />
+               <div className="flex items-center justify-between">
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="cursor-pointer">
+                          Remember me
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <Link href="#" className="text-sm text-primary/80 hover:underline">
+                    Forgot password?
+                </Link>
+              </div>
               {error && (
                 <Alert variant="destructive">
                   <Terminal className="h-4 w-4" />
