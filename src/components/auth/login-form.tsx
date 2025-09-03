@@ -133,7 +133,7 @@ export default function LoginForm() {
                   </FormItem>
                 )}
               />
-               <div className="flex items-center justify-between">
+               <div className="flex items-center">
                 <FormField
                   control={form.control}
                   name="rememberMe"
@@ -153,9 +153,6 @@ export default function LoginForm() {
                     </FormItem>
                   )}
                 />
-                <Link href="#" className="text-sm text-primary/80 hover:underline">
-                    Forgot password?
-                </Link>
               </div>
               {error && (
                 <Alert variant="destructive">
