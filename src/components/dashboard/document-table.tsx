@@ -113,12 +113,12 @@ export default function DocumentTable() {
 
   const columns = [
     { key: 'select', name: '' },
-    { key: 'documentId', name: 'Document ID' },
-    { key: 'department', name: 'Assigned Dept.' },
-    { key: 'name', name: 'Name' },
-    { key: 'office', name: 'Office' },
-    { key: 'currentStatus', name: 'Current Status' },
-    { key: 'lastUpdate', name: 'Last Update' },
+    { key: 'documentId', name: 'លេខឯកាសារ' },
+    { key: 'department', name: 'នាយកដ្ឋាន' },
+    { key: 'name', name: 'ឈ្មោះឯកសារ' },
+    { key: 'office', name: 'ការិយាល័យ' },
+    { key: 'currentStatus', name: 'ស្ថានភាព' },
+    { key: 'lastUpdate', name: 'កែចុងក្រោយ' },
     { key: 'actions', name: '' },
   ]
   
@@ -148,7 +148,7 @@ export default function DocumentTable() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <span>{col.name}</span>
+                    <span style={col.key === 'documentId' ? { fontFamily: "'Khmer OS Battambang', serif", color: '#000099' } : {fontFamily: "'Khmer OS Battambang', serif"}}>{col.name}</span>
                   )}
                   {col.key === 'department' && (
                     <DropdownMenu>
