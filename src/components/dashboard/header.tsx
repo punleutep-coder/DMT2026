@@ -10,8 +10,8 @@ export default function DashboardHeader() {
         <Menu />
       </SidebarTrigger>
       <div className="text-left flex-1">
-        <h1 className="text-2xl font-bold text-[#000066]">
-          System Overview
+        <h1 className="text-2xl font-bold text-[#000066]" style={{fontFamily: "'Khmer Moul', serif", fontSize: '22px'}}>
+          ទិដ្ឋភាពរួម
         </h1>
       </div>
     </header>
