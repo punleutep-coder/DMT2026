@@ -177,8 +177,8 @@ export default function DocumentManagement() {
     <section className="glassmorphic-card space-y-6">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-foreground">
-            Document Management 
+          <h2 className="text-2xl font-bold text-foreground" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '18px'}}>
+            ការគ្រប់គ្រងឯកសារ
             {isFiltered && <span className="text-base font-normal text-muted-foreground ml-2">({filteredDocs.length} results)</span>}
           </h2>
         </div>
