@@ -1,3 +1,4 @@
+
 'use client'
 
 import { SidebarTrigger } from '../ui/sidebar'
@@ -10,7 +11,7 @@ export default function DashboardHeader() {
         <Menu />
       </SidebarTrigger>
       <div className="text-left flex-1">
-        <h1 className="text-2xl font-bold text-[#000066]" style={{fontFamily: "'Khmer Moul', serif", fontSize: '22px'}}>
+        <h1 className="text-2xl font-bold text-[#000066]" style={{fontFamily: "'Khmer Moul', serif", fontSize: '22px', textShadow: '2px 2px 4px rgba(0,0,0,0.2)'}}>
           ទិដ្ឋភាពរួម
         </h1>
       </div>
