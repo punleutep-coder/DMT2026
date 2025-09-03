@@ -148,7 +148,7 @@ export default function DocumentTable() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <span style={col.key === 'documentId' ? { fontFamily: "'Khmer OS Battambang', serif", color: '#000099' } : {fontFamily: "'Khmer OS Battambang', serif"}}>{col.name}</span>
+                    <span style={{fontFamily: "'Khmer OS Battambang', serif", color: '#000099'}}>{col.name}</span>
                   )}
                   {col.key === 'department' && (
                     <DropdownMenu>
