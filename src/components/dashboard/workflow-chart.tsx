@@ -43,7 +43,7 @@ export default function WorkflowChart() {
   return (
     <>
       <CardHeader>
-        <CardTitle className="text-[#000066]" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '22px'}}>ស្ថានភាពលំហូឯកសារ</CardTitle>
+        <CardTitle className="text-[#000066]" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '18px'}}>ស្ថានភាពលំហូឯកសារ</CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
