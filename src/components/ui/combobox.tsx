@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, PlusCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -27,6 +27,7 @@ interface ComboboxProps {
     searchPlaceholder?: string;
     notFoundText?: string;
     className?: string;
+    onCreate?: (value: string) => void;
 }
 
 export function Combobox({ 
@@ -37,11 +38,32 @@ export function Combobox({
     searchPlaceholder = "Search...",
     notFoundText = "No option found.",
     className,
+    onCreate
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const handleSelect = (currentValue: string) => {
+    onChange(currentValue === value ? "" : currentValue)
+    setOpen(false)
+  }
+
+  const handleCreate = () => {
+    if (onCreate) {
+      onCreate(searchQuery);
+      setOpen(false);
+    }
+  }
+
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) setSearchQuery('');
+    }}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -55,20 +77,20 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput 
+            placeholder={searchPlaceholder} 
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandList>
-            <CommandEmpty>{notFoundText}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
+                  value={option.label} // Compare with label for filtering
+                  onSelect={() => handleSelect(option.value)}
                 >
                   <Check
                     className={cn(
@@ -80,6 +102,18 @@ export function Combobox({
                 </CommandItem>
               ))}
             </CommandGroup>
+            {onCreate && searchQuery && !filteredOptions.some(opt => opt.label.toLowerCase() === searchQuery.toLowerCase()) && (
+              <>
+                <CommandEmpty>
+                    <button onClick={handleCreate} className="w-full text-left p-2 hover:bg-accent rounded-sm text-sm">
+                      <PlusCircle className="mr-2 h-4 w-4 inline-block" />Create "{searchQuery}"
+                    </button>
+                </CommandEmpty>
+              </>
+            )}
+            {filteredOptions.length === 0 && !searchQuery && (
+                 <CommandEmpty>{notFoundText}</CommandEmpty>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

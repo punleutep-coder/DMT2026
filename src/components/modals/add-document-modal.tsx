@@ -87,6 +87,22 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
   }
 
+  const handleCreateDepartment = (deptName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new departments.", variant: "destructive" });
+      return;
+    }
+    if (departments.some(d => d.toLowerCase() === deptName.toLowerCase())) {
+        toast({ title: "Duplicate Department", description: "This department already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newDepartments = [...departments, deptName];
+    dispatch({ type: 'SET_DEPARTMENTS', payload: newDepartments });
+    form.setValue('assignedDepartment', deptName);
+    toast({ title: "Department Created", description: `"${deptName}" has been added.` });
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
     if (state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
@@ -198,8 +214,9 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                               value={field.value || ''}
                               onChange={field.onChange}
                               placeholder="Select a department..."
-                              searchPlaceholder="Search depts..."
+                              searchPlaceholder="Search or create..."
                               notFoundText="No matching department found."
+                              onCreate={currentUser?.role === 'Admin' ? handleCreateDepartment : undefined}
                             />
                             <FormMessage />
                           </FormItem>
