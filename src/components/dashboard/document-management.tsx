@@ -14,6 +14,7 @@ import {
   Upload,
   Trash2,
   FileDigit,
+  FileArchive,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -117,6 +118,7 @@ export default function DocumentManagement() {
         users: state.users.reduce((acc, user) => ({ ...acc, [user.id]: { ...user, id: undefined } }), {}),
         departments: state.departments,
         documentTypes: state.documentTypes,
+        assignedDepartments: state.assignedDepartments,
         columnVisibility: state.columnVisibility,
       };
 
@@ -209,12 +211,17 @@ export default function DocumentManagement() {
         )}
         {currentUser?.role === 'Admin' && (
             <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
-                <Library /> Manage Departments
+                <Library /> Manage Workflow Depts
             </Button>
         )}
          {currentUser?.role === 'Admin' && (
             <Button variant="secondary" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-800 hover:bg-cyan-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <FileDigit /> Manage Document Types
+            </Button>
+        )}
+        {currentUser?.role === 'Admin' && (
+            <Button variant="secondary" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-800 hover:bg-teal-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
+                <FileArchive /> Manage Assigned Depts
             </Button>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (

@@ -36,6 +36,7 @@ type Action =
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'UPDATE_DEPARTMENT_NAME'; payload: { oldName: string, newName: string } }
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
+  | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_DOCUMENTS'; payload: Document[] }
   | { type: 'SET_LOGS'; payload: Log[] }
@@ -50,6 +51,7 @@ const getInitialState = (): AppState => ({
     logs: [],
     departments: [],
     documentTypes: [],
+    assignedDepartments: [],
     filter: {
         mainFilter: 'All',
         departmentSpecificFilter: 'All',
@@ -117,7 +119,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, documentTypes: state.documentTypes, columnVisibility: state.columnVisibility };
+      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, documentTypes: state.documentTypes, assignedDepartments: state.assignedDepartments, columnVisibility: state.columnVisibility };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload }, pagination: {...state.pagination, currentPage: 1} };
     case 'SET_PAGINATION':
@@ -236,6 +238,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
         set(ref(db, 'departments'), action.payload);
         return { ...state, departments: action.payload };
     }
+    case 'SET_ASSIGNED_DEPARTMENTS': {
+        set(ref(db, 'assignedDepartments'), action.payload);
+        return { ...state, assignedDepartments: action.payload };
+    }
     case 'UPDATE_DEPARTMENT_NAME': {
         const { oldName, newName } = action.payload;
         const updates: { [key: string]: any } = {};
@@ -337,6 +343,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         { path: 'users', actionType: 'SET_USERS' },
         { path: 'departments', actionType: 'SET_DEPARTMENTS' },
         { path: 'documentTypes', actionType: 'SET_DOCUMENT_TYPES' },
+        { path: 'assignedDepartments', actionType: 'SET_ASSIGNED_DEPARTMENTS' },
         { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
     ];
 
@@ -346,7 +353,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             if (path === 'users') {
                  dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
             } else {
-                 dispatch({ type: actionType, payload: data || (path === 'departments' || path === 'documentTypes' ? [] : initialColumnVisibility) } as any);
+                 dispatch({ type: actionType, payload: data || (path === 'departments' || path === 'documentTypes' || path === 'assignedDepartments' ? [] : initialColumnVisibility) } as any);
             }
         }, (error) => {
             console.error(`Firebase onValue error for ${path}:`, error);

@@ -1,3 +1,4 @@
+
 'use client'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -44,7 +45,7 @@ interface AddDocumentModalProps {
 
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
-  const { currentUser, documentTypes, departments } = state
+  const { currentUser, documentTypes, assignedDepartments, departments } = state
   const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
 
@@ -87,20 +88,20 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     }
   }
 
-  const handleCreateDepartment = (deptName: string) => {
+  const handleCreateAssignedDepartment = (deptName: string) => {
     if (currentUser?.role !== 'Admin') {
-      toast({ title: "Permission Denied", description: "Only Admins can create new departments.", variant: "destructive" });
+      toast({ title: "Permission Denied", description: "Only Admins can create new assigned departments.", variant: "destructive" });
       return;
     }
-    if (departments.some(d => d.toLowerCase() === deptName.toLowerCase())) {
-        toast({ title: "Duplicate Department", description: "This department already exists.", variant: "destructive" });
+    if (assignedDepartments.some(d => d.toLowerCase() === deptName.toLowerCase())) {
+        toast({ title: "Duplicate Department", description: "This assigned department already exists.", variant: "destructive" });
         return;
     }
     
-    const newDepartments = [...departments, deptName];
-    dispatch({ type: 'SET_DEPARTMENTS', payload: newDepartments });
+    const newAssignedDepartments = [...assignedDepartments, deptName];
+    dispatch({ type: 'SET_ASSIGNED_DEPARTMENTS', payload: newAssignedDepartments });
     form.setValue('assignedDepartment', deptName);
-    toast({ title: "Department Created", description: `"${deptName}" has been added.` });
+    toast({ title: "Assigned Department Created", description: `"${deptName}" has been added.` });
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -152,7 +153,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   }
 
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
-  const departmentOptions = departments.map(dept => ({ value: dept, label: dept }));
+  const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -210,13 +211,13 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                           <FormItem className="flex flex-col">
                             <FormLabel>Assigned Department</FormLabel>
                             <Combobox
-                              options={departmentOptions}
+                              options={assignedDepartmentOptions}
                               value={field.value || ''}
                               onChange={field.onChange}
                               placeholder="Select a department..."
                               searchPlaceholder="Search or create..."
                               notFoundText="No matching department found."
-                              onCreate={currentUser?.role === 'Admin' ? handleCreateDepartment : undefined}
+                              onCreate={currentUser?.role === 'Admin' ? handleCreateAssignedDepartment : undefined}
                             />
                             <FormMessage />
                           </FormItem>

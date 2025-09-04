@@ -13,6 +13,8 @@ const DEFAULT_DEPARTMENTS = ['Department A', 'Department B', 'Department C', 'De
 
 const DEFAULT_DOCUMENT_TYPES = ['Contract', 'Invoice', 'Requisition', 'HR Form', 'IT Request', 'Memo'];
 
+const DEFAULT_ASSIGNED_DEPARTMENTS = ['Legal', 'Finance', 'Procurement', 'Human Resources', 'IT'];
+
 const DEFAULT_DOCS: { [key: string]: Omit<Document, 'id'> } = {
     'CON-001': { firestoreId: 'doc-1', name: 'Contract Review', office: 'Legal Office', documentType: 'Contract', status: 'Department C', initialDepartment: 'Department A', assignedDepartment: 'Legal', lastUpdate: '2025-07-16T10:05:00Z', secondaryId: 'SEC-A1', tertiaryId: 'TRT-X1', quaternaryId: null, documentLink: ['https://example.com/contract-review-con001'], history: [{'department':'Department A', start: '2025-07-16T09:00:00Z', end: '2025-07-16T09:30:00Z', receiver: 'Alice Smith', note: 'Initial legal review.'}, {'department': 'Department B', start: '2025-07-16T09:30:00Z', end: '2025-07-16T10:05:00Z', receiver: 'Bob Johnson', note: 'Finance approval pending.'}, {'department':'Department C', start: '2025-07-16T10:05:00Z', end: null, receiver: 'Charlie Brown', note: 'Awaiting executive sign-off.'}], tags: [], isDelayed: false, releaseDate: null, keywords: 'contract legal' },
     'INV-002': { firestoreId: 'doc-2', name: 'Invoice Processing', office: 'Finance Department', documentType: 'Invoice', status: 'Department A', initialDepartment: 'Department B', assignedDepartment: 'Finance', lastUpdate: '2025-07-16T11:15:00Z', secondaryId: 'SEC-B2', tertiaryId: null, quaternaryId: null, documentLink: ['https://example.com/invoice-inv002', 'https://example.com/invoice-backup-inv002'], history: [{'department':'Department A', start: '2025-07-16T11:15:00Z', end: null, receiver: 'David Lee', note: 'Invoice received and logged.'}], tags: ['Finance'], isDelayed: false, releaseDate: null, keywords: 'invoice finance' },
@@ -91,5 +93,6 @@ export const initialData = {
     users: DEFAULT_USERS,
     departments: DEFAULT_DEPARTMENTS,
     documentTypes: DEFAULT_DOCUMENT_TYPES,
+    assignedDepartments: DEFAULT_ASSIGNED_DEPARTMENTS,
     columnVisibility: initialColumnVisibility,
 }
