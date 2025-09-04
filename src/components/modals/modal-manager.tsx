@@ -16,6 +16,7 @@ import AdvanceDocumentModal from "./advance-document-modal"
 import CompleteDocumentModal from "./complete-document-modal"
 import MyActivityLogModal from "./my-activity-log-modal"
 import ReportingModal from "./reporting-modal"
+import ManageDocumentTypesModal from "./manage-document-types-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -44,6 +45,8 @@ export default function ModalManager() {
             return <UserManagementModal isOpen={true} onClose={handleClose} userId={userId} />
         case 'manageDepartments':
             return <ManageDepartmentsModal isOpen={true} onClose={handleClose} />
+        case 'manageDocumentTypes':
+            return <ManageDocumentTypesModal isOpen={true} onClose={handleClose} />
         case 'manageColumns':
             return <ManageColumnsModal isOpen={true} onClose={handleClose} />
         case 'combineDocuments':

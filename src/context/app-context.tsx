@@ -35,6 +35,7 @@ type Action =
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> & {reason?: string | null} }
   | { type: 'SET_DEPARTMENTS'; payload: string[] }
   | { type: 'UPDATE_DEPARTMENT_NAME'; payload: { oldName: string, newName: string } }
+  | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_DOCUMENTS'; payload: Document[] }
   | { type: 'SET_LOGS'; payload: Log[] }
@@ -48,6 +49,7 @@ const getInitialState = (): AppState => ({
     documents: [],
     logs: [],
     departments: [],
+    documentTypes: [],
     filter: {
         mainFilter: 'All',
         departmentSpecificFilter: 'All',
@@ -115,7 +117,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, columnVisibility: state.columnVisibility };
+      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, documentTypes: state.documentTypes, columnVisibility: state.columnVisibility };
     case 'SET_FILTER':
       return { ...state, filter: { ...state.filter, ...action.payload }, pagination: {...state.pagination, currentPage: 1} };
     case 'SET_PAGINATION':
@@ -265,6 +267,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
         
         return state;
     }
+    case 'SET_DOCUMENT_TYPES': {
+        set(ref(db, 'documentTypes'), action.payload);
+        return { ...state, documentTypes: action.payload };
+    }
     case 'SET_COLUMN_VISIBILITY': {
         set(ref(db, 'columnVisibility'), action.payload);
         return { ...state, columnVisibility: action.payload };
@@ -330,6 +336,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const listeners = [
         { path: 'users', actionType: 'SET_USERS' },
         { path: 'departments', actionType: 'SET_DEPARTMENTS' },
+        { path: 'documentTypes', actionType: 'SET_DOCUMENT_TYPES' },
         { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
     ];
 
@@ -339,7 +346,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             if (path === 'users') {
                  dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
             } else {
-                 dispatch({ type: actionType, payload: data || (path === 'departments' ? [] : initialColumnVisibility) } as any);
+                 dispatch({ type: actionType, payload: data || (path === 'departments' || path === 'documentTypes' ? [] : initialColumnVisibility) } as any);
             }
         }, (error) => {
             console.error(`Firebase onValue error for ${path}:`, error);

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
@@ -21,7 +22,7 @@ import { hasPermission } from '@/lib/permissions'
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
   name: z.string().min(1, 'Document Name is required.'),
-  documentType: z.string().optional(),
+  documentType: z.string().min(1, 'Please select a document type.'),
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
@@ -44,7 +45,7 @@ interface AddDocumentModalProps {
 
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
-  const { currentUser } = state
+  const { currentUser, documentTypes } = state
   const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
 
@@ -160,7 +161,30 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                 }
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {hasPermission(currentUser, 'canEditDocumentType') && <FormField control={form.control} name="documentType" render={({ field }) => ( <FormItem><FormLabel>Document Type</FormLabel><FormControl><Input placeholder="e.g. Invoice, Contract" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentType') && (
+                      <FormField
+                          control={form.control}
+                          name="documentType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Document Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a document type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {documentTypes.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                    )}
                     {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}

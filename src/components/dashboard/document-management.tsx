@@ -13,6 +13,7 @@ import {
   Download,
   Upload,
   Trash2,
+  FileDigit,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -115,6 +116,7 @@ export default function DocumentManagement() {
         logs: state.logs.reduce((acc, log) => ({ ...acc, [log.id]: { ...log, id: undefined } }), {}),
         users: state.users.reduce((acc, user) => ({ ...acc, [user.id]: { ...user, id: undefined } }), {}),
         departments: state.departments,
+        documentTypes: state.documentTypes,
         columnVisibility: state.columnVisibility,
       };
 
@@ -208,6 +210,11 @@ export default function DocumentManagement() {
         {currentUser?.role === 'Admin' && (
             <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <Library /> Manage Departments
+            </Button>
+        )}
+         {currentUser?.role === 'Admin' && (
+            <Button variant="secondary" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-800 hover:bg-cyan-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
+                <FileDigit /> Manage Document Types
             </Button>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (

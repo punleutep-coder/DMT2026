@@ -66,6 +66,7 @@ export interface AppState {
   documents: Document[];
   logs: Log[];
   departments: string[];
+  documentTypes: string[];
   filter: {
     mainFilter: string;
     departmentSpecificFilter: string;
@@ -109,6 +110,7 @@ export type ModalType =
   | 'myActivityLog'
   | 'reporting'
   | 'manageDepartments'
+  | 'manageDocumentTypes'
   | 'manageColumns'
   | 'combineDocuments'
   | 'splitDocument'

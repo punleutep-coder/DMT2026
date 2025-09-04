@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
@@ -43,7 +44,7 @@ interface EditDocumentModalProps {
 export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId }: EditDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
-  const { currentUser } = state
+  const { currentUser, documentTypes } = state
   const { toast } = useToast()
   const [isSuggesting, setIsSuggesting] = useState(false)
 
@@ -160,7 +161,30 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
               <div className="space-y-4">
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                {hasPermission(currentUser, 'canEditDocumentType') && <FormField control={form.control} name="documentType" render={({ field }) => ( <FormItem><FormLabel>Document Type</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentType') && (
+                  <FormField
+                    control={form.control}
+                    name="documentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a document type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {documentTypes.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditAssignedDepartment') && <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 
