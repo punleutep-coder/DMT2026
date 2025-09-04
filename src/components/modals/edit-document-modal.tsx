@@ -43,7 +43,7 @@ interface EditDocumentModalProps {
 export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId }: EditDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
-  const { currentUser, documentTypes } = state
+  const { currentUser, documentTypes, departments } = state
   const { toast } = useToast()
   const [isSuggesting, setIsSuggesting] = useState(false)
 
@@ -149,6 +149,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
   }
 
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
+  const departmentOptions = departments.map(dept => ({ value: dept, label: dept }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -183,7 +184,26 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                   />
                 )}
                 {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                {hasPermission(currentUser, 'canEditAssignedDepartment') && <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditAssignedDepartment') && (
+                  <FormField
+                    control={form.control}
+                    name="assignedDepartment"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Assigned Department</FormLabel>
+                        <Combobox
+                          options={departmentOptions}
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          placeholder="Select a department..."
+                          searchPlaceholder="Search depts..."
+                          notFoundText="No matching department found."
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}

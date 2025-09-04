@@ -44,7 +44,7 @@ interface AddDocumentModalProps {
 
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
-  const { currentUser, documentTypes } = state
+  const { currentUser, documentTypes, departments } = state
   const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
 
@@ -136,6 +136,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   }
 
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
+  const departmentOptions = departments.map(dept => ({ value: dept, label: dept }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -185,7 +186,26 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                     {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditAssignedDepartment') && <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input placeholder="e.g. Finance" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditAssignedDepartment') && (
+                      <FormField
+                        control={form.control}
+                        name="assignedDepartment"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Assigned Department</FormLabel>
+                            <Combobox
+                              options={departmentOptions}
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              placeholder="Select a department..."
+                              searchPlaceholder="Search depts..."
+                              notFoundText="No matching department found."
+                            />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel>Initial Receiver Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
