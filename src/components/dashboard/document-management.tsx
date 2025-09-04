@@ -14,7 +14,7 @@ import {
   Upload,
   Trash2,
   FileDigit,
-  FileArchive,
+  FileCog,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -221,7 +221,7 @@ export default function DocumentManagement() {
         )}
         {currentUser?.role === 'Admin' && (
             <Button variant="secondary" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-800 hover:bg-teal-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
-                <FileArchive /> Manage Assigned Depts
+                <FileCog /> Manage Assigned Depts
             </Button>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (
