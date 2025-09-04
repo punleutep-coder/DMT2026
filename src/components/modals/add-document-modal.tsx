@@ -1,4 +1,3 @@
-
 'use client'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -9,7 +8,6 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
@@ -18,6 +16,7 @@ import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
 import { sanitizeFirebaseKey } from '@/lib/utils'
 import { hasPermission } from '@/lib/permissions'
+import { Combobox } from '../ui/combobox'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -136,6 +135,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     onClose();
   }
 
+  const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] glassmorphic-card">
@@ -166,20 +167,16 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                           control={form.control}
                           name="documentType"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex flex-col">
                               <FormLabel>Document Type</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a document type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {documentTypes.map(type => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <Combobox
+                                options={documentTypeOptions}
+                                value={field.value}
+                                onChange={field.onChange}
+                                placeholder="Select a document type..."
+                                searchPlaceholder="Search types..."
+                                notFoundText="No matching type found."
+                              />
                               <FormMessage />
                             </FormItem>
                           )}
