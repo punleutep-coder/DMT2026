@@ -10,7 +10,7 @@ import {
   initialData
 } from '@/lib/initial-data'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
-import { hasDepartmentPermission } from '@/lib/permissions'
+import { hasDepartmentPermission, hasPermission } from '@/lib/permissions'
 import { sanitizeFirebaseKey } from '@/lib/utils'
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
@@ -389,8 +389,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     let docs = state.documents
 
-    if (state.currentUser?.role !== 'Admin' && Array.isArray(state.currentUser?.departmentPermissions) && state.currentUser.departmentPermissions.length > 0) {
-        docs = docs.filter(doc => doc.status && hasDepartmentPermission(state.currentUser, doc.status));
+    if (state.currentUser?.role !== 'Admin') {
+        const canViewCompleted = hasPermission(state.currentUser, 'canViewCompleted');
+        docs = docs.filter(doc => {
+            const isCompleted = doc.status.startsWith('Completed');
+            const hasDeptPerm = doc.status && hasDepartmentPermission(state.currentUser, doc.status);
+            
+            if (isCompleted) {
+                return canViewCompleted;
+            }
+            return hasDeptPerm;
+        });
     }
 
     if (state.filter.search) {

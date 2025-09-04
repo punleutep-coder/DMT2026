@@ -82,7 +82,7 @@ interface UserManagementModalProps {
 const permissionGroups = {
   'General Document Permissions': [
     'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 
-    'canViewLog', 'canExportData', 'canManageColumns'
+    'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted'
   ],
   'Document Action Permissions': [
     'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote'
@@ -567,4 +567,3 @@ export default function UserManagementModal({
     
 
     
-

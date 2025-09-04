@@ -51,6 +51,7 @@ export const PERMISSIONS_CONFIG: { [key: string]: string } = {
     canManageColumns: 'Manage Columns',
     canExportData: 'Export Data',
     canViewLog: 'View Log',
+    canViewCompleted: 'View Completed Docs',
     canSplitDocument: 'Split Document',
     canEditCurrentNote: 'Edit Current Note',
     canMoveDocument: 'Move Document (Advance/Back)',
