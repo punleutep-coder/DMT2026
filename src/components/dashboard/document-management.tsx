@@ -210,19 +210,17 @@ export default function DocumentManagement() {
           </Button>
         )}
         {currentUser?.role === 'Admin' && (
+          <>
             <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <Library /> Manage Workflow Depts
             </Button>
-        )}
-         {currentUser?.role === 'Admin' && (
             <Button variant="secondary" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-800 hover:bg-cyan-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <FileDigit /> Manage Document Types
             </Button>
-        )}
-        {currentUser?.role === 'Admin' && (
             <Button variant="secondary" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-800 hover:bg-teal-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <FileCog /> Manage Assigned Depts
             </Button>
+          </>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (
             <Button variant="secondary" onClick={() => openModal('manageColumns')} className="bg-purple-800 hover:bg-purple-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
