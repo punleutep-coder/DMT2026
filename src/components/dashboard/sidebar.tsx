@@ -19,6 +19,7 @@ import {
   FileText,
   Combine,
   Columns,
+  BarChart3,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
@@ -31,12 +32,8 @@ export default function DashboardSidebar() {
     dispatch({ type: 'LOGOUT' })
   }
 
-  const openUserManagement = () => {
-    dispatch({ type: 'SET_MODAL', payload: { type: 'addUser' } })
-  }
-
-  const openMyActivityLog = () => {
-    dispatch({ type: 'SET_MODAL', payload: { type: 'myActivityLog' } })
+  const openModal = (type: any) => {
+    dispatch({ type: 'SET_MODAL', payload: { type } })
   }
 
   if (!currentUser) return null;
@@ -62,14 +59,20 @@ export default function DashboardSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="My Activity Log" onClick={openMyActivityLog}>
+            <SidebarMenuButton tooltip="My Activity Log" onClick={() => openModal('myActivityLog')}>
               <FileText />
               <span>My Activity</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Reporting" onClick={() => openModal('reporting')}>
+              <BarChart3 />
+              <span>Reporting</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           {currentUser.role === 'Admin' && (
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="User Management" onClick={openUserManagement}>
+              <SidebarMenuButton tooltip="User Management" onClick={() => openModal('addUser')}>
                 <Users />
                 <span>User Management</span>
               </SidebarMenuButton>

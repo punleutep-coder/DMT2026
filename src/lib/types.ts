@@ -18,6 +18,7 @@ export interface Document {
   firestoreId: string;
   name: string;
   office: string | null;
+  documentType: string | null;
   status: string;
   initialDepartment: string;
   assignedDepartment: string | null;
@@ -106,6 +107,7 @@ export type ModalType =
   | 'editDocument'
   | 'viewLog'
   | 'myActivityLog'
+  | 'reporting'
   | 'manageDepartments'
   | 'manageColumns'
   | 'combineDocuments'

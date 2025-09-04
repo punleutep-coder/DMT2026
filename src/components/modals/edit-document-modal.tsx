@@ -20,6 +20,7 @@ import { suggestTagsAction } from '@/app/actions/ai'
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
   name: z.string().min(1, 'Document name is required.'),
+  documentType: z.string().optional(),
   office: z.string().optional(),
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
@@ -51,6 +52,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     defaultValues: {
       id: docToUpdate?.id || '',
       name: docToUpdate?.name || '',
+      documentType: docToUpdate?.documentType || '',
       office: docToUpdate?.office || '',
       secondaryId: docToUpdate?.secondaryId || '',
       tertiaryId: docToUpdate?.tertiaryId || '',
@@ -98,6 +100,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             ...docToUpdate,
             id: values.id, // Use the new original ID
             name: values.name,
+            documentType: values.documentType || null,
             office: values.office || null,
             assignedDepartment: values.assignedDepartment || null,
             secondaryId: values.secondaryId || null,
@@ -124,6 +127,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
         // Only add fields to update if the user has permission and the value has changed
         if (hasPermission(currentUser, 'canEditDocumentName') && values.name !== docToUpdate.name) updatedFields.name = values.name;
+        if (hasPermission(currentUser, 'canEditDocumentType') && values.documentType !== docToUpdate.documentType) updatedFields.documentType = values.documentType || null;
         if (hasPermission(currentUser, 'canEditOffice') && values.office !== docToUpdate.office) updatedFields.office = values.office || null;
         if (hasPermission(currentUser, 'canEditAssignedDepartment') && values.assignedDepartment !== docToUpdate.assignedDepartment) updatedFields.assignedDepartment = values.assignedDepartment || null;
         if (hasPermission(currentUser, 'canEditSecondaryId') && values.secondaryId !== docToUpdate.secondaryId) updatedFields.secondaryId = values.secondaryId || null;
@@ -156,6 +160,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
               <div className="space-y-4">
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentType') && <FormField control={form.control} name="documentType" render={({ field }) => ( <FormItem><FormLabel>Document Type</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditAssignedDepartment') && <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Assigned Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 

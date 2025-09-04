@@ -15,6 +15,7 @@ import EditNoteModal from "./edit-note-modal"
 import AdvanceDocumentModal from "./advance-document-modal"
 import CompleteDocumentModal from "./complete-document-modal"
 import MyActivityLogModal from "./my-activity-log-modal"
+import ReportingModal from "./reporting-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -35,6 +36,8 @@ export default function ModalManager() {
             return <LogModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'myActivityLog':
             return <MyActivityLogModal isOpen={true} onClose={handleClose} />
+        case 'reporting':
+            return <ReportingModal isOpen={true} onClose={handleClose} />
         case 'addUser':
             return <UserManagementModal isOpen={true} onClose={handleClose} />
         case 'editUser':

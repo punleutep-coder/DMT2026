@@ -46,7 +46,7 @@ const EmptyState = () => {
 
     return (
         <TableRow>
-            <TableCell colSpan={8} className="h-48 text-center">
+            <TableCell colSpan={9} className="h-48 text-center">
                 <div className="flex flex-col items-center justify-center gap-4">
                     <SearchX className="h-16 w-16 text-muted-foreground/50" />
                     <h3 className="text-xl font-semibold text-foreground">No Documents Found</h3>
@@ -114,8 +114,9 @@ export default function DocumentTable() {
   const columns = [
     { key: 'select', name: '' },
     { key: 'documentId', name: 'លេខឯកាសារ' },
-    { key: 'department', name: 'នាយកដ្ឋាន' },
     { key: 'name', name: 'ឈ្មោះឯកសារ' },
+    { key: 'documentType', name: 'ប្រភេទឯកសារ' },
+    { key: 'assignedDepartment', name: 'នាយកដ្ឋាន' },
     { key: 'office', name: 'ការិយាល័យ' },
     { key: 'currentStatus', name: 'ស្ថានភាព' },
     { key: 'lastUpdate', name: 'កែចុងក្រោយ' },
@@ -150,7 +151,7 @@ export default function DocumentTable() {
                   ) : (
                     <span style={{fontFamily: "'Khmer OS Battambang', serif", color: '#000099'}}>{col.name}</span>
                   )}
-                  {col.key === 'department' && (
+                  {col.key === 'assignedDepartment' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-6 w-6">

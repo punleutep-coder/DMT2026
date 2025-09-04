@@ -20,11 +20,12 @@ import { hasPermission } from '@/lib/permissions'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
+  name: z.string().min(1, 'Document Name is required.'),
+  documentType: z.string().optional(),
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
   assignedDepartment: z.string().optional(),
-  name: z.string().min(1, 'Document Name is required.'),
   office: z.string().optional(),
   documentLink1: z.string().url().optional().or(z.literal('')),
   documentLink2: z.string().url().optional().or(z.literal('')),
@@ -51,11 +52,12 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: '',
+      name: '',
+      documentType: '',
       secondaryId: '',
       tertiaryId: '',
       quaternaryId: '',
       assignedDepartment: '',
-      name: '',
       office: '',
       documentLink1: '',
       documentLink2: '',
@@ -107,6 +109,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         id: values.id, // Store original ID
         firestoreId: `doc-${Date.now()}`,
         name: values.name,
+        documentType: values.documentType || null,
         office: values.office || null,
         status: initialDepartment,
         initialDepartment: initialDepartment,
@@ -157,6 +160,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                 }
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {hasPermission(currentUser, 'canEditDocumentType') && <FormField control={form.control} name="documentType" render={({ field }) => ( <FormItem><FormLabel>Document Type</FormLabel><FormControl><Input placeholder="e.g. Invoice, Contract" {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}

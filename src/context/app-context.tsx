@@ -389,17 +389,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     let docs = state.documents
 
+    if (state.currentUser?.role !== 'Admin' && !hasPermission(state.currentUser, 'canViewCompleted')) {
+      docs = docs.filter(doc => !doc.status.startsWith('Completed'));
+    }
+
     if (state.currentUser?.role !== 'Admin') {
-        const canViewCompleted = hasPermission(state.currentUser, 'canViewCompleted');
-        docs = docs.filter(doc => {
-            const isCompleted = doc.status.startsWith('Completed');
-            const hasDeptPerm = doc.status && hasDepartmentPermission(state.currentUser, doc.status);
-            
-            if (isCompleted) {
-                return canViewCompleted;
-            }
-            return hasDeptPerm;
-        });
+        docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status));
     }
 
     if (state.filter.search) {
@@ -409,6 +404,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const basicSearchMatch =
                 doc.id.toLowerCase().includes(searchLower) ||
                 doc.name.toLowerCase().includes(searchLower) ||
+                (doc.documentType && doc.documentType.toLowerCase().includes(searchLower)) ||
                 (doc.office && doc.office.toLowerCase().includes(searchLower)) ||
                 (doc.secondaryId && doc.secondaryId.toLowerCase().includes(searchLower)) ||
                 (doc.tertiaryId && doc.tertiaryId.toLowerCase().includes(searchLower)) ||

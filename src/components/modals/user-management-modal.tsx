@@ -88,7 +88,7 @@ const permissionGroups = {
     'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote'
   ],
   'Document Field Edit Permissions': [
-    'canEditDocumentId', 'canEditDocumentName', 'canEditOffice', 'canEditAssignedDepartment', 'canEditSecondaryId',
+    'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditOffice', 'canEditAssignedDepartment', 'canEditSecondaryId',
     'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote'
   ],
   'Document Link Permissions': [
