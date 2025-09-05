@@ -57,20 +57,15 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
         toast({ title: 'Error', description: 'Department name already exists.', variant: 'destructive' });
         return;
     }
-
-    const oldName = departments[index];
-    const newName = editingValue.trim();
-
-    if (oldName !== newName) {
-        dispatch({ type: 'UPDATE_DEPARTMENT_NAME', payload: { oldName, newName } });
-    }
-
+    
+    const updatedDepts = [...departments];
+    updatedDepts[index] = editingValue.trim();
+    setDepartments(updatedDepts);
     handleCancelEditing();
   }
 
   const handleSave = () => {
-    // We only need to save the order and new/deleted departments. Edits are handled separately.
-    dispatch({ type: 'SET_DEPARTMENTS', payload: departments })
+    dispatch({ type: 'SET_DEPARTMENTS', payload: {newOrder: departments, originalDepartments: state.departments } })
     onClose()
   }
 

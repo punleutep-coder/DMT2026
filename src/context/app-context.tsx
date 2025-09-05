@@ -33,8 +33,7 @@ type Action =
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> & {reason?: string | null} }
-  | { type: 'SET_DEPARTMENTS'; payload: string[] }
-  | { type: 'UPDATE_DEPARTMENT_NAME'; payload: { oldName: string, newName: string } }
+  | { type: 'SET_DEPARTMENTS'; payload: { newOrder: string[], originalDepartments: string[]} }
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
@@ -235,43 +234,42 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return state;
     }
     case 'SET_DEPARTMENTS': {
-        set(ref(db, 'departments'), action.payload);
-        return { ...state, departments: action.payload };
+        const { newOrder, originalDepartments } = action.payload;
+        const updates: { [key: string]: any } = {};
+        updates['/departments'] = newOrder;
+
+        // Check for renamed departments
+        originalDepartments.forEach((oldName, index) => {
+            const newName = newOrder.find(n => originalDepartments.includes(n) && originalDepartments.indexOf(n) === index && n !== oldName);
+            const renamed = newOrder.includes(oldName) === false && newOrder.length === originalDepartments.length;
+
+            if (renamed) {
+                const newNameForOldIndex = newOrder[index];
+                if (newNameForOldIndex && newNameForOldIndex !== oldName) {
+                    state.documents.forEach(doc => {
+                        const sanitizedId = sanitizeFirebaseKey(doc.id);
+                        if (doc.status === oldName) {
+                            updates[`/documents/${sanitizedId}/status`] = newNameForOldIndex;
+                        }
+                        if (Array.isArray(doc.history)) {
+                            const newHistory = doc.history.map(h =>
+                                h.department === oldName ? { ...h, department: newNameForOldIndex } : h
+                            );
+                            if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
+                                updates[`/documents/${sanitizedId}/history`] = newHistory;
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        update(ref(db), updates);
+        return { ...state, departments: newOrder };
     }
     case 'SET_ASSIGNED_DEPARTMENTS': {
         set(ref(db, 'assignedDepartments'), action.payload);
         return { ...state, assignedDepartments: action.payload };
-    }
-    case 'UPDATE_DEPARTMENT_NAME': {
-        const { oldName, newName } = action.payload;
-        const updates: { [key: string]: any } = {};
-
-        const newDepartments = state.departments.map(d => d === oldName ? newName : d);
-        updates['/departments'] = newDepartments;
-
-        state.documents.forEach(doc => {
-            const sanitizedId = sanitizeFirebaseKey(doc.id);
-            let docNeedsUpdate = false;
-        
-            if (doc.status === oldName) {
-                updates[`/documents/${sanitizedId}/status`] = newName;
-                docNeedsUpdate = true;
-            }
-        
-            if (Array.isArray(doc.history)) {
-                const newHistory = doc.history.map(h => 
-                    h.department === oldName ? { ...h, department: newName } : h
-                );
-                if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
-                    updates[`/documents/${sanitizedId}/history`] = newHistory;
-                    docNeedsUpdate = true;
-                }
-            }
-        });
-        
-        update(ref(db), updates);
-        
-        return state;
     }
     case 'SET_DOCUMENT_TYPES': {
         set(ref(db, 'documentTypes'), action.payload);
