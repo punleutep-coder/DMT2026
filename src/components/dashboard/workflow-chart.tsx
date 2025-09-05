@@ -98,7 +98,7 @@ export default function WorkflowChart() {
                 }
                 return <Cell key={`cell-${index}`} fill={color} />;
               })}
-              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={14} fontWeight="bold" />
+              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={18} fontWeight="bold" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
