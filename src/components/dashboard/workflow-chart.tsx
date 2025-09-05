@@ -17,7 +17,7 @@ import { useMemo } from 'react'
 
 export default function WorkflowChart() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { departments } = state
+  const { departments, filter } = state
 
   const chartData = useMemo(() => {
     // Use filteredDocs to make the chart dynamic
@@ -36,7 +36,9 @@ export default function WorkflowChart() {
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const departmentName = data.activePayload[0].payload.fullName
-      dispatch({ type: 'SET_FILTER', payload: { departmentSpecificFilter: departmentName, mainFilter: 'All' }})
+      // Preserve the 'Exceeding Period' filter if it's active
+      const newMainFilter = filter.mainFilter === 'Exceeding Period' ? 'Exceeding Period' : 'All';
+      dispatch({ type: 'SET_FILTER', payload: { departmentSpecificFilter: departmentName, mainFilter: newMainFilter }})
     }
   }
 

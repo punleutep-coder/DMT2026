@@ -487,10 +487,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         docs = docs.filter(doc => doc.assignedDepartment === state.filter.assignedDepartment);
     }
 
-    if (state.filter.mainFilter !== 'All') {
-        if (state.filter.mainFilter === 'Exceeding Period') {
-            docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
-        } else if (state.filter.mainFilter === 'In Progress') {
+    if (state.filter.mainFilter === 'Exceeding Period') {
+        docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
+    } else if (state.filter.mainFilter !== 'All') {
+        if (state.filter.mainFilter === 'In Progress') {
             docs = docs.filter(d => d.status && !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
         } else if (state.filter.mainFilter === 'Delayed') {
             docs = docs.filter(d => d.isDelayed && !d.releaseDateReached);
