@@ -172,7 +172,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                 <TableBody>
                     {userLogs.length > 0 ? userLogs.map(log => (
                         <TableRow key={log.id}>
-                            <TableCell>{format(new Date(log.timestamp), 'PPp')}</TableCell>
+                            <TableCell>{format(new Date(log.timestamp), 'dd.MM.yyyy')}</TableCell>
                             <TableCell>{log.docId}</TableCell>
                             <TableCell>
                                 From <span className="font-bold text-primary/90">{log.oldStatus}</span> to <span className="font-bold text-primary">{log.newStatus}</span>

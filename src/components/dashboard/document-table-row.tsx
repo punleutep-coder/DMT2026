@@ -196,7 +196,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         </TableCell>
       )}
       {columnVisibility.lastUpdate && (
-        <TableCell className="text-foreground">{format(new Date(doc.lastUpdate), 'PPp')}</TableCell>
+        <TableCell className="text-foreground">{format(new Date(doc.lastUpdate), 'dd.MM.yyyy')}</TableCell>
       )}
       {columnVisibility.actions && (
         <TableCell>

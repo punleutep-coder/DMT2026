@@ -121,8 +121,8 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                   <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/50">
                     <h4 className="font-bold text-foreground mb-2" style={{color: '#0000E2'}}>{entry.department}</h4>
                     <div className="text-sm space-y-1">
-                       <p><strong className="text-foreground/80">Start:</strong> {entry.start ? format(new Date(entry.start), 'PPp') : 'N/A'}</p>
-                       <p><strong className="text-foreground/80">End:</strong> {entry.end ? format(new Date(entry.end), 'PPp') : 'N/A'}</p>
+                       <p><strong className="text-foreground/80">Start:</strong> {entry.start ? format(new Date(entry.start), 'dd.MM.yyyy') : 'N/A'}</p>
+                       <p><strong className="text-foreground/80">End:</strong> {entry.end ? format(new Date(entry.end), 'dd.MM.yyyy') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">Period:</strong> <span className="text-foreground font-medium" style={{color: '#0000E2'}}>{formatDuration(entry.start, entry.end)}</span></p>
                        <p><strong className="text-foreground/80">Receiver Name:</strong> {entry.receiver}</p>
                        <p><strong className="text-foreground/80">Note:</strong> {entry.note || 'N/A'}</p>
@@ -142,7 +142,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                         <p className="font-medium text-foreground">
                             From <span style={{color: '#0000E2'}}>{log.oldStatus}</span> to <span style={{color: '#0000E2'}}>{log.newStatus}</span>
                         </p>
-                        <p className="text-xs text-foreground">{format(new Date(log.timestamp), 'PPp')} by {log.user}</p>
+                        <p className="text-xs text-foreground">{format(new Date(log.timestamp), 'dd.MM.yyyy')} by {log.user}</p>
                         {log.reason && (
                             <p className="text-sm mt-2 p-2 bg-muted/20 rounded-md border border-border/30">
                                 <strong className="text-foreground/80">Reason:</strong> {log.reason}
