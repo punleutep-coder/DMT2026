@@ -129,7 +129,7 @@ export default function DocumentManagement() {
       a.href = url;
       a.download = `docuflow_export_${new Date().toISOString()}.json`;
       document.body.appendChild(a);
-      a.click();
+a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
