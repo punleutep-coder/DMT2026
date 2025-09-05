@@ -33,7 +33,7 @@ type Action =
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> & {reason?: string | null} }
-  | { type: 'SET_DEPARTMENTS'; payload: { newOrder: string[], originalDepartments: string[]} }
+  | { type: 'SET_DEPARTMENTS'; payload: string[] | { newOrder: string[], originalDepartments: string[]} }
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
@@ -234,11 +234,16 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return state;
     }
     case 'SET_DEPARTMENTS': {
-        const { newOrder, originalDepartments } = action.payload;
-        const updates: { [key: string]: any } = {};
-        updates['/departments'] = newOrder;
+      if (Array.isArray(action.payload)) {
+        return { ...state, departments: action.payload };
+      }
+      
+      const { newOrder, originalDepartments } = action.payload;
+      const updates: { [key: string]: any } = {};
+      updates['/departments'] = newOrder;
 
-        // Check for renamed departments
+      // Check for renamed departments
+      if (originalDepartments && Array.isArray(originalDepartments)) {
         originalDepartments.forEach((oldName, index) => {
             const newName = newOrder.find(n => originalDepartments.includes(n) && originalDepartments.indexOf(n) === index && n !== oldName);
             const renamed = newOrder.includes(oldName) === false && newOrder.length === originalDepartments.length;
@@ -263,9 +268,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 }
             }
         });
+      }
 
-        update(ref(db), updates);
-        return { ...state, departments: newOrder };
+      update(ref(db), updates);
+      return { ...state, departments: newOrder };
     }
     case 'SET_ASSIGNED_DEPARTMENTS': {
         set(ref(db, 'assignedDepartments'), action.payload);
