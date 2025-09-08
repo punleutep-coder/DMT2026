@@ -52,6 +52,8 @@ export const initialColumnVisibility = Object.keys(COLUMN_CONFIG).reduce((acc, k
 
 
 export const PERMISSIONS_CONFIG: { [key: string]: string } = {
+    canViewMetrics: 'View Metrics Cards',
+    canViewWorkflowChart: 'View Workflow Chart',
     canAddDocument: 'Add New Document',
     canCombineDocuments: 'Combine Documents',
     canManageColumns: 'Manage Columns',

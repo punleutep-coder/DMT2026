@@ -80,6 +80,9 @@ interface UserManagementModalProps {
 }
 
 const permissionGroups = {
+  'Dashboard Permissions': [
+    'canViewMetrics', 'canViewWorkflowChart'
+  ],
   'General Document Permissions': [
     'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 
     'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted'
@@ -318,7 +321,7 @@ export default function UserManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl glassmorphic-card">
+      <DialogContent className="sm:max-w-4xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>User Management</DialogTitle>
           <DialogDescription>
@@ -470,7 +473,7 @@ export default function UserManagementModal({
                                         />
                                       </FormControl>
                                       <FormLabel className="font-normal">
-                                        {PERMISSIONS_CONFIG[key]}
+                                        {PERMISSIONS_CONFIG[key as keyof typeof PERMISSIONS_CONFIG]}
                                       </FormLabel>
                                     </FormItem>
                                   )}

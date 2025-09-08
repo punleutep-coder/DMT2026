@@ -11,9 +11,11 @@ import { useAppContext } from '@/hooks/use-app-context'
 import ConfirmDialog from '../modals/confirm-dialog'
 import ModalManager from '../modals/modal-manager'
 import { Skeleton } from '../ui/skeleton'
+import { hasPermission } from '@/lib/permissions'
 
 export default function Dashboard() {
   const { state } = useAppContext()
+  const { currentUser } = state
 
   if (!state.isInitialized) {
     return (
@@ -33,10 +35,12 @@ export default function Dashboard() {
       <div className="relative flex min-h-svh flex-1 flex-col bg-transparent">
         <DashboardHeader />
         <main className="flex-1 space-y-6 p-4 sm:p-6 md:p-8">
-          <Metrics />
-          <div className="glassmorphic-card">
-            <WorkflowChart />
-          </div>
+          {hasPermission(currentUser, 'canViewMetrics') && <Metrics />}
+          {hasPermission(currentUser, 'canViewWorkflowChart') && (
+            <div className="glassmorphic-card">
+              <WorkflowChart />
+            </div>
+          )}
           <DocumentManagement />
         </main>
       </div>
