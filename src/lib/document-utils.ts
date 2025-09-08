@@ -7,6 +7,10 @@ export const isDocumentExceedingPeriod = (
     unit: 'days' | 'hours' | 'minutes',
     department: string = 'All' // 'All' or a specific department name
 ) => {
+    if (doc.status.startsWith('Completed') || doc.status === 'Combined' || doc.status === 'Split') {
+        return false;
+    }
+
     let thresholdInMs = 0;
     switch (unit) {
         case 'minutes': thresholdInMs = value * 60 * 1000; break;
@@ -17,28 +21,28 @@ export const isDocumentExceedingPeriod = (
   
     const now = new Date().getTime();
     
-    // Check if doc.history is a valid array before iterating
     if (!Array.isArray(doc.history)) {
         return false;
     }
 
-    // Iterate over all history entries
+    // Iterate over all history entries to find any that exceed the period
     for (const entry of doc.history) {
-        // If a specific department is selected, only check entries for that department
+        // If a specific department is selected for the filter, only check that department
         if (department !== 'All' && entry.department !== department) {
             continue;
         }
 
         const startTime = new Date(entry.start).getTime();
-        // If the step is finished, compare against its end time. If it's ongoing, compare against now.
+        // If the step is finished, use its end time. If it's the current, ongoing step, use `now`.
         const endTime = entry.end ? new Date(entry.end).getTime() : now;
         const duration = endTime - startTime;
 
         if (duration > thresholdInMs) {
-            return true; // Found at least one step that exceeded the period
+            return true; // Found a step that exceeded the period
         }
     }
     
     return false; // No step exceeded the period
   }
+
 
