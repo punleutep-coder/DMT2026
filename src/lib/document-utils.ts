@@ -21,28 +21,28 @@ export const isDocumentExceedingPeriod = (
   
     const now = new Date().getTime();
     
-    if (!Array.isArray(doc.history)) {
+    if (!Array.isArray(doc.history) || doc.history.length === 0) {
         return false;
     }
 
-    // Iterate over all history entries to find any that exceed the period
-    for (const entry of doc.history) {
-        // If a specific department is selected for the filter, only check that department
-        if (department !== 'All' && entry.department !== department) {
-            continue;
-        }
+    // Get the last entry in the history, which is the current department
+    const currentEntry = doc.history[doc.history.length - 1];
 
-        const startTime = new Date(entry.start).getTime();
-        // If the step is finished, use its end time. If it's the current, ongoing step, use `now`.
-        const endTime = entry.end ? new Date(entry.end).getTime() : now;
-        const duration = endTime - startTime;
-
-        if (duration > thresholdInMs) {
-            return true; // Found a step that exceeded the period
-        }
+    // If a specific department is selected for the filter, and it's not the current one, then this doc doesn't match
+    if (department !== 'All' && currentEntry.department !== department) {
+        return false;
     }
     
-    return false; // No step exceeded the period
+    // The current step should not have an end date yet
+    if (currentEntry.end) {
+        return false;
+    }
+
+    const startTime = new Date(currentEntry.start).getTime();
+    const duration = now - startTime;
+
+    return duration > thresholdInMs;
   }
+
 
 
