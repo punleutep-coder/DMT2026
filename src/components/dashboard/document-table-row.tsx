@@ -219,7 +219,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         <DropdownMenuItem key={i} asChild>
                             <a href={link} target="_blank" rel="noopener noreferrer">
                                 <FileSymlink className="mr-2 h-4 w-4"/>
-                                {i === 0 ? "ឯកសារដើម" : `Open Link ${i+1}`}
+                                {i === 0 ? "ឯកសារដើម" : i === 1 ? "លសនបនប" : `Open Link ${i+1}`}
                             </a>
                         </DropdownMenuItem> : null
                     ))}
