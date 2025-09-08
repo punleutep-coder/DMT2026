@@ -217,7 +217,10 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     {Array.isArray(doc.documentLink) && doc.documentLink.map((link, i) => (
                         hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ?
                         <DropdownMenuItem key={i} asChild>
-                            <a href={link} target="_blank" rel="noopener noreferrer"><FileSymlink className="mr-2 h-4 w-4"/>Open Link {i+1}</a>
+                            <a href={link} target="_blank" rel="noopener noreferrer">
+                                <FileSymlink className="mr-2 h-4 w-4"/>
+                                {i === 0 ? "ឯកសារដើម" : `Open Link ${i+1}`}
+                            </a>
                         </DropdownMenuItem> : null
                     ))}
 
