@@ -1,6 +1,7 @@
 
 
 
+
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
@@ -75,7 +76,7 @@ const getInitialState = (): AppState => ({
     isInitialized: false,
     dialog: { isOpen: false, title: '', message: '' },
     modal: { type: null },
-    language: 'km',
+    language: 'en',
 })
 
 

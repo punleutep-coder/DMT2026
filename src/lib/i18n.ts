@@ -30,7 +30,7 @@ const translations = {
     },
     km: {
         // Sidebar
-        dashboard: "แดชบอร์ด",
+        dashboard: "ទំព័រដើម",
         myActivity: "កំណត់ហេតុសកម្មភាពរបស់ខ្ញុំ",
         reporting: "ការរាយការណ៍",
         userManagement: "ការគ្រប់គ្រង​អ្នកប្រើប្រាស់",
