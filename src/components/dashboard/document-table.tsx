@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import {
@@ -41,6 +42,7 @@ const EmptyState = () => {
             startDate: null,
             endDate: null,
             assignedDepartment: 'All',
+            documentType: 'All'
         }});
     }
 
@@ -60,7 +62,7 @@ const EmptyState = () => {
 
 export default function DocumentTable() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { columnVisibility, selectedDocIds, pagination } = state
+  const { columnVisibility, selectedDocIds, pagination, documentTypes } = state
 
   const totalPages = Math.ceil(filteredDocs.length / pagination.rowsPerPage);
   const paginatedDocs = useMemo(() => {
@@ -97,6 +99,11 @@ export default function DocumentTable() {
   const handleAssignedDeptFilterChange = (dept: string) => {
     const newDept = state.filter.assignedDepartment === dept ? 'All' : dept
     dispatch({ type: 'SET_FILTER', payload: { assignedDepartment: newDept }})
+  }
+
+  const handleDocumentTypeFilterChange = (type: string) => {
+    const newType = state.filter.documentType === type ? 'All' : type;
+    dispatch({ type: 'SET_FILTER', payload: { documentType: newType } });
   }
 
   const handleRowsPerPageChange = (value: string) => {
@@ -150,6 +157,32 @@ export default function DocumentTable() {
                     </DropdownMenu>
                   ) : (
                     <span style={{fontFamily: "'Khmer OS Battambang', serif", color: '#000099'}}>{col.name}</span>
+                  )}
+                   {col.key === 'documentType' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <ListFilter className="h-4 w-4"/>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuCheckboxItem
+                            checked={state.filter.documentType === 'All'}
+                            onCheckedChange={() => handleDocumentTypeFilterChange('All')}
+                        >
+                            All
+                        </DropdownMenuCheckboxItem>
+                        {documentTypes.map(type => (
+                           <DropdownMenuCheckboxItem
+                                key={type}
+                                checked={state.filter.documentType === type}
+                                onCheckedChange={() => handleDocumentTypeFilterChange(type)}
+                            >
+                                {type}
+                           </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                   {col.key === 'assignedDepartment' && (
                     <DropdownMenu>

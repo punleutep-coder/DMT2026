@@ -75,6 +75,7 @@ export interface AppState {
     startDate: Date | null;
     endDate: Date | null;
     assignedDepartment: string;
+    documentType: string;
     periodValue: number;
     periodUnit: 'days' | 'hours' | 'minutes';
     periodDepartment: string;

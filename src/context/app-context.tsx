@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
@@ -58,6 +59,7 @@ const getInitialState = (): AppState => ({
         startDate: null,
         endDate: null,
         assignedDepartment: 'All',
+        documentType: 'All',
         periodValue: 3,
         periodUnit: 'days',
         periodDepartment: 'All',
@@ -486,12 +488,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (state.filter.assignedDepartment !== 'All') {
         docs = docs.filter(doc => doc.assignedDepartment === state.filter.assignedDepartment);
     }
+    
+    if (state.filter.documentType !== 'All') {
+      docs = docs.filter(doc => doc.documentType === state.filter.documentType);
+    }
 
     if (state.filter.mainFilter === 'Exceeding Period') {
         docs = docs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
     } else if (state.filter.mainFilter !== 'All') {
         if (state.filter.mainFilter === 'In Progress') {
-            docs = docs.filter(d => d.status && !d.isDelayed && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
+            docs = docs.filter(d => d.status && !d.isDelayed && !d.releaseDateReached && !d.status.startsWith('Completed') && d.status !== 'Combined' && d.status !== 'Split');
         } else if (state.filter.mainFilter === 'Delayed') {
             docs = docs.filter(d => d.isDelayed && !d.releaseDateReached);
         } else if (state.filter.mainFilter === 'Release Date Reached') {
