@@ -32,6 +32,7 @@ import { useMemo, useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Document } from '@/lib/types'
+import { useTranslation } from '@/lib/i18n'
 
 interface ReportingModalProps {
   isOpen: boolean
@@ -50,6 +51,7 @@ type ReportData = {
 export default function ReportingModal({ isOpen, onClose }: ReportingModalProps) {
   const { state } = useAppContext()
   const { documents } = state
+  const t = useTranslation()
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
   const [reportData, setReportData] = useState<ReportData | null>(null)
 
@@ -112,9 +114,9 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[90vh] glassmorphic-card flex flex-col">
         <DialogHeader>
-          <DialogTitle>Document Reports</DialogTitle>
+          <DialogTitle>{t('documentReports')}</DialogTitle>
           <DialogDescription>
-            Generate reports on document types and departmental distribution.
+            {t('documentReportsDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -130,7 +132,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? format(dateRange.from, 'PPP') : <span>Pick a start date</span>}
+                  {dateRange.from ? format(dateRange.from, 'PPP') : <span>{t('pickStartDate')}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -142,7 +144,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                 />
               </PopoverContent>
             </Popover>
-            <span className="text-muted-foreground">to</span>
+            <span className="text-muted-foreground">{t('to')}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -153,7 +155,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.to ? format(dateRange.to, 'PPP') : <span>Pick an end date</span>}
+                  {dateRange.to ? format(dateRange.to, 'PPP') : <span>{t('pickEndDate')}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -168,21 +170,21 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
           </div>
           <div className="flex flex-wrap gap-2 mb-4">
             <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('today')}>
-              Today
+              {t('today')}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('week')}>
-              This Week
+              {t('thisWeek')}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('month')}>
-              This Month
+              {t('thisMonth')}
             </Button>
           </div>
           <div className="flex gap-2">
             <Button onClick={generateReport} disabled={!dateRange.from || !dateRange.to}>
-              Generate Report
+              {t('generateReport')}
             </Button>
             <Button variant="ghost" onClick={clearReport}>
-              Clear
+              {t('cancel')}
             </Button>
           </div>
         </div>
@@ -196,15 +198,15 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                         <AccordionTrigger>
                             <div className="flex justify-between w-full pr-4">
                                 <span className="font-semibold text-lg">{dept}</span>
-                                <span className="text-muted-foreground">Total Docs: {reportData[dept].totalDocs} | Types: {Object.keys(reportData[dept].docTypes).length}</span>
+                                <span className="text-muted-foreground">{t('totalDocs')}: {reportData[dept].totalDocs} | {t('types')}: {Object.keys(reportData[dept].docTypes).length}</span>
                             </div>
                         </AccordionTrigger>
                         <AccordionContent>
                            <Table>
                             <TableHeader>
                                 <TableRow>
-                                <TableHead>Document Type</TableHead>
-                                <TableHead className="text-right">Count</TableHead>
+                                <TableHead>{t('documentType')}</TableHead>
+                                <TableHead className="text-right">{t('count')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -222,7 +224,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
               </Accordion>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                <p>Please select a date range and generate a report.</p>
+                <p>{t('pleaseSelectDateRange')}</p>
               </div>
             )}
           </div>

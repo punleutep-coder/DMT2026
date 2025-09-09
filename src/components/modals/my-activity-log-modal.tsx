@@ -14,6 +14,7 @@ import { useMemo, useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Log } from '@/lib/types'
+import { useTranslation } from '@/lib/i18n'
 
 interface MyActivityLogModalProps {
   isOpen: boolean
@@ -23,6 +24,7 @@ interface MyActivityLogModalProps {
 export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogModalProps) {
   const { state } = useAppContext()
   const { logs, currentUser } = state
+  const t = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({ from: undefined, to: undefined })
   const [reportResult, setReportResult] = useState<{count: number, from: Date, to: Date} | null>(null)
@@ -84,20 +86,20 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>My Activity Log</DialogTitle>
+          <DialogTitle>{t('myActivityLog')}</DialogTitle>
           <DialogDescription>
-            Review your actions or generate a report on documents you've handled.
+            {t('myActivityLogDesc')}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="search" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="search">Search Log</TabsTrigger>
-                <TabsTrigger value="report">Generate Report</TabsTrigger>
+                <TabsTrigger value="search">{t('searchLog')}</TabsTrigger>
+                <TabsTrigger value="report">{t('generateReport')}</TabsTrigger>
             </TabsList>
             <TabsContent value="search" className="pt-4">
                  <Input 
-                    placeholder="Search by Document ID..."
+                    placeholder={t('searchByDocId')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full"
@@ -113,14 +115,14 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                                 className={cn("w-[240px] justify-start text-left font-normal", !dateRange.from && "text-muted-foreground")}
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {dateRange.from ? format(dateRange.from, "PPP") : <span>Pick a start date</span>}
+                                {dateRange.from ? format(dateRange.from, "PPP") : <span>{t('pickStartDate')}</span>}
                             </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar mode="single" selected={dateRange.from} onSelect={(d) => setDateRange(prev => ({...prev, from: d}))} initialFocus />
                             </PopoverContent>
                         </Popover>
-                        <span className="text-muted-foreground">to</span>
+                        <span className="text-muted-foreground">{t('to')}</span>
                         <Popover>
                             <PopoverTrigger asChild>
                             <Button
@@ -128,7 +130,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                                 className={cn("w-[240px] justify-start text-left font-normal", !dateRange.to && "text-muted-foreground")}
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {dateRange.to ? format(dateRange.to, "PPP") : <span>Pick an end date</span>}
+                                {dateRange.to ? format(dateRange.to, "PPP") : <span>{t('pickEndDate')}</span>}
                             </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
@@ -137,21 +139,21 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                         </Popover>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('today')}>Today</Button>
-                        <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('week')}>This Week</Button>
-                        <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('month')}>This Month</Button>
+                        <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('today')}>{t('today')}</Button>
+                        <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('week')}>{t('thisWeek')}</Button>
+                        <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('month')}>{t('thisMonth')}</Button>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={generateReport} disabled={!dateRange.from || !dateRange.to}>Generate Report</Button>
-                        <Button variant="ghost" onClick={clearReport}>Clear</Button>
+                        <Button onClick={generateReport} disabled={!dateRange.from || !dateRange.to}>{t('generateReport')}</Button>
+                        <Button variant="ghost" onClick={clearReport}>{t('cancel')}</Button>
                     </div>
                     {reportResult && (
                         <div className="p-4 bg-primary/10 rounded-md text-center">
                             <p className="text-muted-foreground">
-                                You handled <span className="font-bold text-xl text-primary">{reportResult.count}</span> unique documents
+                                {t('reportResult', { count: reportResult.count })}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                from {format(reportResult.from, "PPP")} to {format(reportResult.to, "PPP")}
+                                {t('from')} {format(reportResult.from, "PPP")} {t('to')} {format(reportResult.to, "PPP")}
                             </p>
                         </div>
                     )}
@@ -163,10 +165,10 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Timestamp</TableHead>
-                        <TableHead>Document ID</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Details</TableHead>
+                        <TableHead>{t('timestamp')}</TableHead>
+                        <TableHead>{t('documentId')}</TableHead>
+                        <TableHead>{t('action')}</TableHead>
+                        <TableHead>{t('details')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -175,13 +177,13 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                             <TableCell>{format(new Date(log.timestamp), 'dd.MM.yyyy')}</TableCell>
                             <TableCell>{log.docId}</TableCell>
                             <TableCell>
-                                From <span className="font-bold text-primary/90">{log.oldStatus}</span> to <span className="font-bold text-primary">{log.newStatus}</span>
+                                {t('from')} <span className="font-bold text-primary/90">{log.oldStatus}</span> {t('to')} <span className="font-bold text-primary">{log.newStatus}</span>
                             </TableCell>
                             <TableCell>{log.reason || 'N/A'}</TableCell>
                         </TableRow>
                     )) : (
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center h-24">No activity found.</TableCell>
+                            <TableCell colSpan={4} className="text-center h-24">{t('noActivityFound')}</TableCell>
                         </TableRow>
                     )}
                 </TableBody>

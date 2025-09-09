@@ -22,6 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
 import { Checkbox } from '../ui/checkbox'
 import Link from 'next/link'
+import { useTranslation } from '@/lib/i18n'
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -42,6 +43,7 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast()
+  const t = useTranslation()
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,8 +79,8 @@ export default function LoginForm() {
         try {
           dispatch({ type: 'LOGIN', payload: { user } })
           toast({
-            title: `Welcome, ${user.username}!`,
-            description: 'You have successfully logged in.',
+            title: t('welcome', { username: user.username }),
+            description: t('loggedInSuccess'),
           })
           
         } catch(e) {
@@ -90,7 +92,7 @@ export default function LoginForm() {
         return
       }
     }
-    setError('Invalid username or password.')
+    setError(t('invalidCredentials'))
     setIsLoggingIn(false);
   }
 
@@ -102,8 +104,8 @@ export default function LoginForm() {
             <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full">
               <Workflow className="w-8 h-8 text-[#000066]" />
             </div>
-            <h1 className="text-3xl font-bold text-[#000066]" style={{fontFamily: "'Khmer Rotanak Traiy B', serif", fontSize: '22px'}}>ប្រព័ន្ធគ្រប់គ្រងឯកសារ</h1>
-            <p className="text-muted-foreground">Please sign in to continue</p>
+            <h1 className="text-3xl font-bold text-[#000066]" style={{fontFamily: "'Khmer Rotanak Traiy B', serif", fontSize: '22px'}}>{t('docuFlowLogin')}</h1>
+            <p className="text-muted-foreground">{t('pleaseSignIn')}</p>
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -112,9 +114,9 @@ export default function LoginForm() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>{t('username')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your username" {...field} className="shadow-inner shadow-md" />
+                      <Input placeholder={t('username')} {...field} className="shadow-inner shadow-md" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -125,7 +127,7 @@ export default function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('password')}</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} className="shadow-inner shadow-md" />
                     </FormControl>
@@ -147,7 +149,7 @@ export default function LoginForm() {
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="cursor-pointer">
-                          Remember me
+                          {t('rememberMe')}
                         </FormLabel>
                       </div>
                     </FormItem>
@@ -157,14 +159,14 @@ export default function LoginForm() {
               {error && (
                 <Alert variant="destructive">
                   <Terminal className="h-4 w-4" />
-                  <AlertTitle>Login Failed</AlertTitle>
+                  <AlertTitle>{t('loginFailed')}</AlertTitle>
                   <AlertDescription>
                     {error}
                   </AlertDescription>
                 </Alert>
               )}
               <Button type="submit" className="w-full" disabled={!state.isInitialized || isLoggingIn}>
-                {isLoggingIn ? 'Logging in...' : 'Login'}
+                {isLoggingIn ? t('loggingIn') : t('login')}
               </Button>
             </form>
           </Form>

@@ -56,7 +56,7 @@ export default function DocumentManagement() {
             type: 'SET_DIALOG',
             payload: {
               isOpen: true,
-              title: 'Confirm Import',
+              title: t('importData'),
               message:
                 'This will ERASE all current data and replace it with the content of the JSON file. This action cannot be undone. Are you sure you want to proceed?',
               onConfirm: () => {
@@ -75,11 +75,11 @@ export default function DocumentManagement() {
 
                   // Instead of dispatching, we write directly to Firebase
                   set(ref(db), importedData).then(() => {
-                    toast({ title: 'Success', description: 'Data imported successfully.' })
+                    toast({ title: t('success'), description: 'Data imported successfully.' })
                   }).catch(error => {
                      console.error('Error during import:', error)
                      toast({
-                       title: 'Import Error',
+                       title: t('error'),
                        description: 'Failed to import data to Firebase.',
                        variant: 'destructive',
                      })
@@ -87,7 +87,7 @@ export default function DocumentManagement() {
                 } catch (error) {
                   console.error('Error during import:', error)
                   toast({
-                    title: 'Import Error',
+                    title: t('error'),
                     description: 'Failed to import data.',
                     variant: 'destructive',
                   })
@@ -99,7 +99,7 @@ export default function DocumentManagement() {
       } catch (error) {
         console.error(error)
         toast({
-          title: 'Error',
+          title: t('error'),
           description: 'Failed to parse JSON file.',
           variant: 'destructive',
         })
@@ -131,7 +131,7 @@ export default function DocumentManagement() {
       a.href = url;
       a.download = `docuflow_export_${new Date().toISOString()}.json`;
       document.body.appendChild(a);
-a.click();
+      a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
@@ -139,7 +139,7 @@ a.click();
 
     } catch (error) {
       console.error("Failed to export data:", error);
-      toast({ title: "Export Error", description: "Could not export data.", variant: "destructive" });
+      toast({ title: t('error'), description: "Could not export data.", variant: "destructive" });
     }
   }
 
@@ -148,12 +148,12 @@ a.click();
       type: 'SET_DIALOG',
       payload: {
         isOpen: true,
-        title: `Delete ${selectedDocIds.length} Documents`,
-        message: `Are you sure you want to delete ${selectedDocIds.length} selected documents? This will also remove all associated logs. This action cannot be undone.`,
-        confirmText: 'Delete Selected',
+        title: t('deleteXDocuments', { count: selectedDocIds.length }),
+        message: t('areYouSureDelete', { count: selectedDocIds.length }),
+        confirmText: t('deleteSelected'),
         onConfirm: () => {
           dispatch({ type: 'DELETE_SELECTED_DOCUMENTS', payload: selectedDocIds });
-          toast({ title: "Success", description: `${selectedDocIds.length} documents have been deleted.` });
+          toast({ title: t('success'), description: t('documentsDeleted', { count: selectedDocIds.length }) });
         },
       },
     })
@@ -161,12 +161,12 @@ a.click();
 
   const processFlowButtons = useMemo(() => {
     const buttons = [
-        { label: 'All', filter: 'All' },
+        { label: t('all'), filter: 'All' },
         ...state.departments.map(dept => ({ label: dept.replace('Department ', ''), filter: dept})),
         { label: 'Completed', filter: 'Completed' }
     ];
     return buttons;
-  }, [state.departments]);
+  }, [state.departments, t]);
 
 
   const handleProcessFlowClick = (filterValue: string) => {
@@ -185,7 +185,7 @@ a.click();
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold text-foreground" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '18px'}}>
             {t('documentManagement')}
-            {isFiltered && <span className="text-base font-normal text-muted-foreground ml-2">({filteredDocs.length} results)</span>}
+            {isFiltered && <span className="text-base font-normal text-muted-foreground ml-2">({filteredDocs.length} {t('results')})</span>}
           </h2>
         </div>
       </div>

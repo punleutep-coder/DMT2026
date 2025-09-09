@@ -31,9 +31,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '../ui/button'
 import { ListFilter, SearchX, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 const EmptyState = () => {
     const { dispatch } = useAppContext();
+    const t = useTranslation();
     const handleClearFilter = () => {
         dispatch({ type: 'SET_FILTER', payload: {
             mainFilter: 'All',
@@ -51,9 +53,9 @@ const EmptyState = () => {
             <TableCell colSpan={9} className="h-48 text-center">
                 <div className="flex flex-col items-center justify-center gap-4">
                     <SearchX className="h-16 w-16 text-muted-foreground/50" />
-                    <h3 className="text-xl font-semibold text-foreground">No Documents Found</h3>
-                    <p className="text-muted-foreground">Your filter settings did not match any documents.</p>
-                    <Button variant="outline" onClick={handleClearFilter}>Clear All Filters</Button>
+                    <h3 className="text-xl font-semibold text-foreground">{t('noDocumentsFound')}</h3>
+                    <p className="text-muted-foreground">{t('filterDidNotMatch')}</p>
+                    <Button variant="outline" onClick={handleClearFilter}>{t('clearAllFilters')}</Button>
                 </div>
             </TableCell>
         </TableRow>
@@ -63,6 +65,7 @@ const EmptyState = () => {
 export default function DocumentTable() {
   const { state, dispatch, filteredDocs } = useAppContext()
   const { columnVisibility, selectedDocIds, pagination, documentTypes } = state
+  const t = useTranslation();
 
   const totalPages = Math.ceil(filteredDocs.length / pagination.rowsPerPage);
   const paginatedDocs = useMemo(() => {
@@ -120,13 +123,13 @@ export default function DocumentTable() {
 
   const columns = [
     { key: 'select', name: '' },
-    { key: 'documentId', name: 'លេខឯកាសារ' },
-    { key: 'name', name: 'ឈ្មោះឯកសារ' },
-    { key: 'documentType', name: 'ប្រភេទឯកសារ' },
-    { key: 'assignedDepartment', name: 'នាយកដ្ឋាន' },
-    { key: 'office', name: 'ការិយាល័យ' },
-    { key: 'currentStatus', name: 'ស្ថានភាព' },
-    { key: 'lastUpdate', name: 'កែចុងក្រោយ' },
+    { key: 'documentId', name: t('documentId') },
+    { key: 'name', name: t('name') },
+    { key: 'documentType', name: t('documentType') },
+    { key: 'assignedDepartment', name: t('assignedDepartment') },
+    { key: 'office', name: t('office') },
+    { key: 'currentStatus', name: t('currentStatus') },
+    { key: 'lastUpdate', name: t('lastUpdate') },
     { key: 'actions', name: '' },
   ]
   
@@ -170,7 +173,7 @@ export default function DocumentTable() {
                             checked={state.filter.documentType === 'All'}
                             onCheckedChange={() => handleDocumentTypeFilterChange('All')}
                         >
-                            All
+                            {t('all')}
                         </DropdownMenuCheckboxItem>
                         {documentTypes.map(type => (
                            <DropdownMenuCheckboxItem
@@ -196,7 +199,7 @@ export default function DocumentTable() {
                             checked={state.filter.assignedDepartment === 'All'}
                             onCheckedChange={() => handleAssignedDeptFilterChange('All')}
                         >
-                            All
+                            {t('all')}
                         </DropdownMenuCheckboxItem>
                         {uniqueAssignedDepts.map(dept => (
                            <DropdownMenuCheckboxItem
@@ -228,11 +231,11 @@ export default function DocumentTable() {
     </Table>
     <div className="flex items-center justify-between p-4 border-t">
         <div className="text-sm text-muted-foreground">
-          {state.selectedDocIds.length} of {filteredDocs.length} row(s) selected.
+          {t('xOfYRowSelected', { selected: state.selectedDocIds.length, total: filteredDocs.length })}
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
             <div className="flex items-center space-x-2">
-                <p className="text-sm font-medium">Rows per page</p>
+                <p className="text-sm font-medium">{t('rowsPerPage')}</p>
                 <Select
                     value={`${pagination.rowsPerPage}`}
                     onValueChange={handleRowsPerPageChange}
@@ -250,7 +253,7 @@ export default function DocumentTable() {
                 </Select>
             </div>
             <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-                Page {pagination.currentPage} of {totalPages}
+                {t('pageXOfY', { current: pagination.currentPage, total: totalPages })}
             </div>
             <div className="flex items-center space-x-2">
                 <Button
