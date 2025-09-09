@@ -14,10 +14,12 @@ import {
 import { CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { useAppContext } from '@/hooks/use-app-context'
 import { useMemo } from 'react'
+import { useTranslation } from '@/lib/i18n'
 
 export default function WorkflowChart() {
   const { state, dispatch, filteredDocs } = useAppContext()
   const { departments, filter } = state
+  const t = useTranslation();
 
   const chartData = useMemo(() => {
     // Use filteredDocs to make the chart dynamic
@@ -45,7 +47,7 @@ export default function WorkflowChart() {
   return (
     <>
       <CardHeader>
-        <CardTitle className="text-[#000066]" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '18px', textShadow: '2px 2px 4px rgba(0,0,0,0.2)'}}>ស្ថានភាពលំហូឯកសារ</CardTitle>
+        <CardTitle className="text-[#000066]" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '18px', textShadow: '2px 2px 4px rgba(0,0,0,0.2)'}}>{t('workflowStatus')}</CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
@@ -98,7 +100,7 @@ export default function WorkflowChart() {
                 }
                 return <Cell key={`cell-${index}`} fill={color} />;
               })}
-              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={18} fontWeight="bold" />
+              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={14} fontWeight="bold" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

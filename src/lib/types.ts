@@ -1,5 +1,6 @@
 
 
+
 export interface HistoryEntry {
   department: string;
   start: string;
@@ -89,6 +90,7 @@ export interface AppState {
   isInitialized: boolean;
   dialog: DialogState;
   modal: ModalState;
+  language: 'en' | 'km';
 }
 
 export interface DialogState {

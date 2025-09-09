@@ -20,13 +20,49 @@ import {
   Combine,
   Columns,
   BarChart3,
+  Languages,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
+import { useTranslation, languages } from '@/lib/i18n'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Button } from '../ui/button'
+
+const LanguageSwitcher = () => {
+    const { state, dispatch } = useAppContext();
+    const { language } = state;
+    
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Languages className="h-5 w-5" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2">
+                <div className="flex flex-col gap-1">
+                    {languages.map(lang => (
+                        <Button
+                            key={lang.code}
+                            variant={language === lang.code ? 'secondary' : 'ghost'}
+                            size="sm"
+                            className="justify-start"
+                            onClick={() => dispatch({ type: 'SET_LANGUAGE', payload: lang.code })}
+                        >
+                            {lang.name}
+                        </Button>
+                    ))}
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
 
 export default function DashboardSidebar() {
   const { state, dispatch } = useAppContext()
   const { currentUser } = state
+  const t = useTranslation();
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' })
@@ -50,31 +86,31 @@ export default function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton 
-              tooltip="Dashboard" 
+              tooltip={t('dashboard')} 
               isActive={state.filter.mainFilter === 'All' && state.filter.departmentSpecificFilter === 'All'}
               onClick={() => dispatch({ type: 'SET_FILTER', payload: { mainFilter: 'All', departmentSpecificFilter: 'All' } })}
             >
               <Home />
-              <span>Dashboard</span>
+              <span>{t('dashboard')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="My Activity Log" onClick={() => openModal('myActivityLog')}>
+            <SidebarMenuButton tooltip={t('myActivity')} onClick={() => openModal('myActivityLog')}>
               <FileText />
-              <span>My Activity</span>
+              <span>{t('myActivity')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
            <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Reporting" onClick={() => openModal('reporting')}>
+            <SidebarMenuButton tooltip={t('reporting')} onClick={() => openModal('reporting')}>
               <BarChart3 />
-              <span>Reporting</span>
+              <span>{t('reporting')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           {currentUser.role === 'Admin' && (
              <SidebarMenuItem>
-              <SidebarMenuButton tooltip="User Management" onClick={() => openModal('addUser')}>
+              <SidebarMenuButton tooltip={t('userManagement')} onClick={() => openModal('addUser')}>
                 <Users />
-                <span>User Management</span>
+                <span>{t('userManagement')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -83,15 +119,16 @@ export default function DashboardSidebar() {
       <SidebarFooter>
         <div className="flex items-center justify-between p-2">
           <div className="text-center text-muted-foreground text-sm">
-              Logged in as:{' '}
+              {t('loggedInAs')}:{' '}
               <strong className="text-primary">{currentUser.username}</strong>
             </div>
+             <LanguageSwitcher />
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout} variant="outline">
               <LogOut />
-              <span>Logout</span>
+              <span>{t('logout')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Button } from '@/components/ui/button'
@@ -21,11 +22,13 @@ import { useToast } from '@/hooks/use-toast'
 import { db } from '@/lib/firebase'
 import { ref, set } from 'firebase/database'
 import { sanitizeFirebaseKey } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 export default function DocumentManagement() {
   const { state, dispatch, filteredDocs } = useAppContext()
   const { currentUser, selectedDocIds } = state
   const { toast } = useToast()
+  const t = useTranslation();
 
   const openModal = (type: any, docId?: string, firestoreId?: string) => {
     dispatch({ type: 'SET_MODAL', payload: { type, docId, firestoreId } })
@@ -181,7 +184,7 @@ a.click();
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold text-foreground" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '18px'}}>
-            ការគ្រប់គ្រងឯកសារ
+            {t('documentManagement')}
             {isFiltered && <span className="text-base font-normal text-muted-foreground ml-2">({filteredDocs.length} results)</span>}
           </h2>
         </div>
@@ -190,12 +193,12 @@ a.click();
       <div className="flex flex-wrap gap-2">
         {hasPermission(currentUser, 'canAddDocument') && (
           <Button onClick={() => openModal('addDocument')} className="bg-primary/80 hover:bg-primary/90 text-[#000066] shadow-lg hover:shadow-xl transition-shadow">
-            <FilePlus /> Add New Document
+            <FilePlus /> {t('addDocument')}
           </Button>
         )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
           <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-blue-800 hover:bg-blue-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
-            <Combine /> Combine Selected
+            <Combine /> {t('combineSelected')}
           </Button>
         )}
         {hasPermission(currentUser, 'canDeleteDocument') && (
@@ -205,36 +208,36 @@ a.click();
             disabled={state.selectedDocIds.length === 0}
             className="shadow-lg hover:shadow-xl transition-shadow"
           >
-            <Trash2 /> Delete Selected
+            <Trash2 /> {t('deleteSelected')}
           </Button>
         )}
         {currentUser?.role === 'Admin' && (
           <>
             <Button variant="secondary" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
-                <Library /> Manage Workflow Depts
+                <Library /> {t('manageWorkflowDepts')}
             </Button>
             <Button variant="secondary" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-800 hover:bg-cyan-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
-                <FileDigit /> Manage Document Types
+                <FileDigit /> {t('manageDocTypes')}
             </Button>
             <Button variant="secondary" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-800 hover:bg-teal-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
-                <FileCog /> Manage Assigned Depts
+                <FileCog /> {t('manageAssignedDepts')}
             </Button>
           </>
         )}
         {hasPermission(currentUser, 'canManageColumns') && (
             <Button variant="secondary" onClick={() => openModal('manageColumns')} className="bg-purple-800 hover:bg-purple-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
-                <Columns /> Manage Columns
+                <Columns /> {t('manageColumns')}
             </Button>
         )}
          {hasPermission(currentUser, 'canExportData') && (
             <Button variant="outline" onClick={handleExport} className="shadow-lg hover:shadow-xl transition-shadow">
-                <Download /> Export Data (JSON)
+                <Download /> {t('exportData')}
             </Button>
         )}
          {currentUser?.role === 'Admin' && (
             <>
                 <Button variant="outline" onClick={handleImportClick} className="shadow-lg hover:shadow-xl transition-shadow">
-                    <Upload /> Import Data (JSON)
+                    <Upload /> {t('importData')}
                 </Button>
                 <input type="file" id="json-file-input" accept=".json" className="hidden" onChange={handleImportFile} />
             </>

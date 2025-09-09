@@ -1,5 +1,6 @@
 
 
+
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
@@ -41,6 +42,7 @@ type Action =
   | { type: 'SET_DOCUMENTS'; payload: Document[] }
   | { type: 'SET_LOGS'; payload: Log[] }
   | { type: 'SET_USERS'; payload: User[] }
+  | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' }
   | { type: 'SET_INITIALIZED'; payload: boolean };
 
 
@@ -73,6 +75,7 @@ const getInitialState = (): AppState => ({
     isInitialized: false,
     dialog: { isOpen: false, title: '', message: '' },
     modal: { type: null },
+    language: 'km',
 })
 
 
@@ -287,6 +290,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
         set(ref(db, 'columnVisibility'), action.payload);
         return { ...state, columnVisibility: action.payload };
     }
+    case 'SET_LANGUAGE':
+        return { ...state, language: action.payload };
     default:
       return state
   }
