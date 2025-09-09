@@ -102,6 +102,22 @@ const translations = {
         allDepartments: "All Departments",
         calculate: "Calculate",
 
+        // Action Menu
+        viewLog: "View Log",
+        docLink1: "ឯកសារដើម",
+        docLink2: "លសនបនប",
+        docLink3: "លសអធម",
+        docLink4: "ឯកសារសម្រេច",
+        editDetails: "Edit Details",
+        splitDocument: "Split Document",
+        delay: "Delay",
+        releaseNow: "Release Now",
+        editCurrentNote: "Edit Current Note",
+        moveBack: "Move Back",
+        advance: "Advance",
+        complete: "Complete",
+        reopen: "Re-open",
+        deleteDocument: "Delete Document",
 
         // Modals
         addNewDocument: "Add New Document",
@@ -141,6 +157,9 @@ const translations = {
         types: "Types",
         count: "Count",
         pleaseSelectDateRange: "Please select a date range and generate a report.",
+        areYouSureDeleteDoc: "Are you sure you want to delete document {docId}? This will also remove associated logs. This action cannot be undone.",
+        delayedUntil: "Delayed until {date}",
+
     },
     km: {
         // General
@@ -239,6 +258,23 @@ const translations = {
         in: "ក្នុង",
         allDepartments: "គ្រប់នាយកដ្ឋាន",
         calculate: "គណនា",
+        
+        // Action Menu
+        viewLog: "មើលកំណត់ហេតុ",
+        docLink1: "ឯកសារដើម",
+        docLink2: "លសនបនប",
+        docLink3: "លសអធម",
+        docLink4: "ឯកសារសម្រេច",
+        editDetails: "កែសម្រួលព័ត៌មានលម្អិត",
+        splitDocument: "បំបែកឯកសារ",
+        delay: "ពន្យាពេល",
+        releaseNow: "ចេញផ្សាយឥឡូវនេះ",
+        editCurrentNote: "កែសម្រួលកំណត់ចំណាំបច្ចុប្បន្ន",
+        moveBack: "ផ្លាស់ទីទៅក្រោយ",
+        advance: "ទៅមុខ",
+        complete: "បញ្ចប់",
+        reopen: "បើកឡើងវិញ",
+        deleteDocument: "លុបឯកសារ",
 
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",
@@ -278,6 +314,8 @@ const translations = {
         types: "ប្រភេទ",
         count: "ចំនួន",
         pleaseSelectDateRange: "សូមជ្រើសរើសចន្លោះកាលបរិច្ឆេទ និងបង្កើតរបាយការណ៍។",
+        areYouSureDeleteDoc: "តើអ្នកប្រាកដទេថាចង់លុបឯកសារ {docId}? វានឹងលុកំណត់ហេតុដែលពាក់ព័ន្ធទាំងអស់ចេញដែរ។ សកម្មភាពនេះមិនអាចមិនធ្វើវិញបានទេ។",
+        delayedUntil: "បានពន្យារពេលរហូតដល់ {date}",
     }
 };
 
@@ -285,11 +323,17 @@ export const useTranslation = () => {
     const { state } = useAppContext();
     const { language } = state;
 
-    const t = (key: keyof typeof translations.en, params?: { [key: string]: string | number }) => {
-        let translation = translations[language]?.[key] || translations.en[key];
+    const t = (key: keyof typeof translations.en, params?: { [key: string]: string | number | undefined }) => {
+        let translation = translations[language]?.[key] || translations.en[key] || key;
+        
+        if (typeof translation !== 'string') {
+            translation = key; // Fallback to key if translation not found
+        }
+        
         if (params) {
             Object.keys(params).forEach(pKey => {
-                translation = translation.replace(`{${pKey}}`, String(params[pKey]));
+                const value = params[pKey] !== undefined ? String(params[pKey]) : `{${pKey}}`;
+                translation = translation.replace(`{${pKey}}`, value);
             });
         }
         return translation;

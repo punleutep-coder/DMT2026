@@ -31,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useTranslation } from '@/lib/i18n'
 
 interface DocumentTableRowProps {
   doc: Document
@@ -47,16 +48,16 @@ const getStatusBadgeVariant = (status: string, isDelayed: boolean, releaseDateRe
     return 'status'
 }
 
-const getStatusText = (doc: Document) => {
-    if (doc.releaseDateReached) return "Release Date Reached!"
-    if (doc.isDelayed) return `Delayed until ${format(new Date(doc.releaseDate!), 'MMM d, yyyy')}`
-    return doc.status
-}
-
-
 export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) {
   const { state, dispatch } = useAppContext()
   const { columnVisibility, selectedDocIds, currentUser } = state
+  const t = useTranslation();
+
+  const getStatusText = (doc: Document) => {
+    if (doc.releaseDateReached) return t('releaseDateReached');
+    if (doc.isDelayed) return t('delayedUntil', { date: format(new Date(doc.releaseDate!), 'MMM d, yyyy') });
+    return doc.status;
+  }
 
   const isSelected = selectedDocIds.includes(doc.id)
 
@@ -73,9 +74,9 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
             type: 'SET_DIALOG',
             payload: {
                 isOpen: true,
-                title: 'Delete Document',
-                message: `Are you sure you want to delete document ${doc.id}? This will also remove associated logs. This action cannot be undone.`,
-                confirmText: 'Delete',
+                title: t('deleteDocument'),
+                message: t('areYouSureDeleteDoc', { docId: doc.id }),
+                confirmText: t('delete'),
                 onConfirm: () => {
                     dispatch({ type: 'DELETE_DOCUMENT', payload: { id: docId } });
                 }
@@ -90,7 +91,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
             lastUpdate: new Date().toISOString()
         };
         dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedDoc });
-        dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId: doc.id, oldStatus: 'Delayed', newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' } });
+        dispatch({ type: 'ADD_LOG', payload: { id: `log-${Date.now()}`, firestoreId: `log-${Date.now()}`, docId: doc.id, oldStatus: t('delayed'), newStatus: doc.status, user: currentUser!.username, timestamp: new Date().toISOString(), reason: 'Document manually released from delay.' } });
 
     } else if (type === 'back') {
       const currentDeptIndex = state.departments.indexOf(doc.status)
@@ -210,7 +211,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 <DropdownMenuContent align="end">
                     {hasPermission(currentUser, 'canViewLog') && (
                         <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)}>
-                            <FileText className="mr-2 h-4 w-4" />View Log
+                            <FileText className="mr-2 h-4 w-4" />{t('viewLog')}
                         </DropdownMenuItem>
                     )}
                     
@@ -219,38 +220,38 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         <DropdownMenuItem key={i} asChild>
                             <a href={link} target="_blank" rel="noopener noreferrer">
                                 <FileSymlink className="mr-2 h-4 w-4"/>
-                                {i === 0 ? "ឯកសារដើម" : i === 1 ? "លសនបនប" : i === 2 ? "លសអធម" : i === 3 ? "ឯកសារសម្រេច" : `Open Link ${i+1}`}
+                                {t(`docLink${i + 1}` as any, { defaultValue: `Open Link ${i+1}` })}
                             </a>
                         </DropdownMenuItem> : null
                     ))}
 
                     {!isTerminal && canEditDetails && (
                         <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}>
-                            <Pencil className="mr-2 h-4 w-4" />Edit Details
+                            <Pencil className="mr-2 h-4 w-4" />{t('editDetails')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canSplitDocument') && (
                         <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)}>
-                            <Split className="mr-2 h-4 w-4" />Split Document
+                            <Split className="mr-2 h-4 w-4" />{t('splitDocument')}
                         </DropdownMenuItem>
                     )}
                     
                     {!isTerminal && hasPermission(currentUser, 'canDelayDocument') && !doc.isDelayed && (
                         <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id, doc.firestoreId)}>
-                            <Clock className="mr-2 h-4 w-4" />Delay
+                            <Clock className="mr-2 h-4 w-4" />{t('delay')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canReleaseDocument') && doc.isDelayed && (
                         <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id, doc.firestoreId)}>
-                            <Play className="mr-2 h-4 w-4 text-yellow-400" />Release Now
+                            <Play className="mr-2 h-4 w-4 text-yellow-400" />{t('releaseNow')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canEditCurrentNote') && (
                         <DropdownMenuItem onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}>
-                            <FileEdit className="mr-2 h-4 w-4" />Edit Current Note
+                            <FileEdit className="mr-2 h-4 w-4" />{t('editCurrentNote')}
                         </DropdownMenuItem>
                     )}
                     
@@ -258,19 +259,19 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     
                     {!isTerminal && hasPermission(currentUser, 'canMoveDocument') && Array.isArray(doc.history) && doc.history.length > 1 && (
                         <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
-                            <Undo2 className="mr-2 h-4 w-4" />Move Back
+                            <Undo2 className="mr-2 h-4 w-4" />{t('moveBack')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canMoveDocument') && (
                         <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}>
-                            <Redo2 className="mr-2 h-4 w-4" />Advance
+                            <Redo2 className="mr-2 h-4 w-4" />{t('advance')}
                         </DropdownMenuItem>
                     )}
                     
                     {!isTerminal && hasPermission(currentUser, 'canCompleteDocument') && (
                          <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}>
-                            <CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />Complete
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />{t('complete')}
                         </DropdownMenuItem>
                     )}
 
@@ -278,7 +279,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
-                                <Undo2 className="mr-2 h-4 w-4"/>Re-open
+                                <Undo2 className="mr-2 h-4 w-4"/>{t('reopen')}
                             </DropdownMenuItem>
                         </>
                     )}
@@ -287,7 +288,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         <>
                            <DropdownMenuSeparator />
                            <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}>
-                                <Trash2 className="mr-2 h-4 w-4" />Delete Document
+                                <Trash2 className="mr-2 h-4 w-4" />{t('deleteDocument')}
                            </DropdownMenuItem>
                         </>
                     )}
