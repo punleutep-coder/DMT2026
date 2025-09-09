@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState, useEffect } from 'react'
 import { format as formatDate } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { useTranslation } from '@/lib/i18n'
 
 
 export default function SearchAndFilter() {
   const { state, dispatch, filteredDocs } = useAppContext()
+  const t = useTranslation()
   const [searchTerm, setSearchTerm] = useState(state.filter.search);
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -70,12 +72,12 @@ export default function SearchAndFilter() {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="search-id">Search by Document ID, Name, Tags...</Label>
+        <Label htmlFor="search-id">{t('searchByDocIdLabel')}</Label>
         <div className="relative">
           <Input
             id="search-id"
             type="text"
-            placeholder="Search..."
+            placeholder={t('search')}
             className="w-full pr-24 shadow-md"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -83,7 +85,7 @@ export default function SearchAndFilter() {
           {isFiltered && (
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <span className="text-sm text-muted-foreground">
-                {filteredDocs.length} found
+                {filteredDocs.length} {t('results')}
               </span>
             </div>
           )}
@@ -92,46 +94,46 @@ export default function SearchAndFilter() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
          <div className='space-y-2'>
-          <Label htmlFor="date-from">History From:</Label>
+          <Label htmlFor="date-from">{t('historyFrom')}</Label>
           <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full shadow-md" />
         </div>
         <div className='space-y-2'>
-          <Label htmlFor="date-to">History To:</Label>
+          <Label htmlFor="date-to">{t('historyTo')}</Label>
           <Input type="date" id="date-to" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full shadow-md" />
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={handleDateFilter} className="bg-teal-600 hover:bg-teal-700 text-white shadow-md">Filter by Date</Button>
-          <Button variant="outline" onClick={clearDateFilter} className="shadow-md">Clear</Button>
+          <Button onClick={handleDateFilter} className="bg-teal-600 hover:bg-teal-700 text-white shadow-md">{t('filterByDate')}</Button>
+          <Button variant="outline" onClick={clearDateFilter} className="shadow-md">{t('clear')}</Button>
         </div>
       </div>
       
       <div className="flex flex-wrap items-center gap-2">
-          <Label>Documents exceeding:</Label>
+          <Label>{t('docsExceeding')}</Label>
           <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-card shadow-md" />
           <Select value={periodUnit} onValueChange={setPeriodUnit}>
               <SelectTrigger className="w-[120px] bg-card shadow-md">
                   <SelectValue placeholder="Unit" />
               </SelectTrigger>
               <SelectContent>
-                  <SelectItem value="days">Days</SelectItem>
-                  <SelectItem value="hours">Hours</SelectItem>
-                  <SelectItem value="minutes">Minutes</SelectItem>
+                  <SelectItem value="days">{t('days')}</SelectItem>
+                  <SelectItem value="hours">{t('hours')}</SelectItem>
+                  <SelectItem value="minutes">{t('minutes')}</SelectItem>
               </SelectContent>
           </Select>
-          <Label>in</Label>
+          <Label>{t('in')}</Label>
           <Select value={periodDepartment} onValueChange={setPeriodDepartment}>
               <SelectTrigger className="w-[180px] bg-card shadow-md">
                   <SelectValue placeholder="Department" />
               </SelectTrigger>
               <SelectContent>
-                  <SelectItem value="All">All Departments</SelectItem>
+                  <SelectItem value="All">{t('allDepartments')}</SelectItem>
                   {state.departments.map(dept => (
                     <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                   ))}
               </SelectContent>
           </Select>
-          <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">Calculate</Button>
-          <Button variant="outline" onClick={clearPeriodFilter} className="shadow-md">Clear</Button>
+          <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">{t('calculate')}</Button>
+          <Button variant="outline" onClick={clearPeriodFilter} className="shadow-md">{t('clear')}</Button>
       </div>
 
     </div>

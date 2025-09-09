@@ -22,6 +22,7 @@ const translations = {
         name: "Name",
         office: "Office",
         lastUpdate: "Last Update",
+        clear: "Clear",
 
         // Sidebar
         dashboard: "Dashboard",
@@ -87,6 +88,20 @@ const translations = {
         completedSuccess: "Completed (Success)",
         completedUnsuccess: "Completed (Unsuccess)",
         exceedingPeriod: "Exceeding Period",
+        
+        // Search & Filter
+        searchByDocIdLabel: "Search by Document ID, Name, Tags...",
+        historyFrom: "History From:",
+        historyTo: "History To:",
+        filterByDate: "Filter by Date",
+        docsExceeding: "Documents exceeding:",
+        days: "Days",
+        hours: "Hours",
+        minutes: "Minutes",
+        in: "in",
+        allDepartments: "All Departments",
+        calculate: "Calculate",
+
 
         // Modals
         addNewDocument: "Add New Document",
@@ -145,6 +160,7 @@ const translations = {
         name: "ឈ្មោះឯកសារ",
         office: "ការិយាល័យ",
         lastUpdate: "កែចុងក្រោយ",
+        clear: "ជម្រះ",
 
         // Sidebar
         dashboard: "ទំព័រដើម",
@@ -210,6 +226,19 @@ const translations = {
         completedSuccess: "បានបញ្ចប់ (ជោគជ័យ)",
         completedUnsuccess: "បានបញ្ចប់ (មិនជោគជ័យ)",
         exceedingPeriod: "លើសពីរយៈពេល",
+        
+        // Search & Filter
+        searchByDocIdLabel: "ស្វែងរកតាមលេខសម្គាល់ឯកសារ, ឈ្មោះ, ស្លាក...",
+        historyFrom: "ប្រវត្តិពី:",
+        historyTo: "ប្រវត្តិដល់:",
+        filterByDate: "ត្រងតាមកាលបរិច្ឆេទ",
+        docsExceeding: "ឯកសារលើសពី:",
+        days: "ថ្ងៃ",
+        hours: "ម៉ោង",
+        minutes: "នាទី",
+        in: "ក្នុង",
+        allDepartments: "គ្រប់នាយកដ្ឋាន",
+        calculate: "គណនា",
 
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",
