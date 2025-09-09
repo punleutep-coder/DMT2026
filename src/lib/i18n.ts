@@ -78,6 +78,16 @@ const translations = {
         welcome: "Welcome, {username}!",
         loggedInSuccess: "You have successfully logged in.",
 
+        // Metrics
+        totalDocuments: "Total Documents",
+        inProgress: "In Progress",
+        delayed: "Delayed",
+        releaseDateReached: "Release Date Reached",
+        completed: "Completed",
+        completedSuccess: "Completed (Success)",
+        completedUnsuccess: "Completed (Unsuccess)",
+        exceedingPeriod: "Exceeding Period",
+
         // Modals
         addNewDocument: "Add New Document",
         editDocument: "Edit Document",
@@ -190,6 +200,16 @@ const translations = {
         login: "ចូល",
         welcome: "សូមស្វាគមន៍, {username}!",
         loggedInSuccess: "អ្នកបានចូលដោយជោគជ័យ។",
+
+        // Metrics
+        totalDocuments: "ឯកសារ​សរុប",
+        inProgress: "កំពុង​ដំណើរការ",
+        delayed: "ពន្យាពេល",
+        releaseDateReached: "ដល់កាលបរិច្ឆេទចេញផ្សាយ",
+        completed: "បាន​បញ្ចប់",
+        completedSuccess: "បានបញ្ចប់ (ជោគជ័យ)",
+        completedUnsuccess: "បានបញ្ចប់ (មិនជោគជ័យ)",
+        exceedingPeriod: "លើសពីរយៈពេល",
 
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",

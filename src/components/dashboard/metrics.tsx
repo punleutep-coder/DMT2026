@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMemo } from 'react'
 import { Clock } from 'lucide-react'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils';
+import { useTranslation } from '@/lib/i18n'
 
 const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primary' }: { title: string; value: number | string; filter: string; icon?: React.ReactNode; valueColorClass?: string; }) => {
   const { state, dispatch } = useAppContext()
@@ -34,16 +35,17 @@ const MetricCard = ({ title, value, filter, icon, valueColorClass = 'text-primar
 
 export default function Metrics() {
   const { metrics } = useAppContext()
+  const t = useTranslation()
 
   const metricItems = [
-    { title: 'Total Documents', filter: 'All', metric: metrics.total, valueColorClass: 'text-[#000066]' },
-    { title: 'In Progress', filter: 'In Progress', metric: metrics.inProgress, valueColorClass: 'text-[#000066]' },
-    { title: 'Delayed', filter: 'Delayed', metric: metrics.delayed, valueColorClass: 'text-[#000066]' },
-    { title: 'Release Date Reached', filter: 'Release Date Reached', metric: metrics.releaseReached, valueColorClass: 'text-red-500' },
-    { title: 'Completed', filter: 'Completed', metric: metrics.completed, valueColorClass: 'text-green-400' },
-    { title: 'Completed (Success)', filter: 'Completed (Success)', metric: metrics.completedSuccess, valueColorClass: 'text-green-400' },
-    { title: 'Completed (Unsuccess)', filter: 'Completed (Unsuccess)', metric: metrics.completedUnsuccess, valueColorClass: 'text-red-500' },
-    { title: 'Exceeding Period', filter: 'Exceeding Period', metric: metrics.exceeding, icon: <Clock className="h-5 w-5 text-muted-foreground" />, valueColorClass: 'text-orange-400' },
+    { title: t('totalDocuments'), filter: 'All', metric: metrics.total, valueColorClass: 'text-[#000066]' },
+    { title: t('inProgress'), filter: 'In Progress', metric: metrics.inProgress, valueColorClass: 'text-[#000066]' },
+    { title: t('delayed'), filter: 'Delayed', metric: metrics.delayed, valueColorClass: 'text-[#000066]' },
+    { title: t('releaseDateReached'), filter: 'Release Date Reached', metric: metrics.releaseReached, valueColorClass: 'text-red-500' },
+    { title: t('completed'), filter: 'Completed', metric: metrics.completed, valueColorClass: 'text-green-400' },
+    { title: t('completedSuccess'), filter: 'Completed (Success)', metric: metrics.completedSuccess, valueColorClass: 'text-green-400' },
+    { title: t('completedUnsuccess'), filter: 'Completed (Unsuccess)', metric: metrics.completedUnsuccess, valueColorClass: 'text-red-500' },
+    { title: t('exceedingPeriod'), filter: 'Exceeding Period', metric: metrics.exceeding, icon: <Clock className="h-5 w-5 text-muted-foreground" />, valueColorClass: 'text-orange-400' },
   ]
 
   return (
