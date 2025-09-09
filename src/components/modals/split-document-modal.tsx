@@ -12,10 +12,12 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { PlusCircle, Trash } from 'lucide-react'
 import type { Document } from '@/lib/types'
+import { Combobox } from '../ui/combobox'
 
 const splitDocumentSchema = z.object({
     id: z.string().min(1, 'Document ID is required'),
     name: z.string().min(1, 'Document Name is required'),
+    documentType: z.string().optional(),
 });
 
 const formSchema = z.object({
@@ -37,7 +39,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      newDocuments: [{ id: '', name: '' }],
+      newDocuments: [{ id: '', name: '', documentType: docToSplit?.documentType || '' }],
       note: '',
     },
   })
@@ -48,6 +50,8 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
   });
 
   if (!docToSplit) return null;
+
+  const documentTypeOptions = state.documentTypes.map(type => ({ value: type, label: type }));
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const newDocIds = values.newDocuments.map(d => d.id);
@@ -65,6 +69,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
         id: newDocData.id,
         firestoreId: `doc-${Date.now()}-${newDocData.id}`,
         name: newDocData.name,
+        documentType: newDocData.documentType || null,
         office: docToSplit.office,
         status: initialDepartment,
         initialDepartment: initialDepartment,
@@ -114,18 +119,36 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
                     <h3 className="text-lg font-medium mb-2">New Documents</h3>
                     <div className="space-y-4">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="flex items-start gap-4 p-4 border rounded-md relative">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
+                        <div key={field.id} className="p-4 border rounded-md relative bg-background/20">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 flex-grow">
                                 <FormField control={form.control} name={`newDocuments.${index}.id`} render={({ field }) => ( <FormItem><FormLabel>New Document ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                                 <FormField control={form.control} name={`newDocuments.${index}.name`} render={({ field }) => ( <FormItem><FormLabel>New Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField
+                                  control={form.control}
+                                  name={`newDocuments.${index}.documentType`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                      <FormLabel>Document Type</FormLabel>
+                                      <Combobox
+                                        options={documentTypeOptions}
+                                        value={field.value || ''}
+                                        onChange={field.onChange}
+                                        placeholder="Select a document type..."
+                                        searchPlaceholder="Search types..."
+                                        notFoundText="No matching type found."
+                                      />
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
                             </div>
-                            <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)} className="mt-6">
-                                <Trash className="h-4 w-4" />
+                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="absolute top-1 right-1">
+                                <Trash className="h-4 w-4 text-destructive" />
                             </Button>
                         </div>
                     ))}
                     </div>
-                    <Button type="button" variant="outline" size="sm" onClick={() => append({id: '', name: ''})} className="mt-4">
+                    <Button type="button" variant="outline" size="sm" onClick={() => append({id: '', name: '', documentType: docToSplit.documentType || ''})} className="mt-4">
                         <PlusCircle className="mr-2 h-4 w-4" /> Add New Document
                     </Button>
                     {form.formState.errors.newDocuments?.message && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.newDocuments.message}</p>}
