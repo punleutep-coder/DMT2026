@@ -69,9 +69,6 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
         >
         <DialogHeader className="pb-4 border-b">
           <DialogTitle className="leading-relaxed" style={{ color: '#000099', textShadow: '1px 1px 2px rgba(0,0,0,0.2)' }}>{t('documentHistory')} <span style={{ color: '#FF6600' }}>{document?.id}</span> / {document?.name}</DialogTitle>
-          <DialogDescription>
-            {t('reviewJourney')}
-          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[60vh] p-4">
           {sourceDocuments.length > 0 && (
