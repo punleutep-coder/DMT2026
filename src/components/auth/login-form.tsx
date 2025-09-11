@@ -55,12 +55,13 @@ export default function LoginForm() {
   })
 
   useEffect(() => {
+    // This code runs only on the client, after the component has mounted.
     const rememberedUsername = localStorage.getItem('rememberedUsername');
     if (rememberedUsername) {
       form.setValue('username', rememberedUsername);
       form.setValue('rememberMe', true);
     }
-  }, [form]);
+  }, [form.setValue]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
