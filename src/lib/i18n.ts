@@ -378,7 +378,6 @@ const translations = {
         initialNote: "កំណត់ចំណាំដំបូង",
         editDocument: "កែសម្រួលឯកសារ",
         documentHistory: "ប្រវត្តិសម្រាប់",
-        reviewJourney: "ពិនិត្យមើលការធ្វើដំណើរពេញលេញ និងរាល់ការផ្លាស់ប្តូរដែលបានធ្វើចំពោះឯកសារនេះ។",
         sourceDocuments: "ឯកสารប្រភព",
         department: "នាយកដ្ឋាន",
         departmentTimestamps: "ព័ត៌មានលម្អិត",
@@ -411,7 +410,7 @@ const translations = {
         totalDocs: "ឯកសារសរុប",
         types: "ប្រភេទ",
         count: "ចំនួន",
-        pleaseSelectDateRange: "សូមជ្រើសរើសចន្លោះកាលបរិច្ឆេទ และสร้างรายงาน",
+        pleaseSelectDateRange: "សូមជ្រើសរើសចន្លោះកាលបរិច្ឆេទ",
         areYouSureDeleteDoc: "តើអ្នកប្រាកដទេថាចង់លុបឯកសារ {docId}? វានឹងលុកំណត់ហេតុដែលពាក់ព័ន្ធទាំងអស់ចេញដែរ។ សកម្មភាពនេះមិនអាចមិនធ្វើវិញបានទេ។",
         delayedUntil: "បានពន្យារពេលរហូតដល់ {date}",
         
