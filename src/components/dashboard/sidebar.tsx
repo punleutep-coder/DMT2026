@@ -1,4 +1,5 @@
 
+
 'use client'
 import {
   Sidebar,
@@ -21,6 +22,7 @@ import {
   Columns,
   BarChart3,
   Languages,
+  History,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
@@ -106,6 +108,14 @@ export default function DashboardSidebar() {
               <span>{t('reporting')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {hasPermission(currentUser, 'canViewGlobalActivity') && (
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Global Activity" onClick={() => openModal('globalActivityLog')}>
+                <History />
+                <span>Global Activity</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           {currentUser.role === 'Admin' && (
              <SidebarMenuItem>
               <SidebarMenuButton tooltip={t('userManagement')} onClick={() => openModal('addUser')}>

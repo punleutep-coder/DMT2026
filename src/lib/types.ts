@@ -1,6 +1,5 @@
 
 
-
 export interface HistoryEntry {
   department: string;
   start: string;
@@ -112,6 +111,7 @@ export type ModalType =
   | 'editDocument'
   | 'viewLog'
   | 'myActivityLog'
+  | 'globalActivityLog'
   | 'reporting'
   | 'manageDepartments'
   | 'manageDocumentTypes'

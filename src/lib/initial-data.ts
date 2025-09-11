@@ -87,6 +87,7 @@ export const PERMISSIONS_CONFIG: { [key: string]: string } = {
     canEditTags: 'Edit Tags',
     canEditInitialNote: 'Edit Initial Note',
     canManageAdmins: 'Can Manage Admins',
+    canViewGlobalActivity: 'Can View Global Activity',
 };
 
 export const initialData = {

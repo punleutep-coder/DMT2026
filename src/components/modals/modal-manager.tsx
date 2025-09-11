@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { useAppContext } from "@/hooks/use-app-context"
@@ -18,6 +19,7 @@ import MyActivityLogModal from "./my-activity-log-modal"
 import ReportingModal from "./reporting-modal"
 import ManageDocumentTypesModal from "./manage-document-types-modal"
 import ManageAssignedDepartmentsModal from "./manage-assigned-departments-modal"
+import GlobalActivityLogModal from "./global-activity-log-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -38,6 +40,8 @@ export default function ModalManager() {
             return <LogModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'myActivityLog':
             return <MyActivityLogModal isOpen={true} onClose={handleClose} />
+        case 'globalActivityLog':
+            return <GlobalActivityLogModal isOpen={true} onClose={handleClose} />
         case 'reporting':
             return <ReportingModal isOpen={true} onClose={handleClose} />
         case 'addUser':

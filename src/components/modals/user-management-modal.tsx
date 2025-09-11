@@ -1,4 +1,5 @@
 
+
 'use client'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -98,7 +99,7 @@ const permissionGroups = {
     'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4',
     'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4'
   ],
-  'Admin Permissions': ['canManageAdmins']
+  'Admin Permissions': ['canManageAdmins', 'canViewGlobalActivity']
 };
 
 
