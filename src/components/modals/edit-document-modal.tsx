@@ -109,13 +109,10 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         return;
     }
     
-    // If the ID has changed, we need to create a new record and delete the old one,
-    // as Firebase doesn't allow renaming keys.
     if (sanitizedId !== sanitizeFirebaseKey(docToUpdate.id)) {
-        // Create the new document object with the new ID
         const newDoc: Document = {
             ...docToUpdate,
-            id: values.id, // Use the new original ID
+            id: values.id,
             name: values.name,
             documentType: values.documentType || null,
             office: values.office || null,
@@ -127,39 +124,93 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
             lastUpdate: new Date().toISOString(),
         };
-
-        // Dispatch action to add the new document
         dispatch({ type: 'ADD_DOCUMENT', payload: newDoc });
-
-        // Dispatch action to delete the old document
         dispatch({ type: 'DELETE_DOCUMENT', payload: { id: docToUpdate.id } });
-        
+        dispatch({
+            type: 'ADD_LOG',
+            payload: {
+                docId: values.id,
+                oldStatus: 'ID Changed',
+                newStatus: `ID changed from ${docToUpdate.id}`,
+                user: currentUser!.username,
+                timestamp: new Date().toISOString(),
+                reason: `Document ID was changed from ${docToUpdate.id} to ${values.id}. A new record was created.`
+            }
+        });
         toast({ title: "Success", description: `Document ID changed to ${values.id}.` });
-
     } else {
+        const changes: string[] = [];
         const updatedFields: Partial<Document> & {id: string} = {
             id: docToUpdate.id,
             lastUpdate: new Date().toISOString(),
+        };
+
+        const compareAndPush = (fieldName: string, oldValue: any, newValue: any) => {
+            if (oldValue !== newValue) {
+                changes.push(`${fieldName} changed from "${oldValue || 'N/A'}" to "${newValue || 'N/A'}".`);
+            }
+        };
+
+        if (hasPermission(currentUser, 'canEditDocumentName') && values.name !== docToUpdate.name) {
+            updatedFields.name = values.name;
+            compareAndPush('Name', docToUpdate.name, values.name);
+        }
+        if (hasPermission(currentUser, 'canEditDocumentType') && values.documentType !== (docToUpdate.documentType || '')) {
+            updatedFields.documentType = values.documentType || null;
+            compareAndPush('Document Type', docToUpdate.documentType, values.documentType);
+        }
+        if (hasPermission(currentUser, 'canEditOffice') && values.office !== (docToUpdate.office || '')) {
+            updatedFields.office = values.office || null;
+            compareAndPush('Office', docToUpdate.office, values.office);
+        }
+        if (hasPermission(currentUser, 'canEditAssignedDepartment') && values.assignedDepartment !== (docToUpdate.assignedDepartment || '')) {
+            updatedFields.assignedDepartment = values.assignedDepartment || null;
+            compareAndPush('Assigned Department', docToUpdate.assignedDepartment, values.assignedDepartment);
+        }
+        if (hasPermission(currentUser, 'canEditSecondaryId') && values.secondaryId !== (docToUpdate.secondaryId || '')) {
+            updatedFields.secondaryId = values.secondaryId || null;
+            compareAndPush('Secondary ID', docToUpdate.secondaryId, values.secondaryId);
+        }
+        if (hasPermission(currentUser, 'canEditTertiaryId') && values.tertiaryId !== (docToUpdate.tertiaryId || '')) {
+            updatedFields.tertiaryId = values.tertiaryId || null;
+            compareAndPush('Tertiary ID', docToUpdate.tertiaryId, values.tertiaryId);
+        }
+        if (hasPermission(currentUser, 'canEditQuaternaryId') && values.quaternaryId !== (docToUpdate.quaternaryId || '')) {
+            updatedFields.quaternaryId = values.quaternaryId || null;
+            compareAndPush('Quaternary ID', docToUpdate.quaternaryId, values.quaternaryId);
         }
 
-        // Only add fields to update if the user has permission and the value has changed
-        if (hasPermission(currentUser, 'canEditDocumentName') && values.name !== docToUpdate.name) updatedFields.name = values.name;
-        if (hasPermission(currentUser, 'canEditDocumentType') && values.documentType !== docToUpdate.documentType) updatedFields.documentType = values.documentType || null;
-        if (hasPermission(currentUser, 'canEditOffice') && values.office !== docToUpdate.office) updatedFields.office = values.office || null;
-        if (hasPermission(currentUser, 'canEditAssignedDepartment') && values.assignedDepartment !== docToUpdate.assignedDepartment) updatedFields.assignedDepartment = values.assignedDepartment || null;
-        if (hasPermission(currentUser, 'canEditSecondaryId') && values.secondaryId !== docToUpdate.secondaryId) updatedFields.secondaryId = values.secondaryId || null;
-        if (hasPermission(currentUser, 'canEditTertiaryId') && values.tertiaryId !== docToUpdate.tertiaryId) updatedFields.tertiaryId = values.tertiaryId || null;
-        if (hasPermission(currentUser, 'canEditQuaternaryId') && values.quaternaryId !== docToUpdate.quaternaryId) updatedFields.quaternaryId = values.quaternaryId || null;
-        if (hasPermission(currentUser, 'canEditTags')) {
-            const newTags = values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [];
+        const newTags = values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [];
+        const oldTags = docToUpdate.tags || [];
+        if (hasPermission(currentUser, 'canEditTags') && JSON.stringify(newTags) !== JSON.stringify(oldTags)) {
             updatedFields.tags = newTags;
+            compareAndPush('Tags', oldTags.join(', '), newTags.join(', '));
         }
         
         const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
-        updatedFields.documentLink = newLinks;
+        const oldLinks = docToUpdate.documentLink || [];
+        if (JSON.stringify(newLinks) !== JSON.stringify(oldLinks)) {
+            updatedFields.documentLink = newLinks;
+            compareAndPush('Document Links', oldLinks.join(', '), newLinks.join(', '));
+        }
         
-        dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
-        toast({ title: "Success", description: "Document details saved." });
+        if (changes.length > 0) {
+            dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
+            dispatch({
+                type: 'ADD_LOG',
+                payload: {
+                    docId: docToUpdate.id,
+                    oldStatus: docToUpdate.status,
+                    newStatus: 'Details Edited',
+                    user: currentUser!.username,
+                    timestamp: new Date().toISOString(),
+                    reason: changes.join('\n')
+                }
+            });
+            toast({ title: "Success", description: "Document details saved." });
+        } else {
+            toast({ title: "No Changes", description: "No changes were made to the document." });
+        }
     }
     
     onClose();
