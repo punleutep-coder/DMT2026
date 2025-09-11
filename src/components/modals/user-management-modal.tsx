@@ -12,8 +12,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Form,
@@ -39,6 +39,7 @@ import type { User } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { v4 as uuidv4 } from 'uuid'
 import { FormDescription } from '../ui/form'
+import { useTranslation } from '@/lib/i18n'
 
 // Create a schema for permissions dynamically from PERMISSIONS_CONFIG
 const permissionsSchema = z.object(
@@ -81,25 +82,25 @@ interface UserManagementModalProps {
 }
 
 const permissionGroups = {
-  'Dashboard Permissions': [
+  dashboardPermissions: [
     'canViewMetrics', 'canViewWorkflowChart'
   ],
-  'General Document Permissions': [
+  generalDocPermissions: [
     'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 
     'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted'
   ],
-  'Document Action Permissions': [
+  docActionPermissions: [
     'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote'
   ],
-  'Document Field Edit Permissions': [
+  docFieldEditPermissions: [
     'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditOffice', 'canEditAssignedDepartment', 'canEditSecondaryId',
     'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote'
   ],
-  'Document Link Permissions': [
+  docLinkPermissions: [
     'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4',
     'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4'
   ],
-  'Admin Permissions': ['canManageAdmins', 'canViewGlobalActivity']
+  adminPermissions: ['canManageAdmins', 'canViewGlobalActivity']
 };
 
 
@@ -119,6 +120,7 @@ export default function UserManagementModal({
   const { state, dispatch } = useAppContext()
   const { currentUser } = state
   const { toast } = useToast()
+  const t = useTranslation()
   const [editingUserId, setEditingUserId] = useState<string | undefined>(
     initialUserId
   )
@@ -324,14 +326,14 @@ export default function UserManagementModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>User Management</DialogTitle>
+          <DialogTitle>{t('userManagement')}</DialogTitle>
           <DialogDescription>
-            Add, edit, or remove users and manage their roles and permissions.
+            {t('userManagementDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Existing Users</h3>
+            <h3 className="font-semibold text-lg">{t('existingUsers')}</h3>
             <ScrollArea className="h-[60vh] p-2 border rounded-md">
               <div className="space-y-2">
                 {state.users.sort((a,b) => a.username.localeCompare(b.username)).map((user) => (
@@ -342,7 +344,7 @@ export default function UserManagementModal({
                     <div>
                       <span className="font-medium">{user.username}</span>
                       <span className="text-sm text-muted-foreground ml-2">
-                        ({user.role})
+                        ({t(user.role as 'Admin' | 'User')})
                       </span>
                     </div>
                     {canManageUser(user) && (
@@ -373,8 +375,8 @@ export default function UserManagementModal({
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">
               {mode === 'edit'
-                ? `Edit User: ${userToEdit?.username}`
-                : 'Add New User'}
+                ? t('editUser', { username: userToEdit?.username })
+                : t('addNewUser')}
             </h3>
             <ScrollArea className="h-[60vh] p-2">
               <Form {...form}>
@@ -388,7 +390,7 @@ export default function UserManagementModal({
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel>{t('username')}</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -401,13 +403,13 @@ export default function UserManagementModal({
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>{t('password')}</FormLabel>
                           <FormControl>
                             <Input
                               type="password"
                               placeholder={
                                 mode === 'edit'
-                                  ? 'Leave blank to keep current password'
+                                  ? t('leaveBlankPassword')
                                   : ''
                               }
                               {...field}
@@ -415,8 +417,8 @@ export default function UserManagementModal({
                           </FormControl>
                           <FormDescription>
                             {mode === 'edit'
-                              ? 'Leave blank to keep the existing password.'
-                              : ''}
+                              ? t('leaveBlankPassword')
+                              : t('passwordRequired')}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -427,14 +429,14 @@ export default function UserManagementModal({
                       name="role"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Role</FormLabel>
+                          <FormLabel>{t('role')}</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
+                                <SelectValue placeholder={t('role')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -451,13 +453,13 @@ export default function UserManagementModal({
                   {role === 'User' ? (
                     <div className="space-y-6">
                       {Object.entries(permissionGroups).map(
-                        ([groupName, permissionKeys]) => (
+                        ([groupKey, permissionKeys]) => (
                           <div
-                            key={groupName}
+                            key={groupKey}
                             className="space-y-4 p-4 border rounded-md"
                           >
                             <h3 className="font-semibold text-foreground">
-                              {groupName}
+                              {t(groupKey as any)}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {permissionKeys.map((key) => (
@@ -474,7 +476,7 @@ export default function UserManagementModal({
                                         />
                                       </FormControl>
                                       <FormLabel className="font-normal">
-                                        {PERMISSIONS_CONFIG[key as keyof typeof PERMISSIONS_CONFIG]}
+                                        {t(key as any)}
                                       </FormLabel>
                                     </FormItem>
                                   )}
@@ -487,11 +489,10 @@ export default function UserManagementModal({
 
                       <div className="p-4 border rounded-md space-y-4">
                         <h3 className="font-semibold text-foreground">
-                          Department Access Permissions
+                          {t('deptAccessPermissions')}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          If no departments are selected, the user will have
-                          access to all departments.
+                          {t('deptAccessDesc')}
                         </p>
                         <FormField
                             control={form.control}
@@ -544,17 +545,17 @@ export default function UserManagementModal({
                     <div className="flex items-center justify-center h-40 text-muted-foreground p-4 border rounded-md bg-muted/30">
                       <div className='text-center'>
                         <Shield className="mx-auto h-8 w-8 text-primary" />
-                        <p className="mt-2 font-medium">{role}s have all permissions by default.</p>
+                        <p className="mt-2 font-medium">{t(role as 'Admin' | 'User')}{t('allHaveAccess')}</p>
                       </div>
                     </div>
                   )}
                    <DialogFooter className="pt-4 flex-row justify-end gap-2">
                     <Button type="button" variant="ghost" onClick={handleSetAddMode}>
-                        {mode === 'edit' ? 'Cancel Edit & Add New' : 'Clear Form'}
+                        {mode === 'edit' ? t('cancelEdit') : t('clearForm')}
                     </Button>
 
                     <Button type="submit">
-                      {mode === 'edit' ? 'Save Changes' : 'Add User'}
+                      {mode === 'edit' ? t('saveChanges') : t('addUser')}
                     </Button>
                   </DialogFooter>
                 </form>
