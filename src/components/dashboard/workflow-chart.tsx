@@ -95,6 +95,8 @@ export default function WorkflowChart() {
                   color = '#FF6600';
                 } else if (entry.name === 'ឯកសារសម្រេច') {
                   color = 'hsl(var(--chart-3))';
+                } else if (entry.name === 'ឯកសារកែសម្រួល') {
+                  color = '#FF9900';
                 } else {
                   color = 'hsl(var(--chart-4))';
                 }
