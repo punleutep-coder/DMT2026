@@ -360,7 +360,7 @@ const translations = {
 
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",
-        docName: "ឈ្មោះឯកសារ",
+        docName: "ខ្លឹមសារ",
         docIdPrimary: "លេខសម្គាល់ឯកសារ (ចម្បង)",
         selectDocType: "ជ្រើសរើសប្រភេទឯកសារ...",
         searchDocType: "ស្វែងរកប្រភេទ...",
@@ -380,7 +380,6 @@ const translations = {
         initialNote: "កំណត់ចំណាំដំបូង",
         editDocument: "កែសម្រួលឯកសារ",
         documentHistory: "ប្រវត្តិសម្រាប់",
-        reviewJourney: "ពិនិត្យមើលការធ្វើដំណើរពេញលេញ និងរាល់ការផ្លាស់ប្តូរដែលបានធ្វើចំពោះឯកសារនេះ។",
         sourceDocuments: "ឯកសារប្រភព",
         department: "នាយកដ្ឋាន",
         departmentTimestamps: "ព័ត៌មានលម្អិត",
@@ -460,7 +459,7 @@ const translations = {
         canOpenDocumentLink3: 'បើកឯកសារ (តំណទី 3)',
         canOpenDocumentLink4: 'បើកឯកសារ (តំណទី 4)',
         canEditDocumentId: 'កែសម្រួលលេខសម្គាល់ឯកសារ (ចម្បង)',
-        canEditDocumentName: 'កែសម្រួលឈ្មោះឯកសារ',
+        canEditDocumentName: 'កែសម្រួលខ្លឹមសារ',
         canEditDocumentType: 'កែសម្រួលប្រភេទឯកសារ',
         canEditOffice: 'កែសម្រួលការិយាល័យ',
         canEditAssignedDepartment: 'កែសម្រួលនាយកដ្ឋានដែលបានចាត់តាំង',
@@ -506,3 +505,5 @@ export const languages = [
     { code: 'en', name: 'English' },
     { code: 'km', name: 'ភាសាខ្មែរ' }
 ];
+
+    

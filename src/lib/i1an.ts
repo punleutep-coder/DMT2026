@@ -357,7 +357,7 @@ const translations = {
 
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",
-        docName: "ឈ្មោះឯកសារ",
+        docName: "ខ្លឹមសារ",
         docIdPrimary: "លេខសម្គាល់ឯកសារ (ចម្បង)",
         selectDocType: "ជ្រើសរើសប្រភេទឯកសារ...",
         searchDocType: "ស្វែងរកប្រភេទ...",
@@ -439,7 +439,7 @@ const translations = {
         canViewMetrics: 'មើលកាតម៉ែត្រ',
         canViewWorkflowChart: 'មើលតារាងលំហូរការងារ',
         canAddDocument: 'បន្ថែមឯកសារថ្មី',
-        canCombineDocuments: 'បូកបញ្ចូលឯកสาร',
+        canCombineDocuments: 'បូកបញ្ចូលឯកសារ',
         canManageColumns: 'គ្រប់គ្រងជួរឈរ',
         canExportData: 'នាំចេញទិន្នន័យ',
         canViewLog: 'មើលកំណត់ហេតុ',
@@ -456,17 +456,17 @@ const translations = {
         canOpenDocumentLink3: 'បើកឯកសារ (តំណទី 3)',
         canOpenDocumentLink4: 'បើកឯកសារ (តំណទី 4)',
         canEditDocumentId: 'កែសម្រួលលេខសម្គាល់ឯកសារ (ចម្បង)',
-        canEditDocumentName: 'កែសម្រួលឈ្មោះឯកสาร',
-        canEditDocumentType: 'កែសម្រួលប្រភេទឯกสาร',
+        canEditDocumentName: 'កែសម្រួលខ្លឹមសារ',
+        canEditDocumentType: 'កែសម្រួលប្រភេទឯកសារ',
         canEditOffice: 'កែសម្រួលការិយាល័យ',
         canEditAssignedDepartment: 'កែសម្រួលនាយកដ្ឋានដែលបានចាត់តាំង',
         canEditSecondaryId: 'កែសម្រួលលេខសម្គាល់បន្ទាប់បន្សំ',
         canEditTertiaryId: 'កែសម្រួលលេខសម្គាល់ទីបី',
         canEditQuaternaryId: 'កែសម្រួលលេខសម្គាល់ទីបួន',
-        canEditDocumentLink1: 'កែសម្រួលតំណឯกสารទី 1',
-        canEditDocumentLink2: 'កែសម្រួលតំណឯกสารទី 2',
-        canEditDocumentLink3: 'កែសម្រួលតំណឯกสารទី 3',
-        canEditDocumentLink4: 'កែសម្រួលតំណឯกสารទី 4',
+        canEditDocumentLink1: 'កែសម្រួលតំណឯកសារទី ១',
+        canEditDocumentLink2: 'កែសម្រួលតំណឯកសារទី ២',
+        canEditDocumentLink3: 'កែសម្រួលតំណឯកសារទី ៣',
+        canEditDocumentLink4: 'កែសម្រួលតំណឯកសារទី ៤',
         canEditKeywords: 'កែសម្រួលពាក្យគន្លឹះ',
         canEditTags: 'កែសម្រួលស្លាក',
         canEditInitialNote: 'កែសម្រួលកំណត់ចំណាំដំបូង',
@@ -502,3 +502,5 @@ export const languages = [
     { code: 'en', name: 'English' },
     { code: 'km', name: 'ភាសាខ្មែរ' }
 ];
+
+    
