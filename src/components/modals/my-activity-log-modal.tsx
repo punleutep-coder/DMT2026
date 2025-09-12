@@ -177,7 +177,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                             <TableCell>{format(new Date(log.timestamp), 'dd.MM.yyyy')}</TableCell>
                             <TableCell>{log.docId}</TableCell>
                             <TableCell>
-                                {t('from')} <span className="font-bold text-primary/90">{log.oldStatus}</span> {t('to')} <span className="font-bold text-primary">{log.newStatus}</span>
+                                {t('from')} <span className="text-destructive">{log.oldStatus}</span> {t('to')} <span className="text-destructive">{log.newStatus}</span>
                             </TableCell>
                             <TableCell>{log.reason || 'N/A'}</TableCell>
                         </TableRow>

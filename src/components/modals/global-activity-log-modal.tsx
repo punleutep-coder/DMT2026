@@ -161,7 +161,7 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
                             <TableCell>{log.user}</TableCell>
                             <TableCell>{log.docId}</TableCell>
                             <TableCell>
-                                From <span className="font-bold text-primary/90">{log.oldStatus}</span> to <span className="font-bold text-primary">{log.newStatus}</span>
+                                From <span className="text-destructive">{log.oldStatus}</span> to <span className="text-destructive">{log.newStatus}</span>
                             </TableCell>
                             <TableCell>{log.reason || 'N/A'}</TableCell>
                         </TableRow>
