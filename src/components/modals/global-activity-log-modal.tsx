@@ -155,13 +155,13 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filteredLogs.length > 0 ? filteredLogs.map(log => (
-                        <TableRow key={log.id}>
+                    {filteredLogs.length > 0 ? filteredLogs.map((log, index) => (
+                        <TableRow key={`${log.id}-${index}`}>
                             <TableCell className="text-xs">{format(new Date(log.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
                             <TableCell>{log.user}</TableCell>
                             <TableCell>{log.docId}</TableCell>
                             <TableCell>
-                                From <span className="text-destructive">{log.oldStatus}</span> to <span className="text-destructive">{log.newStatus}</span>
+                                {t('from')} <span className="text-destructive">{log.oldStatus}</span> {t('to')} <span className="text-destructive">{log.newStatus}</span>
                             </TableCell>
                             <TableCell>{log.reason || 'N/A'}</TableCell>
                         </TableRow>

@@ -172,8 +172,8 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {userLogs.length > 0 ? userLogs.map(log => (
-                        <TableRow key={log.id}>
+                    {userLogs.length > 0 ? userLogs.map((log, index) => (
+                        <TableRow key={`${log.id}-${index}`}>
                             <TableCell>{format(new Date(log.timestamp), 'dd.MM.yyyy')}</TableCell>
                             <TableCell>{log.docId}</TableCell>
                             <TableCell>
