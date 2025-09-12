@@ -226,7 +226,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
       <DialogContent className="sm:max-w-[600px] glassmorphic-card">
         <DialogHeader>
           <DialogTitle>
-            {t('editDocument')}: <span className="text-primary">{docToUpdate.id}</span>
+            {t('editDocument')}: <span className="text-destructive">{docToUpdate.id}</span>
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
