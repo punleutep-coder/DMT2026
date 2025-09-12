@@ -309,7 +309,7 @@ const translations = {
         username: "ឈ្មោះ​អ្នកប្រើប្រាស់",
         password: "ពាក្យសម្ងាត់",
         rememberMe: "ចងចាំខ្ញុំ",
-        loginFailed: "ការចូលล้มเหลว",
+        loginFailed: "ការចូលបរាជ័យ",
         invalidCredentials: "ឈ្មោះអ្នកប្រើ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។",
         loggingIn: "កំពុងចូល...",
         login: "ចូល",
