@@ -33,6 +33,7 @@ const translations = {
         userManagement: "User Management",
         logout: "Logout",
         loggedInAs: "Logged in as",
+        globalActivity: "Global Activity",
 
         // Header
         overview: "Overview",
@@ -239,7 +240,6 @@ const translations = {
         canEditInitialNote: 'Edit Initial Note',
         canManageAdmins: 'Can Manage Admins',
         canViewGlobalActivity: 'Can View Global Activity',
-        globalActivity: 'Global Activity',
     },
     km: {
         // General
@@ -269,6 +269,7 @@ const translations = {
         userManagement: "ការគ្រប់គ្រង​អ្នកប្រើប្រាស់",
         logout: "ចាកចេញ",
         loggedInAs: "បានចូលជា",
+        globalActivity: "សកម្មភាពសកល",
 
         // Header
         overview: "ទិដ្ឋភាពរួម",
@@ -441,7 +442,7 @@ const translations = {
         canViewMetrics: 'មើលកាតម៉ែត្រ',
         canViewWorkflowChart: 'មើលតារាងលំហូរការងារ',
         canAddDocument: 'បន្ថែមឯកសារថ្មី',
-        canCombineDocuments: 'បូកបញ្ចូលឯកสาร',
+        canCombineDocuments: 'បូកបញ្ចូលឯកសារ',
         canManageColumns: 'គ្រប់គ្រងជួរឈរ',
         canExportData: 'នាំចេញទិន្នន័យ',
         canViewLog: 'មើលកំណត់ហេតុ',
@@ -474,7 +475,6 @@ const translations = {
         canEditInitialNote: 'កែសម្រួលកំណត់ចំណាំដំបូង',
         canManageAdmins: 'អាចគ្រប់គ្រងអ្នកគ្រប់គ្រងបាន',
         canViewGlobalActivity: 'អាចមើលសកម្មភាពសកលបាន',
-        globalActivity: 'សកម្មភាពសកល',
     }
 };
 
