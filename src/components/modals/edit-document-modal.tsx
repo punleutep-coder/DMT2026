@@ -17,6 +17,7 @@ import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Combobox } from '../ui/combobox'
+import { useTranslation } from '@/lib/i18n'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -47,6 +48,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
   const { currentUser, documentTypes, assignedDepartments } = state
   const { toast } = useToast()
   const [isSuggesting, setIsSuggesting] = useState(false)
+  const t = useTranslation()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -223,49 +225,49 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Edit Document: {docToUpdate.id}</DialogTitle>
+          <DialogTitle>{t('editDocument')}: {docToUpdate.id}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
-                {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>{t('docName')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditDocumentType') && (
                   <FormField
                     control={form.control}
                     name="documentType"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Document Type</FormLabel>
+                        <FormLabel>{t('documentType')}</FormLabel>
                         <Combobox
                           options={documentTypeOptions}
                           value={field.value || ''}
                           onChange={field.onChange}
-                          placeholder="Select a document type..."
-                          searchPlaceholder="Search types..."
-                          notFoundText="No matching type found."
+                          placeholder={t('selectDocType')}
+                          searchPlaceholder={t('searchDocType')}
+                          notFoundText={t('noDocTypeFound')}
                         />
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 )}
-                {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditAssignedDepartment') && (
                   <FormField
                     control={form.control}
                     name="assignedDepartment"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Assigned Department</FormLabel>
+                        <FormLabel>{t('assignedDepartment')}</FormLabel>
                         <Combobox
                           options={assignedDepartmentOptions}
                           value={field.value || ''}
                           onChange={field.onChange}
-                          placeholder="Select a department..."
-                          searchPlaceholder="Search or create..."
-                          notFoundText="No matching department found."
+                          placeholder={t('selectAssignedDept')}
+                          searchPlaceholder={t('searchAssignedDept')}
+                          notFoundText={t('noAssignedDeptFound')}
                           onCreate={currentUser?.role === 'Admin' ? handleCreateAssignedDepartment : undefined}
                         />
                         <FormMessage />
@@ -275,18 +277,18 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                 )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>Secondary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>Tertiary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>Quaternary ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>{t('secondaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>{t('tertiaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>{t('quaternaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
 
                 {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tags (comma-separated)</FormLabel>
+                    <FormLabel>{t('tagsLabel')}</FormLabel>
                     <div className="flex gap-2">
                       <FormControl><Input {...field} /></FormControl>
                       <Button type="button" variant="outline" onClick={handleSuggestTags} disabled={isSuggesting}>
-                        <Sparkles className="mr-2 h-4 w-4" /> {isSuggesting ? 'Suggesting...' : 'Suggest'}
+                        <Sparkles className="mr-2 h-4 w-4" /> {isSuggesting ? t('suggesting') : t('suggest')}
                       </Button>
                     </div>
                     <FormMessage />
@@ -294,16 +296,16 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                 )} />}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>Document Link 1</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink2') && <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>Document Link 2</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink3') && <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>Document Link 3</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink4') && <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>Document Link 4</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>{t('docLink1')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink2') && <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>{t('docLink2')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink3') && <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>{t('docLink3')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentLink4') && <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>{t('docLink4')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
               </div>
             </ScrollArea>
             <DialogFooter className="pt-4">
-              <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button type="submit">Save Changes</Button>
+              <Button type="button" variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+              <Button type="submit">{t('saveChanges')}</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -311,3 +313,5 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     </Dialog>
   )
 }
+
+    
