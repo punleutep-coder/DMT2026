@@ -365,7 +365,7 @@ const translations = {
         selectDocType: "ជ្រើសរើសប្រភេទឯកសារ...",
         searchDocType: "ស្វែងរកប្រភេទ...",
         noDocTypeFound: "រកមិនឃើញប្រភេទដែលត្រូវគ្នាទេ។",
-        secondaryId: "លេខសម្គាល់បន្ទាប់បន្សំ",
+        secondaryId: "លេខសម្គាល់ទីពីរ",
         tertiaryId: "លេខសម្គាល់ទីបី",
         quaternaryId: "លេខសម្គាល់ទីបួន",
         selectAssignedDept: "ជ្រើសរើសនាយកដ្ឋាន...",
@@ -464,7 +464,7 @@ const translations = {
         canEditDocumentType: 'កែសម្រួលប្រភេទឯកសារ',
         canEditOffice: 'កែសម្រួលការិយាល័យ',
         canEditAssignedDepartment: 'កែសម្រួលនាយកដ្ឋានដែលបានចាត់តាំង',
-        canEditSecondaryId: 'កែសម្រួលលេខសម្គាល់បន្ទាប់បន្សំ',
+        canEditSecondaryId: 'កែសម្រួលលេខសម្គាល់ទីពីរ',
         canEditTertiaryId: 'កែសម្រួលលេខសម្គាល់ទីបី',
         canEditQuaternaryId: 'កែសម្រួលលេខសម្គាល់ទីបួន',
         canEditDocumentLink1: 'កែសម្រួលតំណឯកសារទី ១',
@@ -508,3 +508,4 @@ export const languages = [
 ];
 
     
+
