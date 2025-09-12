@@ -25,6 +25,7 @@ const translations = {
         lastUpdate: "Last Update",
         clear: "Clear",
         user: "User",
+        unsuccess: "Unsuccess",
 
         // Sidebar
         dashboard: "Dashboard",
@@ -143,6 +144,7 @@ const translations = {
         suggesting: "Suggesting...",
         initialNote: "Initial Note",
         editDocument: "Edit Document",
+        saveChanges: "Save Changes",
         documentHistory: "History for",
         reviewJourney: "Review the complete journey and all changes made to this document.",
         sourceDocuments: "Source Documents",
@@ -180,6 +182,11 @@ const translations = {
         pleaseSelectDateRange: "Please select a date range and generate a report.",
         areYouSureDeleteDoc: "Are you sure you want to delete document {docId}? This will also remove associated logs. This action cannot be undone.",
         delayedUntil: "Delayed until {date}",
+        completionStatus: "Completion Status",
+        finalNote: "Final Note (Optional)",
+        customDate: "Custom Date (Optional)",
+        pickDate: "Pick a date",
+        markAsComplete: "Mark as Complete",
 
         // User Management
         userManagementDesc: "Add, edit, or remove users and manage their roles and permissions.",
@@ -199,7 +206,6 @@ const translations = {
         deptAccessDesc: "If no departments are selected, the user will have access to all departments.",
         allHaveAccess: "s have all permissions by default.",
         clearForm: "Clear Form",
-        saveChanges: "Save Changes",
         addUser: "Add User",
         cancelEdit: "Cancel Edit & Add New",
 
@@ -261,6 +267,7 @@ const translations = {
         lastUpdate: "កែចុងក្រោយ",
         clear: "ជម្រះ",
         user: "អ្នកប្រើប្រាស់",
+        unsuccess: "មិនជោគជ័យ",
 
         // Sidebar
         dashboard: "ទំព័រដើម",
@@ -379,8 +386,8 @@ const translations = {
         suggesting: "កំពុងស្នើ...",
         initialNote: "កំណត់ចំណាំដំបូង",
         editDocument: "កែសម្រួលឯកសារ",
+        saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
         documentHistory: "ប្រវត្តិសម្រាប់",
-        reviewJourney: "ពិនិត្យមើលដំណើរការទាំងមូល និងរាល់ការផ្លាស់ប្តូរដែលបានធ្វើចំពោះឯកសារនេះ។",
         sourceDocuments: "ឯកសារប្រភព",
         department: "នាយកដ្ឋាន",
         departmentTimestamps: "ព័ត៌មានលម្អិត",
@@ -416,6 +423,11 @@ const translations = {
         pleaseSelectDateRange: "សូមជ្រើសរើសចន្លោះកាលបរិច្ឆេទ",
         areYouSureDeleteDoc: "តើអ្នកប្រាកដទេថាចង់លុបឯកសារ {docId}? វានឹងលុកំណត់ហេតុដែលពាក់ព័ន្ធទាំងអស់ចេញដែរ។ សកម្មភាពនេះមិនអាចមិនធ្វើវិញបានទេ។",
         delayedUntil: "បានពន្យារពេលរហូតដល់ {date}",
+        completionStatus: "ស្ថានភាព​ការ​បញ្ចប់",
+        finalNote: "កំណត់ចំណាំចុងក្រោយ (ស្រេចចិត្ត)",
+        customDate: "កាលបរិច្ឆេទផ្ទាល់ខ្លួន (ស្រេចចិត្ត)",
+        pickDate: "ជ្រើសរើសកាលបរិច្ឆេទ",
+        markAsComplete: "សម្គាល់ថាបានបញ្ចប់",
         
         // User Management
         userManagementDesc: "បន្ថែម កែសម្រួល ឬលុបអ្នកប្រើប្រាស់ និងគ្រប់គ្រងតួនាទី និងការអនុញ្ញាតរបស់ពួកគេ។",
@@ -435,7 +447,6 @@ const translations = {
         deptAccessDesc: "ប្រសិនបើគ្មាននាយកដ្ឋានណាមួយត្រូវបានជ្រើសរើសទេ អ្នកប្រើប្រាស់នឹងអាចចូលប្រើនាយកដ្ឋានទាំងអស់។",
         allHaveAccess: "មានការអនុញ្ញាតទាំងអស់តាមលំនាំដើម។",
         clearForm: "ជម្រះទម្រង់",
-        saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
         addUser: "បន្ថែមអ្នកប្រើប្រាស់",
         cancelEdit: "បោះបង់ការកែសម្រួល & បន្ថែមថ្មី",
 
@@ -508,4 +519,5 @@ export const languages = [
 ];
 
     
+
 

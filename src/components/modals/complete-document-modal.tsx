@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
 import { Calendar } from '../ui/calendar'
+import { useTranslation } from '@/lib/i18n'
 
 const formSchema = z.object({
   status: z.enum(['Completed (Success)', 'Completed (Unsuccess)'], {
@@ -33,6 +34,7 @@ interface CompleteDocumentModalProps {
 export default function CompleteDocumentModal({ isOpen, onClose, docId, firestoreId }: CompleteDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
+  const t = useTranslation()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,7 +84,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] glassmorphic-card">
         <DialogHeader>
-          <DialogTitle>Complete Document: {docToUpdate.id}</DialogTitle>
+          <DialogTitle>{t('completeDocument')}: {docToUpdate.id}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -91,7 +93,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
               name="status"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Completion Status</FormLabel>
+                  <FormLabel>{t('completionStatus')}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -103,7 +105,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
                           <RadioGroupItem value="Completed (Success)" />
                         </FormControl>
                         <FormLabel className="font-normal">
-                          Success
+                          {t('success')}
                         </FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
@@ -111,7 +113,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
                           <RadioGroupItem value="Completed (Unsuccess)" />
                         </FormControl>
                         <FormLabel className="font-normal">
-                          Unsuccess
+                          {t('unsuccess')}
                         </FormLabel>
                       </FormItem>
                     </RadioGroup>
@@ -125,7 +127,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
               name="note"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Final Note (Optional)</FormLabel>
+                  <FormLabel>{t('finalNote')}</FormLabel>
                   <FormControl>
                     <Textarea {...field} />
                   </FormControl>
@@ -138,7 +140,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
               name="customDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Custom Date (Optional)</FormLabel>
+                  <FormLabel>{t('customDate')}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -152,7 +154,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
                           {field.value ? (
                             format(field.value, 'PPP')
                           ) : (
-                            <span>Pick a date</span>
+                            <span>{t('pickDate')}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -175,8 +177,8 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button type="submit">Mark as Complete</Button>
+              <Button type="button" variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+              <Button type="submit">{t('markAsComplete')}</Button>
             </DialogFooter>
           </form>
         </Form>
