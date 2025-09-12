@@ -361,7 +361,7 @@ const translations = {
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",
         docName: "ខ្លឹមសារ",
-        docIdPrimary: "លេខសម្គាល់ឯកសារ (ចម្បង)",
+        docIdPrimary: "លេខសម្គាល់ទីមួយ",
         selectDocType: "ជ្រើសរើសប្រភេទឯកសារ...",
         searchDocType: "ស្វែងរកប្រភេទ...",
         noDocTypeFound: "រកមិនឃើញប្រភេទដែលត្រូវគ្នាទេ។",
@@ -380,6 +380,7 @@ const translations = {
         initialNote: "កំណត់ចំណាំដំបូង",
         editDocument: "កែសម្រួលឯកសារ",
         documentHistory: "ប្រវត្តិសម្រាប់",
+        reviewJourney: "ពិនិត្យមើលដំណើរការទាំងមូល និងរាល់ការផ្លាស់ប្តូរដែលបានធ្វើចំពោះឯកសារនេះ។",
         sourceDocuments: "ឯកសារប្រភព",
         department: "នាយកដ្ឋាន",
         departmentTimestamps: "ព័ត៌មានលម្អិត",
