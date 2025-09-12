@@ -110,9 +110,9 @@ export default function DashboardSidebar() {
           </SidebarMenuItem>
           {hasPermission(currentUser, 'canViewGlobalActivity') && (
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Global Activity" onClick={() => openModal('globalActivityLog')}>
+              <SidebarMenuButton tooltip={t('globalActivity')} onClick={() => openModal('globalActivityLog')}>
                 <History />
-                <span>Global Activity</span>
+                <span>{t('globalActivity')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
