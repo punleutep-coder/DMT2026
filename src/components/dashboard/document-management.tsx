@@ -15,6 +15,7 @@ import {
   Trash2,
   FileDigit,
   FileCog,
+  FileOutput,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -230,9 +231,14 @@ export default function DocumentManagement() {
             </Button>
         )}
          {hasPermission(currentUser, 'canExportData') && (
-            <Button variant="outline" onClick={handleExport} className="shadow-lg hover:shadow-xl transition-shadow">
-                <Download /> {t('exportData')}
-            </Button>
+            <>
+              <Button variant="outline" onClick={handleExport} className="shadow-lg hover:shadow-xl transition-shadow">
+                  <Download /> {t('exportData')}
+              </Button>
+              <Button variant="outline" onClick={() => openModal('exportXLSX')} disabled={state.selectedDocIds.length === 0} className="shadow-lg hover:shadow-xl transition-shadow">
+                <FileOutput /> Export (XLSX)
+              </Button>
+            </>
         )}
          {currentUser?.role === 'Admin' && (
             <>

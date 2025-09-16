@@ -123,6 +123,7 @@ export type ModalType =
   | 'editNote'
   | 'advanceDocument'
   | 'completeDocument'
+  | 'exportXLSX'
   | null;
 
 export interface ModalState {

@@ -20,6 +20,7 @@ import ReportingModal from "./reporting-modal"
 import ManageDocumentTypesModal from "./manage-document-types-modal"
 import ManageAssignedDepartmentsModal from "./manage-assigned-departments-modal"
 import GlobalActivityLogModal from "./global-activity-log-modal"
+import ExportXLSXModal from "./export-xlsx-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -68,6 +69,8 @@ export default function ModalManager() {
             return <AdvanceDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'completeDocument':
             return <CompleteDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
+        case 'exportXLSX':
+            return <ExportXLSXModal isOpen={true} onClose={handleClose} />
         default:
             return null;
     }
