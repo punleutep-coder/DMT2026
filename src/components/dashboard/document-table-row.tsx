@@ -226,7 +226,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     ))}
 
                     {!isTerminal && canEditDetails && (
-                        <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)}>
+                        <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)} className="text-green-800">
                             <Pencil className="mr-2 h-4 w-4" />{t('editDetails')}
                         </DropdownMenuItem>
                     )}
