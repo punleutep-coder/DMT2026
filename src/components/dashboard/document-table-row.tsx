@@ -210,7 +210,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     {hasPermission(currentUser, 'canViewLog') && (
-                        <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)}>
+                        <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)} className="text-blue-600">
                             <FileText className="mr-2 h-4 w-4" />{t('viewLog')}
                         </DropdownMenuItem>
                     )}
