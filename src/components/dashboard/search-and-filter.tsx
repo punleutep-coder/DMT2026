@@ -19,18 +19,20 @@ export default function SearchAndFilter() {
   const [searchTerm, setSearchTerm] = useState(state.filter.search);
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [periodValue, setPeriodValue] = useState(state.filter.periodValue);
-  const [periodUnit, setPeriodUnit] = useState(state.filter.periodUnit);
-  const [periodDepartment, setPeriodDepartment] = useState(state.filter.periodDepartment);
+  const [periodValue, setPeriodValue] = useState(3);
+  const [periodUnit, setPeriodUnit] = useState<'days' | 'hours' | 'minutes'>('days');
+  const [periodDepartment, setPeriodDepartment] = useState('All');
 
   useEffect(() => {
     setSearchTerm(state.filter.search);
     const timeZone = 'UTC';
     setDateFrom(state.filter.startDate ? formatInTimeZone(state.filter.startDate, timeZone, 'yyyy-MM-dd') : '');
     setDateTo(state.filter.endDate ? formatInTimeZone(state.filter.endDate, timeZone, 'yyyy-MM-dd') : '');
-    setPeriodValue(state.filter.periodValue);
-    setPeriodUnit(state.filter.periodUnit);
-    setPeriodDepartment(state.filter.periodDepartment);
+    if (state.filter.mainFilter !== 'Exceeding Period') {
+        setPeriodValue(3);
+        setPeriodUnit('days');
+        setPeriodDepartment('All');
+    }
   }, [state.filter]);
 
   // Debounce search input
@@ -62,6 +64,10 @@ export default function SearchAndFilter() {
   
   const handleCalculatePeriod = () => {
     dispatch({ type: 'SET_FILTER', payload: { periodValue, periodUnit, periodDepartment, mainFilter: 'Exceeding Period', departmentSpecificFilter: 'All' } })
+    // Reset local state to defaults after calculation
+    setPeriodValue(3);
+    setPeriodUnit('days');
+    setPeriodDepartment('All');
   }
   
   const clearPeriodFilter = () => {
@@ -90,7 +96,7 @@ export default function SearchAndFilter() {
       <div className="flex flex-wrap items-center gap-2">
           <Label>{t('docsExceeding')}</Label>
           <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-card shadow-md" />
-          <Select value={periodUnit} onValueChange={setPeriodUnit}>
+          <Select value={periodUnit} onValueChange={v => setPeriodUnit(v as 'days' | 'hours' | 'minutes')}>
               <SelectTrigger className="w-[120px] bg-card shadow-md">
                   <SelectValue placeholder="Unit" />
               </SelectTrigger>
