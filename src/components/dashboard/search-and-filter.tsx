@@ -122,11 +122,12 @@ export default function SearchAndFilter() {
           {t('searchByDocIdLabel')}
         </Label>
         <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             id="search-id"
             type="text"
             placeholder={t('search')}
-            className="w-full pr-24 shadow-md bg-[#33CCCC40]"
+            className="w-full pr-24 pl-10 shadow-md bg-[#33CCCC40]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
