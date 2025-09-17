@@ -250,7 +250,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canEditCurrentNote') && (
-                        <DropdownMenuItem onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}>
                             <FileEdit className="mr-2 h-4 w-4" />{t('editCurrentNote')}
                         </DropdownMenuItem>
                     )}
