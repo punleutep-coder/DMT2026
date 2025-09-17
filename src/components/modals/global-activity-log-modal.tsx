@@ -157,7 +157,7 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
                 <TableBody>
                     {filteredLogs.length > 0 ? filteredLogs.map((log, index) => (
                         <TableRow key={`${log.id}-${index}`}>
-                            <TableCell className="text-xs">{format(new Date(log.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
+                            <TableCell className="text-xs">{format(new Date(log.timestamp), 'dd/MM/yyyy HH:mm')}</TableCell>
                             <TableCell>{log.user}</TableCell>
                             <TableCell>{log.docId}</TableCell>
                             <TableCell>

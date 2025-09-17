@@ -120,8 +120,8 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                   <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/50">
                     <h4 className="font-bold text-foreground mb-2" style={{color: '#0000E2'}}>{entry.department}</h4>
                     <div className="text-sm space-y-1">
-                       <p><strong className="text-foreground/80">{t('start')}:</strong> {entry.start ? format(new Date(entry.start), 'dd.MM.yyyy') : 'N/A'}</p>
-                       <p><strong className="text-foreground/80">{t('end')}:</strong> {entry.end ? format(new Date(entry.end), 'dd.MM.yyyy') : 'N/A'}</p>
+                       <p><strong className="text-foreground/80">{t('start')}:</strong> {entry.start ? format(new Date(entry.start), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
+                       <p><strong className="text-foreground/80">{t('end')}:</strong> {entry.end ? format(new Date(entry.end), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">{t('period')}:</strong> <span className="text-foreground font-medium" style={{color: '#0000E2'}}>{formatDuration(entry.start, entry.end)}</span></p>
                        <p><strong className="text-foreground/80">{t('receiverName')}:</strong> {entry.receiver}</p>
                        <p><strong className="text-foreground/80">{t('note')}:</strong> {entry.note || 'N/A'}</p>
@@ -141,7 +141,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                         <p className="font-medium text-foreground">
                             {t('from')} <span style={{color: '#0000E2'}}>{log.oldStatus}</span> {t('to')} <span style={{color: '#0000E2'}}>{log.newStatus}</span>
                         </p>
-                        <p className="text-xs text-foreground">{format(new Date(log.timestamp), 'dd.MM.yyyy')} by {log.user}</p>
+                        <p className="text-xs text-foreground">{format(new Date(log.timestamp), 'dd/MM/yyyy HH:mm')} by {log.user}</p>
                         {log.reason && (
                             <p className="text-sm mt-2 p-2 bg-muted/20 rounded-md border border-border/30">
                                 <strong className="text-foreground/80">{t('reason')}:</strong> {log.reason}
