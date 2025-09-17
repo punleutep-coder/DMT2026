@@ -124,9 +124,9 @@ export default function DocumentTable() {
   const columns = [
     { key: 'select', name: '' },
     { key: 'documentId', name: t('documentId') },
+    { key: 'assignedDepartment', name: t('assignedDepartment') },
     { key: 'name', name: t('name') },
     { key: 'documentType', name: t('documentType') },
-    { key: 'assignedDepartment', name: t('assignedDepartment') },
     { key: 'office', name: t('office') },
     { key: 'currentStatus', name: t('currentStatus') },
     { key: 'lastUpdate', name: t('lastUpdate') },
