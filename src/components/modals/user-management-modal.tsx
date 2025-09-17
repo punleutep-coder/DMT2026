@@ -355,7 +355,7 @@ export default function UserManagementModal({
                             className="h-7 w-7"
                             onClick={() => handleSetEditMode(user)}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4 text-green-600" />
                           </Button>
                           <Button
                             variant="ghost"
