@@ -17,7 +17,7 @@ import {
   FileSymlink,
   Clock,
   Play,
-  FileEdit,
+  FilePlus,
   Split,
   MoreVertical,
   Combine,
@@ -250,8 +250,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canEditCurrentNote') && (
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('editNote', doc.id, doc.firestoreId)}>
-                            <FileEdit className="mr-2 h-4 w-4" />{t('editCurrentNote')}
+                        <DropdownMenuItem onClick={() => handleAction('addNote', doc.id, doc.firestoreId)}>
+                            <FilePlus className="mr-2 h-4 w-4" />{t('addNote')}
                         </DropdownMenuItem>
                     )}
                     

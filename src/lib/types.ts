@@ -120,7 +120,7 @@ export type ModalType =
   | 'combineDocuments'
   | 'splitDocument'
   | 'delayDocument'
-  | 'editNote'
+  | 'addNote'
   | 'advanceDocument'
   | 'completeDocument'
   | 'exportXLSX'

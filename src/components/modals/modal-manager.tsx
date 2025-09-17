@@ -12,7 +12,7 @@ import ManageColumnsModal from "./manage-columns-modal"
 import CombineDocumentsModal from "./combine-documents-modal"
 import SplitDocumentModal from "./split-document-modal"
 import DelayDocumentModal from "./delay-document-modal"
-import EditNoteModal from "./edit-note-modal"
+import AddNoteModal from "./add-note-modal"
 import AdvanceDocumentModal from "./advance-document-modal"
 import CompleteDocumentModal from "./complete-document-modal"
 import MyActivityLogModal from "./my-activity-log-modal"
@@ -63,8 +63,8 @@ export default function ModalManager() {
             return <SplitDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'delayDocument':
             return <DelayDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
-        case 'editNote':
-            return <EditNoteModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
+        case 'addNote':
+            return <AddNoteModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'advanceDocument':
             return <AdvanceDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'completeDocument':

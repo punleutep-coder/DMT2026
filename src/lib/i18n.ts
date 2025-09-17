@@ -116,7 +116,7 @@ const translations = {
         splitDocument: "Split Document",
         delay: "Delay",
         releaseNow: "Release Now",
-        editCurrentNote: "Edit Current Note",
+        addNote: "Add Note",
         moveBack: "Move Back",
         advance: "Advance",
         complete: "Complete",
@@ -219,7 +219,7 @@ const translations = {
         canViewLog: 'View Log',
         canViewCompleted: 'View Completed Docs',
         canSplitDocument: 'Split Document',
-        canEditCurrentNote: 'Edit Current Note',
+        canEditCurrentNote: 'Add/Edit Note',
         canMoveDocument: 'Move Document (Advance/Back)',
         canDelayDocument: 'Delay Document',
         canReleaseDocument: 'Release Document from Delay',
@@ -358,7 +358,7 @@ const translations = {
         splitDocument: "បំបែកឯកសារ",
         delay: "ពន្យាពេល",
         releaseNow: "ចេញផ្សាយឥឡូវនេះ",
-        editCurrentNote: "កែសម្រួលកំណត់ចំណាំបច្ចុប្បន្ន",
+        addNote: "បន្ថែមចំណាំ",
         moveBack: "ផ្លាស់ទីទៅក្រោយ",
         advance: "ទៅមុខ",
         complete: "បញ្ចប់",
@@ -368,11 +368,11 @@ const translations = {
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",
         docName: "ខ្លឹមសារ",
-        docIdPrimary: "លេខសម្គាល់ទីមួយ",
+        docIdPrimary: "លេខសម្គាល់ឯកសារ (ចម្បង)",
         selectDocType: "ជ្រើសរើសប្រភេទឯកសារ...",
         searchDocType: "ស្វែងរកប្រភេទ...",
         noDocTypeFound: "រកមិនឃើញប្រភេទដែលត្រូវគ្នាទេ។",
-        secondaryId: "លេខសម្គាល់ទីពីរ",
+        secondaryId: "លេខសម្គាល់បន្ទាប់បន្សំ",
         tertiaryId: "លេខសម្គាល់ទីបី",
         quaternaryId: "លេខសម្គាល់ទីបួន",
         selectAssignedDept: "ជ្រើសរើសនាយកដ្ឋាន...",
@@ -388,7 +388,7 @@ const translations = {
         editDocument: "កែសម្រួលឯកសារ",
         saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
         documentHistory: "ប្រវត្តិសម្រាប់",
-        sourceDocuments: "ឯកសារប្រភព",
+        sourceDocuments: "ឯកสารប្រភព",
         department: "នាយកដ្ឋាន",
         departmentTimestamps: "ព័ត៌មានលម្អិត",
         statusChangeLog: "កំណត់ហេតុការផ្លាស់ប្តូរស្ថានភាព",
@@ -460,7 +460,7 @@ const translations = {
         canViewLog: 'មើលកំណត់ហេតុ',
         canViewCompleted: 'មើលឯកសារដែលបានបញ្ចប់',
         canSplitDocument: 'បំបែកឯកសារ',
-        canEditCurrentNote: 'កែសម្រួលកំណត់ចំណាំបច្ចុប្បន្ន',
+        canEditCurrentNote: 'បន្ថែម/កែសម្រួលចំណាំ',
         canMoveDocument: 'ផ្លាស់ទីឯកសារ (ទៅមុខ/ថយក្រោយ)',
         canDelayDocument: 'ពន្យាពេលឯកសារ',
         canReleaseDocument: 'ចេញផ្សាយឯកសារពីការពន្យាពេល',
@@ -475,7 +475,7 @@ const translations = {
         canEditDocumentType: 'កែសម្រួលប្រភេទឯកសារ',
         canEditOffice: 'កែសម្រួលការិយាល័យ',
         canEditAssignedDepartment: 'កែសម្រួលនាយកដ្ឋានដែលបានចាត់តាំង',
-        canEditSecondaryId: 'កែសម្រួលលេខសម្គាល់ទីពីរ',
+        canEditSecondaryId: 'កែសម្រួលលេខសម្គាល់បន្ទាប់បន្សំ',
         canEditTertiaryId: 'កែសម្រួលលេខសម្គាល់ទីបី',
         canEditQuaternaryId: 'កែសម្រួលលេខសម្គាល់ទីបួន',
         canEditDocumentLink1: 'កែសម្រួលតំណឯកសារទី ១',
@@ -519,5 +519,6 @@ export const languages = [
 ];
 
     
+
 
 
