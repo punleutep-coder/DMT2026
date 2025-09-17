@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react'
 import { format as formatDate } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { useTranslation } from '@/lib/i18n'
+import { Search } from 'lucide-react'
 
 
 export default function SearchAndFilter() {
@@ -116,7 +117,10 @@ export default function SearchAndFilter() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="search-id">{t('searchByDocIdLabel')}</Label>
+        <Label htmlFor="search-id" className="flex items-center gap-2 text-2xl">
+          <Search className="h-6 w-6" />
+          {t('searchByDocIdLabel')}
+        </Label>
         <div className="relative">
           <Input
             id="search-id"
