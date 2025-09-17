@@ -71,27 +71,6 @@ export default function SearchAndFilter() {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="search-id">{t('searchByDocIdLabel')}</Label>
-        <div className="relative">
-          <Input
-            id="search-id"
-            type="text"
-            placeholder={t('search')}
-            className="w-full pr-24 shadow-md"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {isFiltered && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <span className="text-sm text-muted-foreground">
-                {filteredDocs.length} {t('results')}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
          <div className='space-y-2'>
           <Label htmlFor="date-from">{t('historyFrom')}</Label>
@@ -136,6 +115,26 @@ export default function SearchAndFilter() {
           <Button variant="outline" onClick={clearPeriodFilter} className="shadow-md">{t('clear')}</Button>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="search-id">{t('searchByDocIdLabel')}</Label>
+        <div className="relative">
+          <Input
+            id="search-id"
+            type="text"
+            placeholder={t('search')}
+            className="w-full pr-24 shadow-md"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {isFiltered && (
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <span className="text-sm text-muted-foreground">
+                {filteredDocs.length} {t('results')}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
