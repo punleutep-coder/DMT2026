@@ -117,10 +117,6 @@ export default function SearchAndFilter() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="search-id" className="flex items-center gap-2 text-2xl">
-          <Search className="h-6 w-6" />
-          {t('searchByDocIdLabel')}
-        </Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
