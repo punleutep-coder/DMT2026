@@ -19,20 +19,18 @@ export default function SearchAndFilter() {
   const [searchTerm, setSearchTerm] = useState(state.filter.search);
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [periodValue, setPeriodValue] = useState(3);
-  const [periodUnit, setPeriodUnit] = useState<'days' | 'hours' | 'minutes'>('days');
-  const [periodDepartment, setPeriodDepartment] = useState('All');
+  const [periodValue, setPeriodValue] = useState(state.filter.periodValue);
+  const [periodUnit, setPeriodUnit] = useState<'days' | 'hours' | 'minutes'>(state.filter.periodUnit);
+  const [periodDepartment, setPeriodDepartment] = useState(state.filter.periodDepartment);
 
   useEffect(() => {
     setSearchTerm(state.filter.search);
     const timeZone = 'UTC';
     setDateFrom(state.filter.startDate ? formatInTimeZone(state.filter.startDate, timeZone, 'yyyy-MM-dd') : '');
     setDateTo(state.filter.endDate ? formatInTimeZone(state.filter.endDate, timeZone, 'yyyy-MM-dd') : '');
-    if (state.filter.mainFilter !== 'Exceeding Period') {
-        setPeriodValue(3);
-        setPeriodUnit('days');
-        setPeriodDepartment('All');
-    }
+    setPeriodValue(state.filter.periodValue);
+    setPeriodUnit(state.filter.periodUnit);
+    setPeriodDepartment(state.filter.periodDepartment);
   }, [state.filter]);
 
   // Debounce search input
@@ -64,14 +62,15 @@ export default function SearchAndFilter() {
   
   const handleCalculatePeriod = () => {
     dispatch({ type: 'SET_FILTER', payload: { periodValue, periodUnit, periodDepartment, mainFilter: 'Exceeding Period', departmentSpecificFilter: 'All' } })
-    // Reset local state to defaults after calculation
-    setPeriodValue(3);
-    setPeriodUnit('days');
-    setPeriodDepartment('All');
   }
   
   const clearPeriodFilter = () => {
-    dispatch({ type: 'SET_FILTER', payload: { mainFilter: 'All' } });
+    dispatch({ type: 'SET_FILTER', payload: { 
+        mainFilter: 'All',
+        periodValue: 3,
+        periodUnit: 'days',
+        periodDepartment: 'All'
+     } });
   }
 
   const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All';

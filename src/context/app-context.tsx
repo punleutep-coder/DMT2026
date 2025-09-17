@@ -3,6 +3,7 @@
 
 
 
+
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
@@ -93,10 +94,26 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const storedUser = sessionStorage.getItem('currentUser');
         const finalUser = currentUser || (storedUser ? JSON.parse(storedUser) : null);
         
+        let initialFilter = state.filter;
+        if (typeof window !== 'undefined') {
+            const storedFilter = localStorage.getItem('docuFlow_filterSettings');
+            if (storedFilter) {
+                const parsedFilter = JSON.parse(storedFilter);
+                initialFilter = {
+                    ...initialFilter,
+                    ...parsedFilter,
+                    // Dates need to be reconstructed from strings
+                    startDate: parsedFilter.startDate ? new Date(parsedFilter.startDate) : null,
+                    endDate: parsedFilter.endDate ? new Date(parsedFilter.endDate) : null,
+                };
+            }
+        }
+
         return {
             ...state,
             ...action.payload,
             currentUser: finalUser,
+            filter: initialFilter,
             isInitialized: true,
         };
     case 'SET_DOCUMENTS':
@@ -125,9 +142,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
       };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
+      localStorage.removeItem('docuFlow_filterSettings');
       return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, documentTypes: state.documentTypes, assignedDepartments: state.assignedDepartments, columnVisibility: state.columnVisibility };
     case 'SET_FILTER':
-      return { ...state, filter: { ...state.filter, ...action.payload }, pagination: {...state.pagination, currentPage: 1} };
+      const newFilter = { ...state.filter, ...action.payload };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('docuFlow_filterSettings', JSON.stringify(newFilter));
+      }
+      return { ...state, filter: newFilter, pagination: {...state.pagination, currentPage: 1} };
     case 'SET_PAGINATION':
         return { ...state, pagination: { ...state.pagination, ...action.payload } };
     case 'SET_MODAL':
@@ -335,11 +357,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    // Try to load user from session storage on initial load.
-    const storedUser = sessionStorage.getItem('currentUser');
-    if (storedUser) {
-        dispatch({ type: 'LOGIN', payload: { user: JSON.parse(storedUser) } });
-    }
+    
+    // This effect runs once on mount to set the initial state, including filters from localStorage
+    dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
 
     // This listener seeds the database if it's empty.
     const dbRef = ref(db, 'users');
@@ -372,10 +392,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             console.error(`Firebase onValue error for ${path}:`, error);
         })
     );
-
-    Promise.all(listeners.map(({ path }) => get(ref(db, path)))).then(() => {
-        dispatch({ type: 'SET_INITIALIZED', payload: true });
-    });
 
     return () => {
         unsubscribes.forEach(unsubscribe => unsubscribe());
