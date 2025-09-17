@@ -32,6 +32,7 @@ const formSchema = z.object({
   documentLink3: z.string().url().optional().or(z.literal('')),
   documentLink4: z.string().url().optional().or(z.literal('')),
   assignedDepartment: z.string().optional(),
+  keywords: z.string().optional(),
   docTags: z.string().optional(),
 })
 
@@ -65,6 +66,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
       documentLink3: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[2] || '' : '',
       documentLink4: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[3] || '' : '',
       assignedDepartment: docToUpdate?.assignedDepartment || '',
+      keywords: docToUpdate?.keywords || '',
       docTags: Array.isArray(docToUpdate?.tags) ? docToUpdate.tags.join(', ') : '',
     },
   })
@@ -123,6 +125,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             tertiaryId: values.tertiaryId || null,
             quaternaryId: values.quaternaryId || null,
             documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
+            keywords: values.keywords || '',
             tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
             lastUpdate: new Date().toISOString(),
         };
@@ -180,6 +183,10 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         if (hasPermission(currentUser, 'canEditQuaternaryId') && values.quaternaryId !== (docToUpdate.quaternaryId || '')) {
             updatedFields.quaternaryId = values.quaternaryId || null;
             compareAndPush('Quaternary ID', docToUpdate.quaternaryId, values.quaternaryId);
+        }
+         if (hasPermission(currentUser, 'canEditKeywords') && values.keywords !== (docToUpdate.keywords || '')) {
+            updatedFields.keywords = values.keywords || '';
+            compareAndPush('Keywords', docToUpdate.keywords, values.keywords);
         }
 
         const newTags = values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [];
@@ -284,6 +291,22 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>{t('quaternaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
 
+                {hasPermission(currentUser, 'canEditKeywords') && (
+                  <FormField
+                    control={form.control}
+                    name="keywords"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('keywords')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={t('keywordsPlaceholder')} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('tagsLabel')}</FormLabel>
@@ -321,3 +344,4 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     
 
     
+
