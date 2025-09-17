@@ -343,6 +343,7 @@ export default function UserManagementModal({
                   >
                     <div>
                       <span className="font-medium">{user.username}</span>
+                      <p className="text-xs text-muted-foreground">ID: {user.id}</p>
                       <span className="text-sm text-muted-foreground ml-2">
                         ({t(user.role as 'Admin' | 'User')})
                       </span>
@@ -572,3 +573,4 @@ export default function UserManagementModal({
     
 
     
+
