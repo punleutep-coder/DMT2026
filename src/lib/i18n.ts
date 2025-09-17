@@ -94,7 +94,7 @@ const translations = {
         exceedingPeriod: "Exceeding Period",
         
         // Search & Filter
-        searchByDocIdLabel: "Search by Document ID, Name, Tags...",
+        searchByDocIdLabel: "Search Document",
         historyFrom: "History From:",
         historyTo: "History To:",
         filterByDate: "Filter by Date",
@@ -336,7 +336,7 @@ const translations = {
         exceedingPeriod: "លើសពីរយៈពេល",
         
         // Search & Filter
-        searchByDocIdLabel: "ស្វែងរកតាមលេខសម្គាល់ឯកសារ, ឈ្មោះ, ស្លាក...",
+        searchByDocIdLabel: "ស្វែងរកឯកសារ",
         historyFrom: "ប្រវត្តិពី:",
         historyTo: "ប្រវត្តិដល់:",
         filterByDate: "ត្រងតាមកាលបរិច្ឆេទ",
@@ -522,3 +522,6 @@ export const languages = [
 
 
 
+
+
+    
