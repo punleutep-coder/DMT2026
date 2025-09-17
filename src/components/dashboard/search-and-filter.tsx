@@ -128,7 +128,7 @@ export default function SearchAndFilter() {
             id="search-id"
             type="text"
             placeholder={t('search')}
-            className="w-full pr-24 pl-10 shadow-md bg-[#33CCCC40]"
+            className="w-full pr-24 pl-10 shadow-md bg-[#FF660040]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
