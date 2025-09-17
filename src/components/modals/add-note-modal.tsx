@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
+import { format } from 'date-fns'
 
 const formSchema = z.object({
   newNote: z.string().min(1, 'Note cannot be empty.'),
@@ -37,19 +38,20 @@ export default function AddNoteModal({ isOpen, onClose, docId, firestoreId }: Ad
   const currentNote = docToUpdate?.history[docToUpdate.history.length - 1]?.note || ''
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const now = new Date().toISOString();
+    const now = new Date();
     const newHistory = [...docToUpdate.history];
     const lastEntry = newHistory[newHistory.length - 1];
     
     if (lastEntry) {
-        const appendedNote = currentNote ? `${currentNote}\n--- (new note) ---\n${values.newNote}` : values.newNote;
+        const formattedDate = format(now, 'dd/MM/yyyy HH:mm');
+        const appendedNote = currentNote ? `${currentNote}\n--- (${formattedDate}) ---\n${values.newNote}` : values.newNote;
         lastEntry.note = appendedNote;
     }
 
     const updatedFields: Partial<Document> & {id: string} = { 
         id: docId,
         history: newHistory, 
-        lastUpdate: now 
+        lastUpdate: now.toISOString() 
     };
 
     dispatch({ type: 'UPDATE_DOCUMENT', payload: updatedFields });
@@ -60,7 +62,7 @@ export default function AddNoteModal({ isOpen, onClose, docId, firestoreId }: Ad
             oldStatus: docToUpdate.status, 
             newStatus: `Note Added in ${docToUpdate.status}`, 
             user: state.currentUser!.username, 
-            timestamp: now, 
+            timestamp: now.toISOString(), 
             reason: `New note added: ${values.newNote}` 
         }
     });
