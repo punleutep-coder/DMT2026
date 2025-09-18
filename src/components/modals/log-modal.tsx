@@ -84,7 +84,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                            {sourceDoc.secondaryId && <p className="text-sm text-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
                            
                            {sourceDoc.documentLink && sourceDoc.documentLink.length > 0 && (
-                            <div className="absolute top-4 right-4">
+                            <div className="mt-4">
                                 <a href={sourceDoc.documentLink[0]} target="_blank" rel="noopener noreferrer">
                                     <Button variant="outline" size="sm">
                                         <Link className="mr-2 h-4 w-4" />
