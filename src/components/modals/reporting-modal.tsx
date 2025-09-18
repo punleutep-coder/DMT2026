@@ -31,6 +31,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   LabelList,
+  Cell,
 } from 'recharts'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -176,9 +177,11 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
     };
   }, [reportData, filteredDocsForReport]);
 
+  const chartColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f', '#ffbb28', '#ff8042'];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] glassmorphic-card flex flex-col">
+      <DialogContent className="max-w-4xl h-[90vh] glassmorphic-card flex flex-col" style={{ background: '#EEDCB4' }}>
         <DialogHeader>
           <DialogTitle>{t('documentReports')}</DialogTitle>
           <DialogDescription>
@@ -312,49 +315,50 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                   <div className="mt-4">
                         <h4 className="font-semibold text-lg mb-2">Documents per Type:</h4>
                         <div className="h-[400px] w-full mt-4">
-                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={reportTotals.chartData} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                    <XAxis type="number" allowDecimals={false} />
-                                    <YAxis type="category" dataKey="name" width={150} interval={0} />
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={reportTotals.chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} style={{ fontSize: '12px' }} />
+                                    <YAxis allowDecimals={false} />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: 'hsl(var(--background))',
                                             borderColor: 'hsl(var(--border))',
                                         }}
                                     />
-                                    <Bar dataKey="count" fill="hsl(var(--primary))" barSize={20}>
-                                        <LabelList dataKey="count" position="right" className="fill-foreground" />
+                                    <Bar dataKey="count" barSize={30}>
+                                        {reportTotals.chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                                        ))}
+                                        <LabelList dataKey="count" position="top" className="fill-foreground font-bold" />
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                     <div className="grid grid-cols-1 gap-y-4 mt-4 md:mt-0">
-                        <div>
-                            <h4 className="font-semibold text-lg mb-2 text-blue-600">Combined Docs by Type:</h4>
-                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1 text-sm">
-                                {Object.keys(reportTotals.combinedTypesBreakdown).length > 0 ? Object.entries(reportTotals.combinedTypesBreakdown).map(([type, count]) => (
-                                <div key={type} className="flex justify-between">
-                                    <span className="text-muted-foreground">{type}:</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                                )) : <p className="text-sm text-muted-foreground col-span-2">None</p>}
+                  <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                     <div>
+                        <h4 className="font-semibold text-lg mb-2 text-blue-600">Combined Docs by Type:</h4>
+                         <div className="grid grid-cols-1 gap-y-1 text-sm">
+                            {Object.keys(reportTotals.combinedTypesBreakdown).length > 0 ? Object.entries(reportTotals.combinedTypesBreakdown).map(([type, count]) => (
+                            <div key={type} className="flex justify-between border-b py-1">
+                                <span className="text-muted-foreground">{type}:</span>
+                                <span className="font-medium">{count}</span>
                             </div>
+                            )) : <p className="text-sm text-muted-foreground">None</p>}
                         </div>
-                         <div>
-                            <h4 className="font-semibold text-lg mb-2 text-purple-600">Split Docs by Type:</h4>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1 text-sm">
-                                {Object.keys(reportTotals.splitTypesBreakdown).length > 0 ? Object.entries(reportTotals.splitTypesBreakdown).map(([type, count]) => (
-                                <div key={type} className="flex justify-between">
-                                    <span className="text-muted-foreground">{type}:</span>
-                                    <span className="font-medium">{count}</span>
-                                </div>
-                                )) : <p className="text-sm text-muted-foreground col-span-2">None</p>}
+                    </div>
+                     <div>
+                        <h4 className="font-semibold text-lg mb-2 text-purple-600">Split Docs by Type:</h4>
+                        <div className="grid grid-cols-1 gap-y-1 text-sm">
+                            {Object.keys(reportTotals.splitTypesBreakdown).length > 0 ? Object.entries(reportTotals.splitTypesBreakdown).map(([type, count]) => (
+                            <div key={type} className="flex justify-between border-b py-1">
+                                <span className="text-muted-foreground">{type}:</span>
+                                <span className="font-medium">{count}</span>
                             </div>
+                            )) : <p className="text-sm text-muted-foreground">None</p>}
                         </div>
-                     </div>
+                    </div>
                   </div>
                 </div>
               </>
