@@ -388,7 +388,7 @@ const translations = {
         editDocument: "កែសម្រួលឯកសារ",
         saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
         documentHistory: "ប្រវត្តិសម្រាប់",
-        sourceDocuments: "ឯកสารប្រភព",
+        sourceDocuments: "ឯកសារដើម",
         department: "នាយកដ្ឋាន",
         departmentTimestamps: "ព័ត៌មានលម្អិត",
         statusChangeLog: "កំណត់ហេតុការផ្លាស់ប្តូរស្ថានភាព",
@@ -523,5 +523,7 @@ export const languages = [
 
 
 
+
+    
 
     
