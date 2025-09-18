@@ -63,7 +63,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
       to = endOfDay(now)
     } else if (period === 'week') {
       from = startOfWeek(now)
-      to = endOfWeek(now)
+      to = endOfMonth(now)
     } else {
       // month
       from = startOfMonth(now)
@@ -108,6 +108,22 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
   const sortedDepartments = useMemo(() => {
     if (!reportData) return [];
     return Object.keys(reportData).sort();
+  }, [reportData]);
+
+  const reportTotals = useMemo(() => {
+    if (!reportData) return { totalDocs: 0, totalTypes: 0 };
+
+    let totalDocs = 0;
+    const allTypes = new Set<string>();
+
+    Object.values(reportData).forEach(deptData => {
+      totalDocs += deptData.totalDocs;
+      Object.keys(deptData.docTypes).forEach(type => {
+        allTypes.add(type);
+      });
+    });
+
+    return { totalDocs, totalTypes: allTypes.size };
   }, [reportData]);
 
   return (
@@ -192,36 +208,51 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
         <ScrollArea className="flex-grow">
           <div className="p-4">
             {reportData ? (
-              <Accordion type="single" collapsible className="w-full">
-                {sortedDepartments.map(dept => (
-                    <AccordionItem value={dept} key={dept}>
-                        <AccordionTrigger>
-                            <div className="flex justify-between w-full pr-4">
-                                <span className="font-semibold text-lg">{dept}</span>
-                                <span className="text-muted-foreground">{t('totalDocs')}: {reportData[dept].totalDocs} | {t('types')}: {Object.keys(reportData[dept].docTypes).length}</span>
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                           <Table>
-                            <TableHeader>
-                                <TableRow>
-                                <TableHead>{t('documentType')}</TableHead>
-                                <TableHead className="text-right">{t('count')}</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {Object.entries(reportData[dept].docTypes).map(([type, count]) => (
-                                <TableRow key={type}>
-                                    <TableCell>{type}</TableCell>
-                                    <TableCell className="text-right">{count}</TableCell>
-                                </TableRow>
-                                ))}
-                            </TableBody>
-                            </Table>
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
-              </Accordion>
+              <>
+                <Accordion type="single" collapsible className="w-full">
+                  {sortedDepartments.map(dept => (
+                      <AccordionItem value={dept} key={dept}>
+                          <AccordionTrigger>
+                              <div className="flex justify-between w-full pr-4">
+                                  <span className="font-semibold text-lg">{dept}</span>
+                                  <span className="text-muted-foreground">{t('totalDocs')}: {reportData[dept].totalDocs} | {t('types')}: {Object.keys(reportData[dept].docTypes).length}</span>
+                              </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                  <TableHead>{t('documentType')}</TableHead>
+                                  <TableHead className="text-right">{t('count')}</TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {Object.entries(reportData[dept].docTypes).map(([type, count]) => (
+                                  <TableRow key={type}>
+                                      <TableCell>{type}</TableCell>
+                                      <TableCell className="text-right">{count}</TableCell>
+                                  </TableRow>
+                                  ))}
+                              </TableBody>
+                              </Table>
+                          </AccordionContent>
+                      </AccordionItem>
+                  ))}
+                </Accordion>
+                <div className="mt-6 pt-4 border-t-2 border-primary/50">
+                  <h3 className="font-bold text-xl mb-2 text-primary">Grand Total</h3>
+                  <div className="space-y-2 text-base">
+                    <div className="flex justify-between font-semibold">
+                      <span>Total Documents:</span>
+                      <span>{reportTotals.totalDocs}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold">
+                      <span>Total Unique Document Types:</span>
+                      <span>{reportTotals.totalTypes}</span>
+                    </div>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>{t('pleaseSelectDateRange')}</p>
