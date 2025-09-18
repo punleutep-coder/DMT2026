@@ -54,6 +54,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
   const t = useTranslation()
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
   const [reportData, setReportData] = useState<ReportData | null>(null)
+  const [filteredDocsForReport, setFilteredDocsForReport] = useState<Document[]>([])
 
   const handleSetDateRange = (period: 'today' | 'week' | 'month') => {
     const now = new Date()
@@ -82,6 +83,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
       const docDate = new Date(doc.history[0]?.start || doc.lastUpdate)
       return docDate >= dateRange.from! && docDate <= dateRange.to!
     })
+    setFilteredDocsForReport(filteredDocs)
 
     const data = filteredDocs.reduce<ReportData>((acc, doc) => {
       const dept = doc.assignedDepartment || 'Unassigned'
@@ -103,6 +105,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
   const clearReport = () => {
     setDateRange({})
     setReportData(null)
+    setFilteredDocsForReport([])
   }
   
   const sortedDepartments = useMemo(() => {
@@ -111,7 +114,15 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
   }, [reportData]);
 
   const reportTotals = useMemo(() => {
-    if (!reportData) return { totalDocs: 0, totalTypes: 0, typesBreakdown: {} };
+    if (!reportData) return { 
+        totalDocs: 0, 
+        totalTypes: 0, 
+        typesBreakdown: {}, 
+        totalCombined: 0,
+        totalSplit: 0,
+        combinedTypesBreakdown: {},
+        splitTypesBreakdown: {} 
+    };
 
     let totalDocs = 0;
     const typesBreakdown: { [key: string]: number } = {};
@@ -124,13 +135,32 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
     });
     
     const sortedTypesBreakdown = Object.entries(typesBreakdown).sort(([a], [b]) => a.localeCompare(b));
+    
+    const combinedDocs = filteredDocsForReport.filter(d => d.combinedFrom && d.combinedFrom.length > 0);
+    const splitDocs = filteredDocsForReport.filter(d => d.splitFrom);
+    
+    const combinedTypesBreakdown = combinedDocs.reduce((acc, doc) => {
+        const type = doc.documentType || 'No Type';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+    }, {} as {[key:string]: number});
+
+    const splitTypesBreakdown = splitDocs.reduce((acc, doc) => {
+        const type = doc.documentType || 'No Type';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+    }, {} as {[key:string]: number});
 
     return { 
         totalDocs, 
         totalTypes: Object.keys(typesBreakdown).length,
-        typesBreakdown: Object.fromEntries(sortedTypesBreakdown)
+        typesBreakdown: Object.fromEntries(sortedTypesBreakdown),
+        totalCombined: combinedDocs.length,
+        totalSplit: splitDocs.length,
+        combinedTypesBreakdown: Object.fromEntries(Object.entries(combinedTypesBreakdown).sort(([a], [b]) => a.localeCompare(b))),
+        splitTypesBreakdown: Object.fromEntries(Object.entries(splitTypesBreakdown).sort(([a], [b]) => a.localeCompare(b))),
     };
-  }, [reportData]);
+  }, [reportData, filteredDocsForReport]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -233,7 +263,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                                   </TableRow>
                               </TableHeader>
                               <TableBody>
-                                  {Object.entries(reportData[dept].docTypes).map(([type, count]) => (
+                                  {Object.entries(reportData[dept].docTypes).sort(([a], [b]) => a.localeCompare(b)).map(([type, count]) => (
                                   <TableRow key={type}>
                                       <TableCell>{type}</TableCell>
                                       <TableCell className="text-right">{count}</TableCell>
@@ -256,17 +286,51 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                           <span>Total Unique Document Types:</span>
                           <span>{reportTotals.totalTypes}</span>
                       </div>
-                  </div>
-                  <div className="mt-4">
-                      <h4 className="font-semibold text-lg mb-2">Documents per Type:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1 text-sm">
-                        {Object.entries(reportTotals.typesBreakdown).map(([type, count]) => (
-                           <div key={type} className="flex justify-between">
-                               <span className="text-muted-foreground">{type}:</span>
-                               <span className="font-medium">{count}</span>
-                           </div>
-                        ))}
+                      <div className="flex justify-between font-semibold border-b pb-2">
+                          <span>Total Combined Documents:</span>
+                          <span className="text-blue-600">{reportTotals.totalCombined}</span>
                       </div>
+                      <div className="flex justify-between font-semibold border-b pb-2">
+                          <span>Total Split Documents:</span>
+                          <span className="text-purple-600">{reportTotals.totalSplit}</span>
+                      </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                     <div>
+                        <h4 className="font-semibold text-lg mb-2">Documents per Type:</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                            {Object.entries(reportTotals.typesBreakdown).map(([type, count]) => (
+                            <div key={type} className="flex justify-between">
+                                <span className="text-muted-foreground">{type}:</span>
+                                <span className="font-medium">{count}</span>
+                            </div>
+                            ))}
+                        </div>
+                     </div>
+                     <div className="grid grid-cols-1 gap-y-4 mt-4 md:mt-0">
+                        <div>
+                            <h4 className="font-semibold text-lg mb-2 text-blue-600">Combined Docs by Type:</h4>
+                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                                {Object.keys(reportTotals.combinedTypesBreakdown).length > 0 ? Object.entries(reportTotals.combinedTypesBreakdown).map(([type, count]) => (
+                                <div key={type} className="flex justify-between">
+                                    <span className="text-muted-foreground">{type}:</span>
+                                    <span className="font-medium">{count}</span>
+                                </div>
+                                )) : <p className="text-sm text-muted-foreground col-span-2">None</p>}
+                            </div>
+                        </div>
+                         <div>
+                            <h4 className="font-semibold text-lg mb-2 text-purple-600">Split Docs by Type:</h4>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                                {Object.keys(reportTotals.splitTypesBreakdown).length > 0 ? Object.entries(reportTotals.splitTypesBreakdown).map(([type, count]) => (
+                                <div key={type} className="flex justify-between">
+                                    <span className="text-muted-foreground">{type}:</span>
+                                    <span className="font-medium">{count}</span>
+                                </div>
+                                )) : <p className="text-sm text-muted-foreground col-span-2">None</p>}
+                            </div>
+                        </div>
+                     </div>
                   </div>
                 </div>
               </>
