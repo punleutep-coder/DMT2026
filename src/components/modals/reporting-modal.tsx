@@ -111,19 +111,25 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
   }, [reportData]);
 
   const reportTotals = useMemo(() => {
-    if (!reportData) return { totalDocs: 0, totalTypes: 0 };
+    if (!reportData) return { totalDocs: 0, totalTypes: 0, typesBreakdown: {} };
 
     let totalDocs = 0;
-    const allTypes = new Set<string>();
+    const typesBreakdown: { [key: string]: number } = {};
 
     Object.values(reportData).forEach(deptData => {
       totalDocs += deptData.totalDocs;
-      Object.keys(deptData.docTypes).forEach(type => {
-        allTypes.add(type);
+      Object.entries(deptData.docTypes).forEach(([type, count]) => {
+        typesBreakdown[type] = (typesBreakdown[type] || 0) + count;
       });
     });
+    
+    const sortedTypesBreakdown = Object.entries(typesBreakdown).sort(([a], [b]) => a.localeCompare(b));
 
-    return { totalDocs, totalTypes: allTypes.size };
+    return { 
+        totalDocs, 
+        totalTypes: Object.keys(typesBreakdown).length,
+        typesBreakdown: Object.fromEntries(sortedTypesBreakdown)
+    };
   }, [reportData]);
 
   return (
@@ -240,16 +246,27 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                   ))}
                 </Accordion>
                 <div className="mt-6 pt-4 border-t-2 border-primary/50">
-                  <h3 className="font-bold text-xl mb-2 text-primary">Grand Total</h3>
-                  <div className="space-y-2 text-base">
-                    <div className="flex justify-between font-semibold">
-                      <span>Total Documents:</span>
-                      <span>{reportTotals.totalDocs}</span>
-                    </div>
-                    <div className="flex justify-between font-semibold">
-                      <span>Total Unique Document Types:</span>
-                      <span>{reportTotals.totalTypes}</span>
-                    </div>
+                  <h3 className="font-bold text-xl mb-4 text-primary">Grand Total</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-base">
+                      <div className="flex justify-between font-semibold border-b pb-2">
+                          <span>Total Documents:</span>
+                          <span>{reportTotals.totalDocs}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold border-b pb-2">
+                          <span>Total Unique Document Types:</span>
+                          <span>{reportTotals.totalTypes}</span>
+                      </div>
+                  </div>
+                  <div className="mt-4">
+                      <h4 className="font-semibold text-lg mb-2">Documents per Type:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1 text-sm">
+                        {Object.entries(reportTotals.typesBreakdown).map(([type, count]) => (
+                           <div key={type} className="flex justify-between">
+                               <span className="text-muted-foreground">{type}:</span>
+                               <span className="font-medium">{count}</span>
+                           </div>
+                        ))}
+                      </div>
                   </div>
                 </div>
               </>
