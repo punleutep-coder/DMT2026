@@ -22,6 +22,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LabelList,
+} from 'recharts'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -121,7 +131,8 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
         totalCombined: 0,
         totalSplit: 0,
         combinedTypesBreakdown: {},
-        splitTypesBreakdown: {} 
+        splitTypesBreakdown: {},
+        chartData: []
     };
 
     let totalDocs = 0;
@@ -150,6 +161,8 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
         acc[type] = (acc[type] || 0) + 1;
         return acc;
     }, {} as {[key:string]: number});
+    
+    const chartData = sortedTypesBreakdown.map(([name, count]) => ({ name, count }));
 
     return { 
         totalDocs, 
@@ -159,6 +172,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
         totalSplit: splitDocs.length,
         combinedTypesBreakdown: Object.fromEntries(Object.entries(combinedTypesBreakdown).sort(([a], [b]) => a.localeCompare(b))),
         splitTypesBreakdown: Object.fromEntries(Object.entries(splitTypesBreakdown).sort(([a], [b]) => a.localeCompare(b))),
+        chartData
     };
   }, [reportData, filteredDocsForReport]);
 
@@ -295,18 +309,28 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                           <span className="text-purple-600">{reportTotals.totalSplit}</span>
                       </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                     <div>
+                  <div className="mt-4">
                         <h4 className="font-semibold text-lg mb-2">Documents per Type:</h4>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1 text-sm">
-                            {Object.entries(reportTotals.typesBreakdown).map(([type, count]) => (
-                            <div key={type} className="flex justify-between">
-                                <span className="text-muted-foreground">{type}:</span>
-                                <span className="font-medium">{count}</span>
-                            </div>
-                            ))}
+                        <div className="h-[400px] w-full mt-4">
+                             <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={reportTotals.chartData} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                    <XAxis type="number" allowDecimals={false} />
+                                    <YAxis type="category" dataKey="name" width={150} interval={0} />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'hsl(var(--background))',
+                                            borderColor: 'hsl(var(--border))',
+                                        }}
+                                    />
+                                    <Bar dataKey="count" fill="hsl(var(--primary))" barSize={20}>
+                                        <LabelList dataKey="count" position="right" className="fill-foreground" />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
-                     </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8">
                      <div className="grid grid-cols-1 gap-y-4 mt-4 md:mt-0">
                         <div>
                             <h4 className="font-semibold text-lg mb-2 text-blue-600">Combined Docs by Type:</h4>
