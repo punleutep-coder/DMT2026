@@ -130,7 +130,7 @@ export default function DashboardSidebar() {
         <div className="flex items-center justify-between p-2">
           <div className="text-center text-muted-foreground text-sm">
               {t('loggedInAs')}:{' '}
-              <strong className="text-primary">{currentUser.username}</strong>
+              <strong className="text-destructive">{currentUser.username}</strong>
             </div>
              <LanguageSwitcher />
         </div>
