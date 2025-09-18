@@ -41,10 +41,12 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { cn } from '@/lib/utils'
 import type { Document } from '@/lib/types'
+import { Combobox } from '../ui/combobox'
 
 const formSchema = z.object({
   newDocId: z.string().min(1, 'New Document ID is required.'),
   newDocName: z.string().min(1, 'New Document Name is required.'),
+  documentType: z.string().min(1, 'Document type is required.'),
   assignedDepartment: z.string().optional(),
   office: z.string().optional(),
   targetDepartment: z.string().min(1, 'Please select a target department.'),
@@ -63,7 +65,7 @@ export default function CombineDocumentsModal({
   onClose,
 }: CombineDocumentsModalProps) {
   const { state, dispatch } = useAppContext()
-  const { selectedDocIds, departments, currentUser } = state
+  const { selectedDocIds, departments, currentUser, documentTypes } = state
   const docsToCombine = state.documents.filter((d) =>
     selectedDocIds.includes(d.id)
   )
@@ -73,6 +75,7 @@ export default function CombineDocumentsModal({
     defaultValues: {
       newDocId: '',
       newDocName: '',
+      documentType: '',
       assignedDepartment: '',
       office: '',
       targetDepartment: '',
@@ -125,6 +128,7 @@ export default function CombineDocumentsModal({
       id: values.newDocId,
       firestoreId: `doc-${Date.now()}`,
       name: values.newDocName,
+      documentType: values.documentType,
       office: values.office || null,
       status: values.targetDepartment,
       initialDepartment: values.targetDepartment,
@@ -182,6 +186,8 @@ export default function CombineDocumentsModal({
     dispatch({ type: 'SET_SELECTED_DOC_IDS', payload: [] })
     onClose()
   }
+  
+  const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -214,6 +220,24 @@ export default function CombineDocumentsModal({
                     <h3 className="font-semibold">New Combined Document Details:</h3>
                     <FormField control={form.control} name="newDocId" render={({ field }) => ( <FormItem><FormLabel>Document ID (Primary)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <FormField control={form.control} name="newDocName" render={({ field }) => ( <FormItem><FormLabel>Document Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField
+                      control={form.control}
+                      name="documentType"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Document Type</FormLabel>
+                          <Combobox
+                            options={documentTypeOptions}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Select document type..."
+                            searchPlaceholder="Search types..."
+                            notFoundText="No types found."
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Department (Assigned to Document)</FormLabel><FormControl><Input placeholder="e.g., Finance, HR, Legal" {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <FormField control={form.control} name="targetDepartment" render={({ field }) => (
