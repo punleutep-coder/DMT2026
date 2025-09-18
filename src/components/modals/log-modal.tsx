@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import type { Document } from '@/lib/types'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { Split } from 'lucide-react'
+import { Split, Link } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
 
 interface LogModalProps {
@@ -82,6 +82,17 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                            </h4>
                            <p className="text-sm text-foreground">{t('department')}: {sourceDoc.assignedDepartment}</p>
                            {sourceDoc.secondaryId && <p className="text-sm text-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
+                           
+                           {sourceDoc.documentLink && sourceDoc.documentLink.length > 0 && (
+                            <div className="absolute top-4 right-4">
+                                <a href={sourceDoc.documentLink[0]} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline" size="sm">
+                                        <Link className="mr-2 h-4 w-4" />
+                                        {t('docLink1')}
+                                    </Button>
+                                </a>
+                            </div>
+                           )}
                         </div>
                     ))}
                 </div>
