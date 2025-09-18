@@ -187,6 +187,14 @@ const translations = {
         customDate: "Custom Date (Optional)",
         pickDate: "Pick a date",
         markAsComplete: "Mark as Complete",
+        grandTotal: "Grand Total",
+        totalUniqueDocTypes: "Total Unique Document Types",
+        totalCombinedDocs: "Total Combined Documents",
+        totalSplitDocs: "Total Split Documents",
+        docsPerType: "Documents per Type",
+        combinedDocsByType: "Combined Docs by Type",
+        splitDocsByType: "Split Docs by Type",
+        none: "None",
 
         // User Management
         userManagementDesc: "Add, edit, or remove users and manage their roles and permissions.",
@@ -428,6 +436,14 @@ const translations = {
         customDate: "កាលបរិច្ឆេទផ្ទាល់ខ្លួន (ស្រេចចិត្ត)",
         pickDate: "ជ្រើសរើសកាលបរិច្ឆេទ",
         markAsComplete: "សម្គាល់ថាបានបញ្ចប់",
+        grandTotal: "សរុប​រួម",
+        totalUniqueDocTypes: "ប្រភេទ​ឯកសារ​ពិសេស​សរុប",
+        totalCombinedDocs: "ឯកសារ​រួម​បញ្ចូល​គ្នា​សរុប",
+        totalSplitDocs: "ឯកសារ​បំបែក​សរុប",
+        docsPerType: "ឯកសារ​ក្នុង​មួយ​ប្រភេទ",
+        combinedDocsByType: "ឯកសារ​រួម​បញ្ចូល​គ្នា​តាម​ប្រភេទ",
+        splitDocsByType: "ឯកសារ​បំបែក​តាម​ប្រភេទ",
+        none: "គ្មាន",
         
         // User Management
         userManagementDesc: "បន្ថែម កែសម្រួល ឬលុបអ្នកប្រើប្រាស់ និងគ្រប់គ្រងតួនាទី និងការអនុញ្ញាតរបស់ពួកគេ។",

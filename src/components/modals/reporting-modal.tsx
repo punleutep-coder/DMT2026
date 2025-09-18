@@ -293,27 +293,27 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                   ))}
                 </Accordion>
                 <div className="mt-6 pt-4 border-t-2 border-primary/50">
-                  <h3 className="font-bold text-xl mb-4 text-primary">Grand Total</h3>
+                  <h3 className="font-bold text-xl mb-4 text-primary">{t('grandTotal')}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-base">
                       <div className="flex justify-between font-semibold border-b pb-2">
-                          <span>Total Documents:</span>
+                          <span>{t('totalDocuments')}:</span>
                           <span>{reportTotals.totalDocs}</span>
                       </div>
                       <div className="flex justify-between font-semibold border-b pb-2">
-                          <span>Total Unique Document Types:</span>
+                          <span>{t('totalUniqueDocTypes')}:</span>
                           <span>{reportTotals.totalTypes}</span>
                       </div>
                       <div className="flex justify-between font-semibold border-b pb-2">
-                          <span>Total Combined Documents:</span>
+                          <span>{t('totalCombinedDocs')}:</span>
                           <span className="text-blue-600">{reportTotals.totalCombined}</span>
                       </div>
                       <div className="flex justify-between font-semibold border-b pb-2">
-                          <span>Total Split Documents:</span>
+                          <span>{t('totalSplitDocs')}:</span>
                           <span className="text-purple-600">{reportTotals.totalSplit}</span>
                       </div>
                   </div>
                   <div className="mt-4">
-                        <h4 className="font-semibold text-lg mb-2">Documents per Type:</h4>
+                        <h4 className="font-semibold text-lg mb-2">{t('docsPerType')}:</h4>
                         <div className="h-[400px] w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={reportTotals.chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
@@ -338,25 +338,25 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                   </div>
                   <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-x-8">
                      <div>
-                        <h4 className="font-semibold text-lg mb-2 text-blue-600">Combined Docs by Type:</h4>
+                        <h4 className="font-semibold text-lg mb-2 text-blue-600">{t('combinedDocsByType')}:</h4>
                          <div className="grid grid-cols-1 gap-y-1 text-sm">
                             {Object.keys(reportTotals.combinedTypesBreakdown).length > 0 ? Object.entries(reportTotals.combinedTypesBreakdown).map(([type, count]) => (
                             <div key={type} className="flex justify-between border-b py-1">
                                 <span className="text-muted-foreground">{type}:</span>
                                 <span className="font-medium">{count}</span>
                             </div>
-                            )) : <p className="text-sm text-muted-foreground">None</p>}
+                            )) : <p className="text-sm text-muted-foreground">{t('none')}</p>}
                         </div>
                     </div>
                      <div>
-                        <h4 className="font-semibold text-lg mb-2 text-purple-600">Split Docs by Type:</h4>
+                        <h4 className="font-semibold text-lg mb-2 text-purple-600">{t('splitDocsByType')}:</h4>
                         <div className="grid grid-cols-1 gap-y-1 text-sm">
                             {Object.keys(reportTotals.splitTypesBreakdown).length > 0 ? Object.entries(reportTotals.splitTypesBreakdown).map(([type, count]) => (
                             <div key={type} className="flex justify-between border-b py-1">
                                 <span className="text-muted-foreground">{type}:</span>
                                 <span className="font-medium">{count}</span>
                             </div>
-                            )) : <p className="text-sm text-muted-foreground">None</p>}
+                            )) : <p className="text-sm text-muted-foreground">{t('none')}</p>}
                         </div>
                     </div>
                   </div>
