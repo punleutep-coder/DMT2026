@@ -262,37 +262,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
           <div className="p-4">
             {reportData ? (
               <>
-                <Accordion type="single" collapsible className="w-full">
-                  {sortedDepartments.map(dept => (
-                      <AccordionItem value={dept} key={dept}>
-                          <AccordionTrigger>
-                              <div className="flex justify-between w-full pr-4">
-                                  <span className="font-semibold text-lg">{dept}</span>
-                                  <span className="text-muted-foreground">{t('totalDocs')}: {reportData[dept].totalDocs} | {t('types')}: {Object.keys(reportData[dept].docTypes).length}</span>
-                              </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <Table>
-                              <TableHeader>
-                                  <TableRow>
-                                  <TableHead>{t('documentType')}</TableHead>
-                                  <TableHead className="text-right">{t('count')}</TableHead>
-                                  </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                  {Object.entries(reportData[dept].docTypes).sort(([a], [b]) => a.localeCompare(b)).map(([type, count]) => (
-                                  <TableRow key={type}>
-                                      <TableCell>{type}</TableCell>
-                                      <TableCell className="text-right">{count}</TableCell>
-                                  </TableRow>
-                                  ))}
-                              </TableBody>
-                              </Table>
-                          </AccordionContent>
-                      </AccordionItem>
-                  ))}
-                </Accordion>
-                <div className="mt-6 pt-4 border-t-2 border-primary/50">
+                <div className="mb-6 pb-4 border-b-2 border-primary/50">
                   <h3 className="font-bold text-xl mb-4 text-primary">{t('grandTotal')}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-base">
                       <div className="flex justify-between font-semibold border-b pb-2">
@@ -361,6 +331,37 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                     </div>
                   </div>
                 </div>
+
+                <Accordion type="single" collapsible className="w-full">
+                  {sortedDepartments.map(dept => (
+                      <AccordionItem value={dept} key={dept}>
+                          <AccordionTrigger>
+                              <div className="flex justify-between w-full pr-4">
+                                  <span className="font-semibold text-lg">{dept}</span>
+                                  <span className="text-muted-foreground">{t('totalDocs')}: {reportData[dept].totalDocs} | {t('types')}: {Object.keys(reportData[dept].docTypes).length}</span>
+                              </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                  <TableHead>{t('documentType')}</TableHead>
+                                  <TableHead className="text-right">{t('count')}</TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {Object.entries(reportData[dept].docTypes).sort(([a], [b]) => a.localeCompare(b)).map(([type, count]) => (
+                                  <TableRow key={type}>
+                                      <TableCell>{type}</TableCell>
+                                      <TableCell className="text-right">{count}</TableCell>
+                                  </TableRow>
+                                  ))}
+                              </TableBody>
+                              </Table>
+                          </AccordionContent>
+                      </AccordionItem>
+                  ))}
+                </Accordion>
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
