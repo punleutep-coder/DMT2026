@@ -1,34 +1,6 @@
 {
   "rules": {
-    // Allow unauthenticated reads ONLY on the users list for login purposes.
-    "users": {
-      ".read": true,
-      ".write": "auth != null && auth.uid != null"
-    },
-    // All other paths require authentication for read and write.
-    "documents": {
-      ".read": "auth != null && auth.uid != null",
-      ".write": "auth != null && auth.uid != null"
-    },
-    "logs": {
-      ".read": "auth != null && auth.uid != null",
-      ".write": "auth != null && auth.uid != null"
-    },
-    "departments": {
-      ".read": "auth != null && auth.uid != null",
-      ".write": "auth != null && auth.uid != null"
-    },
-    "documentTypes": {
-      ".read": "auth != null && auth.uid != null",
-      ".write": "auth != null && auth.uid != null"
-    },
-    "assignedDepartments": {
-      ".read": "auth != null && auth.uid != null",
-      ".write": "auth != null && auth.uid != null"
-    },
-    "columnVisibility": {
-      ".read": "auth != null && auth.uid != null",
-      ".write": "auth != null && auth.uid != null"
-    }
+    ".read": "auth != null",
+    ".write": "auth != null"
   }
 }
