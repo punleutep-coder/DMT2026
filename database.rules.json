@@ -1,6 +1,32 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null"
+    "users": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "documents": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "logs": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "departments": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "documentTypes": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "assignedDepartments": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "columnVisibility": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
   }
 }
