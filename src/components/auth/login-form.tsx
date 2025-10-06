@@ -22,8 +22,10 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
 import { Checkbox } from '../ui/checkbox'
 import { useTranslation } from '@/lib/i18n'
-import { auth } from '@/lib/firebase'
+import { auth, db } from '@/lib/firebase'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { ref, set } from 'firebase/database'
+import type { User } from '@/lib/types'
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -77,11 +79,27 @@ export default function LoginForm() {
             // If user doesn't exist, offer to create a new account
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-                // The onAuthStateChanged listener in AppContext will handle creating the user profile in RTDB.
+                const newUser = userCredential.user;
+
+                // Create a corresponding user profile in the Realtime Database
+                const userProfile: User = {
+                    id: newUser.uid,
+                    firestoreId: newUser.uid, // Using uid for consistency
+                    username: values.email.split('@')[0], // Default username from email
+                    email: values.email,
+                    role: 'User',
+                    permissions: {},
+                    departmentPermissions: [],
+                    passwordHash: '', // Not used with Firebase Auth
+                };
+
+                await set(ref(db, 'users/' + newUser.uid), userProfile);
+                
                 toast({
                     title: 'Account Created',
                     description: 'New account created successfully. You are now logged in.',
                 });
+
             } catch (creationError: any) {
                 console.error("Error creating user:", creationError);
                 setError(creationError.message || 'Failed to create a new account.');

@@ -80,7 +80,16 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_INITIALIZED':
         return { ...state, isInitialized: action.payload };
     case 'SET_ALL_DATA':
-        return { ...state, ...action.payload, isInitialized: true };
+        const currentData = {
+          users: action.payload.users ? Object.values(action.payload.users) : state.users,
+          documents: action.payload.documents ? Object.values(action.payload.documents).map(d => ({...d, id: sanitizeFirebaseKey(d.id)})) : state.documents,
+          logs: action.payload.logs ? Object.values(action.payload.logs) : state.logs,
+          departments: action.payload.departments || state.departments,
+          documentTypes: action.payload.documentTypes || state.documentTypes,
+          assignedDepartments: action.payload.assignedDepartments || state.assignedDepartments,
+          columnVisibility: action.payload.columnVisibility || state.columnVisibility,
+        }
+        return { ...state, ...currentData, isInitialized: true };
     case 'SET_CURRENT_USER':
         return { ...state, currentUser: action.payload };
     case 'LOGIN_SUCCESS':
@@ -110,16 +119,17 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         let needsUpdate = false;
         state.documents.forEach(doc => {
+            const sanitizedId = sanitizeFirebaseKey(doc.id);
             if (doc.isDelayed && doc.releaseDate) {
                 const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
                 if (today >= releaseDate && !doc.releaseDateReached) {
-                    updates[`documents/${doc.id}/releaseDateReached`] = true;
-                    updates[`documents/${doc.id}/justReleased`] = true;
+                    updates[`documents/${sanitizedId}/releaseDateReached`] = true;
+                    updates[`documents/${sanitizedId}/justReleased`] = true;
                     needsUpdate = true;
                 }
             }
             if (doc.justReleased) {
-                updates[`documents/${doc.id}/justReleased`] = false;
+                updates[`documents/${sanitizedId}/justReleased`] = false;
                 needsUpdate = true;
             }
         });
@@ -251,18 +261,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribeDB = onValue(dbRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const allData = {
-          users: data.users ? Object.values(data.users) : [],
-          documents: data.documents ? Object.values(data.documents) : [],
-          logs: data.logs ? Object.values(data.logs) : [],
-          departments: data.departments || [],
-          documentTypes: data.documentTypes || [],
-          assignedDepartments: data.assignedDepartments || [],
-          columnVisibility: data.columnVisibility || initialColumnVisibility,
-        };
-        dispatch({ type: 'SET_ALL_DATA', payload: allData });
+        dispatch({ type: 'SET_ALL_DATA', payload: data });
       } else {
-         set(ref(db), initialData); // Seed if empty
+         set(ref(db), initialData).then(() => {
+            dispatch({ type: 'SET_ALL_DATA', payload: initialData });
+         });
       }
     }, (error) => {
       console.error("Firebase onValue error:", error);
@@ -277,8 +280,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           if (userProfile) {
             dispatch({ type: 'LOGIN_SUCCESS', payload: { user: userProfile } });
           } else {
-            console.error("Authenticated user not found in database:", user.uid);
-            auth.signOut(); // Log out if profile is missing
+            // This can happen briefly during registration before the DB has updated.
+            // We don't sign out, but wait for the next onValue to trigger a state update.
           }
         }
       } else {
@@ -290,7 +293,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       unsubscribeDB();
       unsubscribeAuth();
     };
-  }, [state.isInitialized]); // Rerun auth check when DB is initialized
+  }, [state.isInitialized, state.users]); // Rerun auth check when DB is initialized OR users change
 
   useEffect(() => {
     if (!state.currentUser) return;
