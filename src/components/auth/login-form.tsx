@@ -34,7 +34,7 @@ const formSchema = z.object({
 })
 
 export default function LoginForm() {
-  const { state } = useAppContext()
+  const { dispatch } = useAppContext()
   const [error, setError] = useState<string | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast()
@@ -69,7 +69,7 @@ export default function LoginForm() {
 
     try {
         await signInWithEmailAndPassword(auth, values.email, values.password);
-        // onAuthStateChanged in AppContext will handle the rest
+        // onAuthStateChanged in AppContext will handle setting the user and state
         toast({
             title: t('welcome', { username: values.email }),
             description: t('loggedInSuccess'),
@@ -82,10 +82,12 @@ export default function LoginForm() {
                 const newUser = userCredential.user;
 
                 // Create a corresponding user profile in the Realtime Database
-                const userProfile: Omit<User, 'id' | 'firestoreId'> = {
+                const userProfile: User = {
+                    id: newUser.uid,
+                    firestoreId: newUser.uid,
                     username: values.email.split('@')[0], // Default username from email
                     email: values.email,
-                    role: 'User',
+                    role: 'User', // Default role
                     permissions: {},
                     departmentPermissions: [],
                     passwordHash: '', // Not used with Firebase Auth
@@ -97,6 +99,7 @@ export default function LoginForm() {
                     title: 'Account Created',
                     description: 'New account created successfully. You are now logged in.',
                 });
+                // onAuthStateChanged will handle the login
 
             } catch (creationError: any) {
                 console.error("Error creating user:", creationError);

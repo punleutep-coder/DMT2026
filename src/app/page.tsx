@@ -1,3 +1,4 @@
+
 'use client'
 import { useAppContext } from '@/hooks/use-app-context'
 import LoginForm from '@/components/auth/login-form'
@@ -7,13 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Home() {
   const { state } = useAppContext()
-  const [isClient, setIsClient] = useState(false)
+  const { currentUser, isInitialized } = state;
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  if (!isClient) {
+  if (!isInitialized) {
     return (
       <div className="w-full h-screen bg-background flex items-center justify-center p-8">
         <div className="w-full max-w-sm space-y-4">
@@ -28,7 +25,7 @@ export default function Home() {
 
   return (
     <main>
-      {state.currentUser ? <Dashboard /> : <LoginForm />}
+      {currentUser ? <Dashboard /> : <LoginForm />}
     </main>
   )
 }
