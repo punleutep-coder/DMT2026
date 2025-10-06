@@ -245,41 +245,66 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // This is the single auth listener. It runs once.
-    const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
       if (authUser) {
         // User is logged in to Firebase Auth. Now, let's listen to DB.
-        const dbRef = ref(db);
-        const unsubscribeDb = onValue(dbRef, async (snapshot) => {
-          if (!snapshot.exists()) {
-             // If DB is empty, seed it. User must be auth'd to do this.
-             await set(dbRef, initialData);
-             // The onValue will trigger again with the new data.
-             return;
-          }
+        
+        // Ensure initial data exists before setting up listeners
+        const dbRootRef = ref(db);
+        const snapshot = await get(dbRootRef);
+        if (!snapshot.exists()) {
+           console.log("No data found in DB. Seeding database...");
+           await set(dbRootRef, initialData);
+        }
 
-          const data = snapshot.val();
-          const users: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-          
-          const userProfile = users.find(u => u.id === authUser.uid);
-          
-          if(userProfile) {
-            dispatch({ type: 'SET_USERS', payload: users });
-            dispatch({ type: 'SET_DOCUMENTS', payload: data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [] });
-            dispatch({ type: 'SET_LOGS', payload: data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [] });
-            dispatch({ type: 'SET_DEPARTMENTS', payload: data.departments || [] });
-            dispatch({ type: 'SET_DOCUMENT_TYPES', payload: data.documentTypes || [] });
-            dispatch({ type: 'SET_ASSIGNED_DEPARTMENTS', payload: data.assignedDepartments || [] });
-            dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: data.columnVisibility || initialColumnVisibility });
-            dispatch({ type: 'LOGIN_SUCCESS', payload: { user: userProfile } });
-          } else {
-            // This can happen if a user exists in Auth but not RTDB.
-            // Sign them out to avoid an inconsistent state.
-            await auth.signOut();
-          }
-        }, (error) => {
-            console.error("Firebase onValue error:", error);
-            dispatch({ type: 'SET_INITIALIZED', payload: true }); 
-        });
+        const dataListeners = [
+          { path: 'users', actionType: 'SET_USERS' },
+          { path: 'documents', actionType: 'SET_DOCUMENTS' },
+          { path: 'logs', actionType: 'SET_LOGS' },
+          { path: 'departments', actionType: 'SET_DEPARTMENTS' },
+          { path: 'documentTypes', actionType: 'SET_DOCUMENT_TYPES' },
+          { path: 'assignedDepartments', actionType: 'SET_ASSIGNED_DEPARTMENTS' },
+          { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
+        ];
+
+        const unsubscribes = dataListeners.map(({ path, actionType }) => 
+          onValue(ref(db, path), (snapshot) => {
+              const data = snapshot.val();
+              let payload;
+              switch (actionType) {
+                  case 'SET_USERS':
+                      payload = data ? Object.keys(data).map(key => ({ id: key, firestoreId: key, ...data[key] })) : [];
+                      // After users are set, find the current user profile
+                      const userProfile = (payload as User[]).find(u => u.id === authUser.uid);
+                      if (userProfile) {
+                          dispatch({ type: 'LOGIN_SUCCESS', payload: { user: userProfile } });
+                      } else {
+                          console.error(`Authenticated user ${authUser.uid} not found in database.`);
+                          auth.signOut();
+                      }
+                      break;
+                  case 'SET_DOCUMENTS':
+                      payload = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+                      break;
+                   case 'SET_LOGS':
+                      payload = data ? Object.keys(data).map(key => ({ id: key, firestoreId: key, ...data[key] })) : [];
+                      break;
+                  case 'SET_DEPARTMENTS':
+                  case 'SET_DOCUMENT_TYPES':
+                  case 'SET_ASSIGNED_DEPARTMENTS':
+                      payload = data || [];
+                      break;
+                  case 'SET_COLUMN_VISIBILITY':
+                      payload = data || initialColumnVisibility;
+                      break;
+                  default:
+                      payload = data;
+              }
+              dispatch({ type: actionType as any, payload: payload });
+          }, (error) => {
+              console.error(`Firebase onValue error for ${path}:`, error);
+          })
+        );
 
         // Set up interval to check for delayed docs
         const interval = setInterval(() => {
@@ -287,7 +312,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }, 60000);
 
         return () => {
-            unsubscribeDb();
+            unsubscribes.forEach(unsub => unsub());
             clearInterval(interval);
         }
 
