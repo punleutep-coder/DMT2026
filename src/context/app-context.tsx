@@ -1,9 +1,4 @@
 
-
-
-
-
-
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
@@ -139,11 +134,12 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { 
         ...state, 
         currentUser: action.payload.user,
+        isInitialized: true, // Mark as initialized on login
       };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
       localStorage.removeItem('docuFlow_filterSettings');
-      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, documentTypes: state.documentTypes, assignedDepartments: state.assignedDepartments, columnVisibility: state.columnVisibility };
+      return { ...getInitialState(), isInitialized: true }; // Reset state but keep initialized true
     case 'SET_FILTER':
       const newFilter = { ...state.filter, ...action.payload };
       if (typeof window !== 'undefined') {
@@ -167,6 +163,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
 
         state.documents.forEach(doc => {
+            if (!doc || !doc.id) return; // Add guard clause
             const sanitizedId = sanitizeFirebaseKey(doc.id);
             if (doc.isDelayed && doc.releaseDate) {
                 const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
@@ -207,6 +204,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       }
     case 'DELETE_DOCUMENT': {
         const { id } = action.payload;
+        if (!id) return state; // Add guard clause
         const sanitizedId = sanitizeFirebaseKey(id);
         const updates: {[key: string]: any} = {};
         updates[`/documents/${sanitizedId}`] = null;
@@ -227,6 +225,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         
         idsToDelete.forEach(id => {
+          if (!id) return; // Add guard clause
           const sanitizedId = sanitizeFirebaseKey(id);
           updates[`/documents/${sanitizedId}`] = null;
         });
@@ -281,6 +280,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 const newNameForOldIndex = newOrder[index];
                 if (newNameForOldIndex && newNameForOldIndex !== oldName) {
                     state.documents.forEach(doc => {
+                        if (!doc || !doc.id) return; // Add guard clause
                         const sanitizedId = sanitizeFirebaseKey(doc.id);
                         if (doc.status === oldName) {
                             updates[`/documents/${sanitizedId}/status`] = newNameForOldIndex;
@@ -357,20 +357,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    
-    // This effect runs once on mount to set the initial state, including filters from localStorage
-    dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
+    // This effect runs once on mount to set the initial state from session/local storage
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (storedUser) {
+      dispatch({ type: 'LOGIN', payload: { user: JSON.parse(storedUser) } });
+    } else {
+      dispatch({ type: 'SET_INITIALIZED', payload: true });
+    }
+  }, []);
 
-    // This listener seeds the database if it's empty.
-    const dbRef = ref(db, 'users');
-    get(dbRef).then((snapshot) => {
-        if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
-            console.log("No users found in DB. Seeding database...");
-            set(ref(db), initialData).catch(error => {
-                console.error("Failed to seed database:", error);
-            });
-        }
-    });
+  useEffect(() => {
+    // These listeners are active only when a user is logged in.
+    if (!state.currentUser) {
+        // If user logs out, we might want to clear data
+        dispatch({ type: 'SET_DOCUMENTS', payload: [] });
+        dispatch({ type: 'SET_LOGS', payload: [] });
+        dispatch({ type: 'SET_USERS', payload: [] });
+        return;
+    };
 
     const listeners = [
         { path: 'users', actionType: 'SET_USERS' },
@@ -378,39 +382,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         { path: 'documentTypes', actionType: 'SET_DOCUMENT_TYPES' },
         { path: 'assignedDepartments', actionType: 'SET_ASSIGNED_DEPARTMENTS' },
         { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
+        { path: 'documents', actionType: 'SET_DOCUMENTS' },
+        { path: 'logs', actionType: 'SET_LOGS' },
     ];
 
     const unsubscribes = listeners.map(({ path, actionType }) => 
         onValue(ref(db, path), (snapshot) => {
             const data = snapshot.val();
-            if (path === 'users') {
+            if (path === 'users' || path === 'documents' || path === 'logs') {
                  dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
             } else {
-                 dispatch({ type: actionType, payload: data || (path === 'departments' || path === 'documentTypes' || path === 'assignedDepartments' ? [] : initialColumnVisibility) } as any);
+                 dispatch({ type: actionType, payload: data || (path.includes('Departments') || path.includes('Types') ? [] : initialColumnVisibility) } as any);
             }
-        }, (error) => {
-            console.error(`Firebase onValue error for ${path}:`, error);
-        })
-    );
-
-    return () => {
-        unsubscribes.forEach(unsubscribe => unsubscribe());
-    };
-  }, []);
-
-  useEffect(() => {
-    // These listeners are active only when a user is logged in.
-    if (!state.currentUser) return;
-
-    const dataListeners = [
-        { path: 'documents', actionType: 'SET_DOCUMENTS' },
-        { path: 'logs', actionType: 'SET_LOGS' },
-    ];
-
-    const dataUnsubscribes = dataListeners.map(({ path, actionType }) => 
-        onValue(ref(db, path), (snapshot) => {
-            const data = snapshot.val();
-            dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
         }, (error) => {
             console.error(`Firebase onValue error for ${path}:`, error);
         })
@@ -421,7 +404,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }, 60000);
 
     return () => {
-        dataUnsubscribes.forEach(unsubscribe => unsubscribe());
+        unsubscribes.forEach(unsubscribe => unsubscribe());
         clearInterval(interval);
     };
   }, [state.currentUser]);

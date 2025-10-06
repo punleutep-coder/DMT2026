@@ -12,5 +12,6 @@ export function cn(...inputs: ClassValue[]) {
  * @returns The sanitized string.
  */
 export function sanitizeFirebaseKey(key: string): string {
+  if (typeof key !== 'string') return '';
   return key.replace(/[.#$\[\]/]/g, '-');
 }
