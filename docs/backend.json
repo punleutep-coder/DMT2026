@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile information.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
+        "firestoreId": {
+          "type": "string",
+          "description": "The Firestore document ID for the user."
+        },
+        "username": {
+          "type": "string",
+          "description": "The user's chosen username."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Admin", "User"],
+          "description": "The user's role in the system."
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {},
+          "description": "A map of specific user permissions."
+        },
+        "departmentPermissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of departments the user has access to."
+        },
+        "passwordHash": {
+          "type": "string",
+          "description": "The user's hashed password (for non-Firebase Auth). This should be migrated to Firebase Auth."
+        }
+      },
+      "required": ["id", "username", "role"]
+    }
+  },
+  "auth": {
+    "providers": ["password", "anonymous"]
+  }
+}
