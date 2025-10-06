@@ -279,6 +279,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                       if (userProfile) {
                           dispatch({ type: 'LOGIN_SUCCESS', payload: { user: userProfile } });
                       } else {
+                          // This case should be rare if registration is correct.
+                          // It might happen if a user is deleted from DB but not Auth.
                           console.error(`Authenticated user ${authUser.uid} not found in database.`);
                           auth.signOut();
                       }
