@@ -2,8 +2,9 @@
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
-import { db } from '@/lib/firebase'
-import { ref, onValue, set, push, get, update } from 'firebase/database'
+import { db, auth } from '@/lib/firebase'
+import { ref, onValue, set, update, push, get } from 'firebase/database'
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
   initialColumnVisibility,
@@ -12,11 +13,12 @@ import {
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission, hasPermission } from '@/lib/permissions'
 import { sanitizeFirebaseKey } from '@/lib/utils'
-import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 
 type Action =
-  | { type: 'SET_INITIAL_STATE'; payload: Partial<AppState> }
-  | { type: 'LOGIN'; payload: { user: User } }
+  | { type: 'SET_INITIALIZED'; payload: boolean }
+  | { type: 'SET_CURRENT_USER'; payload: User | null }
+  | { type: 'LOGIN_SUCCESS'; payload: { user: User } }
   | { type: 'LOGOUT' }
   | { type: 'SET_FILTER'; payload: Partial<AppState['filter']> }
   | { type: 'SET_PAGINATION'; payload: Partial<AppState['pagination']> }
@@ -37,12 +39,8 @@ type Action =
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
-  | { type: 'SET_DOCUMENTS'; payload: Document[] }
-  | { type: 'SET_LOGS'; payload: Log[] }
-  | { type: 'SET_USERS'; payload: User[] }
-  | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' }
-  | { type: 'SET_INITIALIZED'; payload: boolean };
-
+  | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], documentTypes: string[], assignedDepartments: string[], columnVisibility: {[key:string]: boolean} } }
+  | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' };
 
 const getInitialState = (): AppState => ({
     users: [],
@@ -80,65 +78,17 @@ const getInitialState = (): AppState => ({
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case 'SET_INITIALIZED':
-        return {
-            ...state,
-            isInitialized: action.payload,
-        };
-    case 'SET_INITIAL_STATE':
-        const currentUser = action.payload.currentUser !== undefined ? action.payload.currentUser : state.currentUser;
-        const storedUser = sessionStorage.getItem('currentUser');
-        const finalUser = currentUser || (storedUser ? JSON.parse(storedUser) : null);
-        
-        let initialFilter = state.filter;
-        if (typeof window !== 'undefined') {
-            const storedFilter = localStorage.getItem('docuFlow_filterSettings');
-            if (storedFilter) {
-                const parsedFilter = JSON.parse(storedFilter);
-                initialFilter = {
-                    ...initialFilter,
-                    ...parsedFilter,
-                    // Dates need to be reconstructed from strings
-                    startDate: parsedFilter.startDate ? new Date(parsedFilter.startDate) : null,
-                    endDate: parsedFilter.endDate ? new Date(parsedFilter.endDate) : null,
-                };
-            }
-        }
-
-        return {
-            ...state,
-            ...action.payload,
-            currentUser: finalUser,
-            filter: initialFilter,
-            isInitialized: true,
-        };
-    case 'SET_DOCUMENTS':
-        return { ...state, documents: action.payload, pagination: {...state.pagination, currentPage: 1} };
-    case 'SET_LOGS':
-        return { ...state, logs: action.payload };
-    case 'SET_USERS':
-        const users = action.payload;
-        let liveCurrentUser = state.currentUser;
-        if (liveCurrentUser) {
-            const updatedUser = users.find(u => u.id === liveCurrentUser!.id);
-            if (!updatedUser) {
-                sessionStorage.removeItem('currentUser');
-                liveCurrentUser = null;
-            } else if (JSON.stringify(updatedUser) !== JSON.stringify(liveCurrentUser)) {
-                liveCurrentUser = updatedUser;
-                sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
-            }
-        }
-        return { ...state, users, currentUser: liveCurrentUser };
-    case 'LOGIN':
+        return { ...state, isInitialized: action.payload };
+    case 'SET_DATA':
+        return { ...state, ...action.payload };
+    case 'SET_CURRENT_USER':
+        return { ...state, currentUser: action.payload, isInitialized: true };
+    case 'LOGIN_SUCCESS':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
-      return { 
-        ...state, 
-        currentUser: action.payload.user,
-      };
+      return { ...state, currentUser: action.payload.user, isInitialized: true };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      localStorage.removeItem('docuFlow_filterSettings');
-      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments, documentTypes: state.documentTypes, assignedDepartments: state.assignedDepartments, columnVisibility: state.columnVisibility };
+      return { ...getInitialState(), isInitialized: true };
     case 'SET_FILTER':
       const newFilter = { ...state.filter, ...action.payload };
       if (typeof window !== 'undefined') {
@@ -157,10 +107,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, selectedDocIds: action.payload };
     case 'CHECK_DELAYED_DOCUMENTS': {
         const today = new Date().setHours(0, 0, 0, 0);
-        let needsUpdate = false;
-        
         const updates: {[key: string]: any} = {};
-
+        let needsUpdate = false;
         state.documents.forEach(doc => {
             const sanitizedId = sanitizeFirebaseKey(doc.id);
             if (doc.isDelayed && doc.releaseDate) {
@@ -176,7 +124,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 needsUpdate = true;
             }
         });
-
         if (needsUpdate) {
             update(ref(db), updates);
         }
@@ -191,12 +138,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
       case 'UPDATE_DOCUMENT': {
         const { id, ...docData } = action.payload;
         const sanitizedId = sanitizeFirebaseKey(id);
-        
         const updates: {[key: string]: any} = {};
         Object.keys(docData).forEach(key => {
             updates[`documents/${sanitizedId}/${key}`] = (docData as any)[key];
         });
-
         update(ref(db), updates);
         return state;
       }
@@ -205,37 +150,27 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const sanitizedId = sanitizeFirebaseKey(id);
         const updates: {[key: string]: any} = {};
         updates[`/documents/${sanitizedId}`] = null;
-        
         state.logs.forEach(log => {
             if (log.docId === id) {
-                updates[`/logs/${log.id}`] = null;
+                updates[`/logs/${log.firestoreId}`] = null;
             }
         });
-
-        if(Object.keys(updates).length > 1 || !updates[`/documents/${sanitizedId}`]) {
-            update(ref(db), updates);
-        }
+        update(ref(db), updates);
         return state;
     }
       case 'DELETE_SELECTED_DOCUMENTS': {
         const idsToDelete = action.payload;
         const updates: {[key: string]: any} = {};
-        
         idsToDelete.forEach(id => {
           const sanitizedId = sanitizeFirebaseKey(id);
           updates[`/documents/${sanitizedId}`] = null;
         });
-
         state.logs.forEach(log => {
             if (idsToDelete.includes(log.docId)) {
-                updates[`/logs/${log.id}`] = null;
+                updates[`/logs/${log.firestoreId}`] = null;
             }
         });
-
-        if(Object.keys(updates).length > 0) {
-            update(ref(db), updates);
-        }
-
+        update(ref(db), updates);
         return { ...state, selectedDocIds: [] };
       }
     case 'ADD_USER': {
@@ -254,11 +189,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
     case 'ADD_LOG': {
         const newLogRef = push(ref(db, 'logs'));
-        set(newLogRef, action.payload);
+        const logWithId = { ...action.payload, id: newLogRef.key, firestoreId: newLogRef.key };
+        set(newLogRef, logWithId);
         return state;
     }
     case 'SET_DEPARTMENTS': {
       if (Array.isArray(action.payload)) {
+        set(ref(db, 'departments'), action.payload)
         return { ...state, departments: action.payload };
       }
       
@@ -266,7 +203,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
       const updates: { [key: string]: any } = {};
       updates['/departments'] = newOrder;
 
-      // Check for renamed departments
       if (originalDepartments && Array.isArray(originalDepartments)) {
         originalDepartments.forEach((oldName, index) => {
             const newName = newOrder.find(n => originalDepartments.includes(n) && originalDepartments.indexOf(n) === index && n !== oldName);
@@ -297,18 +233,15 @@ const appReducer = (state: AppState, action: Action): AppState => {
       update(ref(db), updates);
       return { ...state, departments: newOrder };
     }
-    case 'SET_ASSIGNED_DEPARTMENTS': {
-        set(ref(db, 'assignedDepartments'), action.payload);
-        return { ...state, assignedDepartments: action.payload };
-    }
-    case 'SET_DOCUMENT_TYPES': {
+    case 'SET_DOCUMENT_TYPES':
         set(ref(db, 'documentTypes'), action.payload);
         return { ...state, documentTypes: action.payload };
-    }
-    case 'SET_COLUMN_VISIBILITY': {
+    case 'SET_ASSIGNED_DEPARTMENTS':
+        set(ref(db, 'assignedDepartments'), action.payload);
+        return { ...state, assignedDepartments: action.payload };
+     case 'SET_COLUMN_VISIBILITY':
         set(ref(db, 'columnVisibility'), action.payload);
         return { ...state, columnVisibility: action.payload };
-    }
     case 'SET_LANGUAGE':
         return { ...state, language: action.payload };
     default:
@@ -336,96 +269,92 @@ export const AppContext = createContext<AppContextValue>({
   state: getInitialState(),
   dispatch: () => null,
   filteredDocs: [],
-  metrics: {
-    total: 0,
-    inProgress: 0,
-    delayed: 0,
-    releaseReached: 0,
-    completed: 0,
-    completedSuccess: 0,
-    completedUnsuccess: 0,
-    exceeding: 0
-  },
+  metrics: { total: 0, inProgress: 0, delayed: 0, releaseReached: 0, completed: 0, completedSuccess: 0, completedUnsuccess: 0, exceeding: 0 },
 })
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    
-    // This effect runs once on mount to set the initial state, including filters from localStorage
-    dispatch({ type: 'SET_INITIAL_STATE', payload: {} });
+    let listeners: (()=>void)[] = [];
 
-    // This listener seeds the database if it's empty.
-    const dbRef = ref(db, 'users');
-    get(dbRef).then((snapshot) => {
-        if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
-            console.log("No users found in DB. Seeding database...");
-            set(ref(db), initialData).catch(error => {
-                console.error("Failed to seed database:", error);
+    const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
+      // First, detach any existing listeners to prevent leaks
+      listeners.forEach(unsub => unsub());
+      listeners = [];
+      
+      if (authUser) {
+        // User is authenticated
+        const dbRef = ref(db);
+        
+        // Single listener for all data
+        const masterListener = onValue(dbRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            
+            const users: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+            const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
+            const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+            
+            dispatch({
+              type: 'SET_DATA',
+              payload: {
+                users: users,
+                documents: documents,
+                logs: logs,
+                departments: data.departments || [],
+                documentTypes: data.documentTypes || [],
+                assignedDepartments: data.assignedDepartments || [],
+                columnVisibility: data.columnVisibility || initialColumnVisibility,
+              }
             });
-        }
+
+            // After data is loaded, find the user profile
+            const userProfile = users.find(u => u.id === authUser.uid);
+            if (userProfile) {
+              dispatch({ type: 'LOGIN_SUCCESS', payload: { user: userProfile } });
+            } else {
+              console.error(`Authenticated user ${authUser.uid} not found in database.`);
+              auth.signOut(); // Log out if profile doesn't exist
+            }
+          } else {
+             // Database is empty, seed it
+             console.log("No data found in DB. Seeding database...");
+             set(dbRef, initialData).then(() => {
+                // After seeding, the listener will fire again with the new data.
+             }).catch(error => {
+                console.error("Failed to seed database:", error);
+             });
+          }
+        }, (error) => {
+          console.error("Firebase Realtime Database listener error:", error);
+        });
+        
+        listeners.push(masterListener);
+
+        const interval = setInterval(() => {
+            dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
+        }, 60000);
+        
+        listeners.push(() => clearInterval(interval));
+
+      } else {
+        // No user is authenticated
+        dispatch({ type: 'LOGOUT' });
+      }
     });
 
-    const listeners = [
-        { path: 'users', actionType: 'SET_USERS' },
-        { path: 'departments', actionType: 'SET_DEPARTMENTS' },
-        { path: 'documentTypes', actionType: 'SET_DOCUMENT_TYPES' },
-        { path: 'assignedDepartments', actionType: 'SET_ASSIGNED_DEPARTMENTS' },
-        { path: 'columnVisibility', actionType: 'SET_COLUMN_VISIBILITY' },
-    ];
-
-    const unsubscribes = listeners.map(({ path, actionType }) => 
-        onValue(ref(db, path), (snapshot) => {
-            const data = snapshot.val();
-            if (path === 'users') {
-                 dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
-            } else {
-                 dispatch({ type: actionType, payload: data || (path === 'departments' || path === 'documentTypes' || path === 'assignedDepartments' ? [] : initialColumnVisibility) } as any);
-            }
-        }, (error) => {
-            console.error(`Firebase onValue error for ${path}:`, error);
-        })
-    );
-
     return () => {
-        unsubscribes.forEach(unsubscribe => unsubscribe());
+      unsubscribeAuth();
+      listeners.forEach(unsub => unsub());
     };
   }, []);
 
-  useEffect(() => {
-    // These listeners are active only when a user is logged in.
-    if (!state.currentUser) return;
-
-    const dataListeners = [
-        { path: 'documents', actionType: 'SET_DOCUMENTS' },
-        { path: 'logs', actionType: 'SET_LOGS' },
-    ];
-
-    const dataUnsubscribes = dataListeners.map(({ path, actionType }) => 
-        onValue(ref(db, path), (snapshot) => {
-            const data = snapshot.val();
-            dispatch({ type: actionType, payload: data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [] } as any);
-        }, (error) => {
-            console.error(`Firebase onValue error for ${path}:`, error);
-        })
-    );
-    
-    const interval = setInterval(() => {
-      dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
-    }, 60000);
-
-    return () => {
-        dataUnsubscribes.forEach(unsubscribe => unsubscribe());
-        clearInterval(interval);
-    };
-  }, [state.currentUser]);
-
 
   const filteredDocs = useMemo(() => {
-    if (!state.isInitialized) return [];
+    if (!state.isInitialized || !state.currentUser) return [];
     
-    let docs = state.documents
+    let docs = state.documents;
 
     if (state.currentUser?.role !== 'Admin' && !hasPermission(state.currentUser, 'canViewCompleted')) {
       docs = docs.filter(doc => !doc.status.startsWith('Completed'));
@@ -436,61 +365,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (state.filter.search) {
-      const searchLower = state.filter.search.toLowerCase()
-      if (searchLower) {
-        docs = docs.filter(doc => {
-            const basicSearchMatch =
-                doc.id.toLowerCase().includes(searchLower) ||
-                doc.name.toLowerCase().includes(searchLower) ||
-                (doc.documentType && doc.documentType.toLowerCase().includes(searchLower)) ||
-                (doc.office && doc.office.toLowerCase().includes(searchLower)) ||
-                (doc.secondaryId && doc.secondaryId.toLowerCase().includes(searchLower)) ||
-                (doc.tertiaryId && doc.tertiaryId.toLowerCase().includes(searchLower)) ||
-                (doc.quaternaryId && doc.quaternaryId.toLowerCase().includes(searchLower)) ||
-                (doc.assignedDepartment && doc.assignedDepartment.toLowerCase().includes(searchLower)) ||
-                (doc.keywords && doc.keywords.toLowerCase().includes(searchLower)) ||
-                (Array.isArray(doc.tags) && doc.tags.some(tag => tag.toLowerCase().includes(searchLower)));
+      const searchLower = state.filter.search.toLowerCase();
+      docs = docs.filter(doc => {
+          const fieldsToSearch = [
+            doc.id, doc.name, doc.documentType, doc.office, doc.secondaryId,
+            doc.tertiaryId, doc.quaternaryId, doc.assignedDepartment, doc.keywords,
+            ...(doc.tags || [])
+          ];
+          const historyText = (doc.history || []).map(h => `${h.receiver} ${h.note}`).join(' ');
+          fieldsToSearch.push(historyText);
 
-            if (basicSearchMatch) return true;
-
-            const historySearchMatch = doc.history && doc.history.some(entry => 
-                (entry.receiver && entry.receiver.toLowerCase().includes(searchLower)) ||
-                (entry.note && entry.note.toLowerCase().includes(searchLower))
-            );
-
-            if (historySearchMatch) return true;
-
-            const docLogs = state.logs.filter(log => log.docId === doc.id);
-            const logSearchMatch = docLogs.some(log => 
-                (log.user && log.user.toLowerCase().includes(searchLower)) ||
-                (log.reason && log.reason.toLowerCase().includes(searchLower))
-            );
-            
-            if (logSearchMatch) return true;
-            
-            if (doc.combinedFrom && doc.combinedFrom.length > 0) {
-              const sourceDocs = doc.combinedFrom
-                .map(id => state.documents.find(d => d.id === id))
-                .filter((d): d is Document => !!d);
-
-              const sourceDocMatch = sourceDocs.some(sourceDoc => 
-                sourceDoc.id.toLowerCase().includes(searchLower) || 
-                sourceDoc.name.toLowerCase().includes(searchLower)
-              );
-              if (sourceDocMatch) return true;
-            }
-
-            if (doc.splitFrom) {
-                const sourceDoc = state.documents.find(d => d.id === doc.splitFrom);
-                if (sourceDoc) {
-                    const sourceDocMatch = sourceDoc.id.toLowerCase().includes(searchLower) || sourceDoc.name.toLowerCase().includes(searchLower);
-                    if (sourceDocMatch) return true;
-                }
-            }
-
-            return false;
-        });
-      }
+          return fieldsToSearch.some(field => field && field.toLowerCase().includes(searchLower));
+      });
     }
 
     if (state.filter.startDate && state.filter.endDate) {
@@ -524,29 +410,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             docs = docs.filter(d => d.status && d.status.startsWith('Completed'));
         } else if (state.filter.mainFilter.startsWith('Completed (')) {
             docs = docs.filter(d => d.status === state.filter.mainFilter);
-        } else if (state.filter.mainFilter === 'Combined' || state.filter.mainFilter === 'Split') {
-            docs = docs.filter(d => d.status === state.filter.mainFilter);
         }
-    } else if (state.filter.departmentSpecificFilter === 'All' && state.currentUser?.role !== 'Admin') {
-        if (!state.filter.startDate) {
-            docs = docs.filter(doc => doc.status !== 'Combined' && doc.status !== 'Split');
-        }
-    }
-
-
+    } 
+    
     if(state.filter.departmentSpecificFilter !== 'All'){
         docs = docs.filter(d => d.status === state.filter.departmentSpecificFilter)
     }
 
     return docs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
-  }, [state.documents, state.logs, state.filter, state.currentUser, state.isInitialized])
+  }, [state.documents, state.filter, state.currentUser, state.isInitialized]);
   
   const activeDocs = useMemo(() => {
-    if (state.filter.startDate && state.filter.endDate) {
-        return filteredDocs;
-    }
     return state.documents.filter(d => d.status !== 'Combined' && d.status !== 'Split');
-  }, [filteredDocs, state.documents, state.filter.startDate, state.filter.endDate]);
+  }, [state.documents]);
 
 
   const metrics = useMemo(() => {
