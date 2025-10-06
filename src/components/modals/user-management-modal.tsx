@@ -1,5 +1,4 @@
 
-
 'use client'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -41,7 +40,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { FormDescription } from '../ui/form'
 import { useTranslation } from '@/lib/i18n'
 
-// Create a schema for permissions dynamically from PERMISSIONS_CONFIG
 const permissionsSchema = z.object(
     Object.keys(PERMISSIONS_CONFIG).reduce(
       (acc, key) => {
@@ -56,6 +54,7 @@ const formSchema = z
   .object({
     id: z.string().optional(),
     username: z.string().min(1, 'Username is required.'),
+    email: z.string().email(),
     password: z.string().optional(),
     role: z.enum(['Admin', 'User']),
     permissions: permissionsSchema,
@@ -65,12 +64,12 @@ const formSchema = z
     (data) => {
       const isNewUser = !data.id
       if (isNewUser) {
-        return data.password && data.password.length > 0
+        return data.password && data.password.length >= 6
       }
       return true
     },
     {
-      message: 'Password is required for new users.',
+      message: 'Password is required for new users and must be at least 6 characters.',
       path: ['password'],
     }
   )
@@ -82,35 +81,13 @@ interface UserManagementModalProps {
 }
 
 const permissionGroups = {
-  dashboardPermissions: [
-    'canViewMetrics', 'canViewWorkflowChart'
-  ],
-  generalDocPermissions: [
-    'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 
-    'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted'
-  ],
-  docActionPermissions: [
-    'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote'
-  ],
-  docFieldEditPermissions: [
-    'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditOffice', 'canEditAssignedDepartment', 'canEditSecondaryId',
-    'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote'
-  ],
-  docLinkPermissions: [
-    'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4',
-    'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4'
-  ],
+  dashboardPermissions: [ 'canViewMetrics', 'canViewWorkflowChart' ],
+  generalDocPermissions: [ 'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted' ],
+  docActionPermissions: [ 'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote' ],
+  docFieldEditPermissions: [ 'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditOffice', 'canEditAssignedDepartment', 'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote' ],
+  docLinkPermissions: [ 'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4', 'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4' ],
   adminPermissions: ['canManageAdmins', 'canViewGlobalActivity']
 };
-
-
-const hashPassword = async (password: string): Promise<string> => {
-    const encoder = new TextEncoder()
-    const data = encoder.encode(password)
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
 
 export default function UserManagementModal({
   isOpen,
@@ -133,6 +110,7 @@ export default function UserManagementModal({
     defaultValues: {
       id: undefined,
       username: '',
+      email: '',
       password: '',
       role: 'User' as const,
       permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
@@ -148,6 +126,7 @@ export default function UserManagementModal({
         form.reset({
           id: user.id,
           username: user.username,
+          email: user.email,
           password: '',
           role: user.role,
           permissions: user.permissions || Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
@@ -159,6 +138,7 @@ export default function UserManagementModal({
       form.reset({
         id: undefined,
         username: '',
+        email: '',
         password: '',
         role: 'User' as const,
         permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
@@ -174,7 +154,6 @@ export default function UserManagementModal({
       toast({ title: 'Error', description: 'You cannot edit your own account from this panel.', variant: 'destructive' });
       return;
     }
-    // Prevent Admins from editing other Admins unless they have the canManageAdmins permission
     if (user.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
        toast({ title: 'Permission Denied', description: 'You do not have permission to edit other Admins.', variant: 'destructive' });
        return;
@@ -184,6 +163,7 @@ export default function UserManagementModal({
     form.reset({
       id: user.id,
       username: user.username,
+      email: user.email,
       password: '',
       role: user.role,
       permissions: user.permissions || Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
@@ -196,6 +176,7 @@ export default function UserManagementModal({
     form.reset({
       id: undefined,
       username: '',
+      email: '',
       password: '',
       role: 'User' as const,
       permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
@@ -218,15 +199,17 @@ export default function UserManagementModal({
       payload: {
         isOpen: true,
         title: 'Delete User',
-        message: `Are you sure you want to delete user '${user.username}'? This action cannot be undone.`,
+        message: `Are you sure you want to delete user '${user.username}'? This action is permanent and cannot be undone.`,
         confirmText: 'Delete',
         onConfirm: () => {
+          // Note: This only deletes from RTDB. The user will still exist in Firebase Auth.
+          // A full solution would involve a backend function to delete the auth user.
           dispatch({ type: 'DELETE_USER', payload: { id: user.id } })
           if (editingUserId === user.id) {
             handleSetAddMode()
           }
           toast({
-            title: 'User Deleted',
+            title: 'User Deleted from Database',
             description: `User ${user.username} has been removed.`,
           })
         },
@@ -235,30 +218,25 @@ export default function UserManagementModal({
   }
   
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    // This function can only update RTDB. It cannot create Firebase Auth users.
+    // That must be done through the main login/registration form.
     const isUpdating = !!values.id;
-
-    if (!isUpdating && state.users.some(u => u.username.toLowerCase() === values.username.toLowerCase())) {
-        form.setError('username', { message: 'This username is already taken.' });
+    if (!isUpdating) {
+      toast({ title: 'Error', description: 'User creation must be done via the main registration form.', variant: 'destructive' });
+      return;
+    }
+    
+    const targetUser = state.users.find(u => u.id === values.id);
+    if (!targetUser) {
+        toast({ title: 'Error', description: 'User not found.', variant: 'destructive' });
         return;
     }
     
-    const targetUser = isUpdating ? state.users.find(u => u.id === values.id) : null;
-    if (isUpdating && targetUser?.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
+    if (targetUser.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
         toast({ title: 'Permission Denied', description: 'You cannot edit other Admin users.', variant: 'destructive' });
         return;
     }
-    
 
-    let passwordHash = isUpdating ? targetUser?.passwordHash : undefined;
-    if (values.password && values.password.length > 0) {
-        passwordHash = await hashPassword(values.password);
-    }
-    
-    if (!passwordHash && !isUpdating) {
-        form.setError('password', { message: 'Password is required for new users.' });
-        return;
-    }
-    
     const allPermissionKeys = Object.keys(PERMISSIONS_CONFIG);
     const finalPermissions: { [key: string]: boolean } = {};
 
@@ -271,46 +249,31 @@ export default function UserManagementModal({
     const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
     
     const userData: User = {
-        id: isUpdating ? values.id! : `user-${uuidv4()}`,
-        firestoreId: isUpdating ? targetUser!.firestoreId : `user-${uuidv4()}`,
+        id: values.id!,
+        firestoreId: targetUser.firestoreId,
         username: values.username,
+        email: values.email,
         role: values.role,
         permissions: finalPermissions,
         departmentPermissions: finalDepartmentPermissions,
-        passwordHash: passwordHash!,
+        passwordHash: '', // Not used
     };
     
-    // Add/ensure canManageAdmins permission for admins
     if (userData.role === 'Admin') {
         userData.permissions.canManageAdmins = true;
     }
     
-    if (isUpdating) {
-        dispatch({ type: 'UPDATE_USER', payload: userData });
-        toast({ title: 'Success', description: 'User updated successfully.' });
-    } else {
-        dispatch({ type: 'ADD_USER', payload: userData });
-        toast({ title: 'Success', description: 'User created successfully.' });
-    }
+    dispatch({ type: 'UPDATE_USER', payload: userData });
+    toast({ title: 'Success', description: 'User updated successfully.' });
 
     handleSetAddMode();
   }
   
   const canManageUser = (userToManage: User) => {
     if (!currentUser) return false;
-    if (currentUser.id === userToManage.id) return false; // Cannot manage self
-
-    // An admin with canManageAdmins permission can manage any other user.
-    if (currentUser.role === 'Admin' && currentUser.permissions?.canManageAdmins) {
-      return true;
-    }
-    
-    // A standard admin (without canManageAdmins) can only manage users, not other admins.
-    if (currentUser.role === 'Admin' && userToManage.role === 'User') {
-      return true;
-    }
-
-    // In all other cases (user trying to manage anyone, or admin trying to manage another admin without permission), it's not allowed.
+    if (currentUser.id === userToManage.id) return false;
+    if (currentUser.role === 'Admin' && currentUser.permissions?.canManageAdmins) return true;
+    if (currentUser.role === 'Admin' && userToManage.role === 'User') return true;
     return false;
   }
   
@@ -320,7 +283,6 @@ export default function UserManagementModal({
       if (currentUser.role === 'Admin' && roleToSet === 'User') return true;
       return false;
   }
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -343,7 +305,7 @@ export default function UserManagementModal({
                   >
                     <div>
                       <span className="font-medium">{user.username}</span>
-                      <p className="text-xs text-muted-foreground">ID: {user.id}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
                       <span className="text-sm text-muted-foreground ml-2">
                         ({t(user.role as 'Admin' | 'User')})
                       </span>
@@ -401,30 +363,18 @@ export default function UserManagementModal({
                     />
                     <FormField
                       control={form.control}
-                      name="password"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('password')}</FormLabel>
+                          <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input
-                              type="password"
-                              placeholder={
-                                mode === 'edit'
-                                  ? t('leaveBlankPassword')
-                                  : ''
-                              }
-                              {...field}
-                            />
+                            <Input type="email" {...field} readOnly={mode === 'edit'} />
                           </FormControl>
-                          <FormDescription>
-                            {mode === 'edit'
-                              ? t('leaveBlankPassword')
-                              : t('passwordRequired')}
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                    
                     <FormField
                       control={form.control}
                       name="role"
@@ -555,7 +505,7 @@ export default function UserManagementModal({
                         {mode === 'edit' ? t('cancelEdit') : t('clearForm')}
                     </Button>
 
-                    <Button type="submit">
+                    <Button type="submit" disabled={mode === 'add'}>
                       {mode === 'edit' ? t('saveChanges') : t('addUser')}
                     </Button>
                   </DialogFooter>
@@ -568,9 +518,3 @@ export default function UserManagementModal({
     </Dialog>
   )
 }
-    
-
-    
-
-    
-

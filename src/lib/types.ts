@@ -1,5 +1,4 @@
 
-
 export interface HistoryEntry {
   department: string;
   start: string;
@@ -51,10 +50,11 @@ export interface Log {
 }
 
 export interface User {
-  id: string;
-  firestoreId: string;
+  id: string; // This should be the Firebase Auth UID
+  firestoreId: string; // Legacy or for other DBs, can be same as id
   username: string;
-  passwordHash: string;
+  email: string;
+  passwordHash: string; // This should NOT be stored or used. Only for initial data shape.
   role: 'Admin' | 'User';
   permissions: { [key: string]: boolean };
   departmentPermissions: string[];

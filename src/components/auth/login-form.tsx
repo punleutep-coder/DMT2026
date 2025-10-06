@@ -21,25 +21,18 @@ import { Workflow } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { Terminal } from 'lucide-react'
 import { Checkbox } from '../ui/checkbox'
-import Link from 'next/link'
 import { useTranslation } from '@/lib/i18n'
+import { auth } from '@/lib/firebase'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 
 const formSchema = z.object({
-  username: z.string().min(1, { message: 'Username is required.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   rememberMe: z.boolean().optional(),
 })
 
-const hashPassword = async (password: string): Promise<string> => {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
 export default function LoginForm() {
-  const { state, dispatch } = useAppContext()
+  const { state } = useAppContext()
   const [error, setError] = useState<string | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast()
@@ -48,53 +41,58 @@ export default function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
       rememberMe: false,
     },
   })
 
   useEffect(() => {
-    // This code runs only on the client, after the component has mounted.
-    const rememberedUsername = localStorage.getItem('rememberedUsername');
-    if (rememberedUsername) {
-      form.setValue('username', rememberedUsername);
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      form.setValue('email', rememberedEmail);
       form.setValue('rememberMe', true);
     }
-  }, [form.setValue]);
+  }, [form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null)
     setIsLoggingIn(true);
 
     if (values.rememberMe) {
-        localStorage.setItem('rememberedUsername', values.username);
+        localStorage.setItem('rememberedEmail', values.email);
     } else {
-        localStorage.removeItem('rememberedUsername');
+        localStorage.removeItem('rememberedEmail');
     }
 
-    const user = state.users.find((u) => u.username === values.username)
-    if (user) {
-      const passwordHash = await hashPassword(values.password)
-      if (passwordHash === user.passwordHash) {
-        try {
-          dispatch({ type: 'LOGIN', payload: { user } })
-          toast({
-            title: t('welcome', { username: user.username }),
+    try {
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+        // onAuthStateChanged in AppContext will handle the rest
+        toast({
+            title: t('welcome', { username: values.email }),
             description: t('loggedInSuccess'),
-          })
-          
-        } catch(e) {
-            console.error(e);
-            setError("Failed to load application data.");
-        } finally {
-            setIsLoggingIn(false);
+        });
+    } catch (e: any) {
+        if (e.code === 'auth/user-not-found') {
+            // If user doesn't exist, offer to create a new account
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+                // The onAuthStateChanged listener in AppContext will handle creating the user profile in RTDB.
+                toast({
+                    title: 'Account Created',
+                    description: 'New account created successfully. You are now logged in.',
+                });
+            } catch (creationError: any) {
+                console.error("Error creating user:", creationError);
+                setError(creationError.message || 'Failed to create a new account.');
+            }
+        } else {
+            console.error("Error signing in:", e);
+            setError(e.message || t('invalidCredentials'));
         }
-        return
-      }
+    } finally {
+        setIsLoggingIn(false);
     }
-    setError(t('invalidCredentials'))
-    setIsLoggingIn(false);
   }
 
   return (
@@ -112,12 +110,12 @@ export default function LoginForm() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('username')}</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('username')} {...field} className="shadow-inner shadow-md" />
+                      <Input placeholder="user@example.com" {...field} className="shadow-inner shadow-md" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
