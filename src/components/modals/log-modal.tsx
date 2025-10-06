@@ -147,8 +147,8 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-foreground">{t('statusChangeLog')}</h3>
               <div className="relative space-y-6 border-l-2 pl-6" style={{borderColor: 'rgba(0, 0, 226, 0.3)'}}>
-                 {docLogs.length > 0 ? docLogs.map((log, index) => (
-                    <div key={index} className="relative">
+                 {docLogs.length > 0 ? docLogs.map((log) => (
+                    <div key={log.id} className="relative">
                         <div className="absolute -left-[30px] top-1.5 h-4 w-4 rounded-full ring-4 ring-background" style={{backgroundColor: '#0000E2'}} />
                         <p className="font-medium text-foreground">
                             {t('from')} <span style={{color: '#0000E2'}}>{log.oldStatus}</span> {t('to')} <span style={{color: '#0000E2'}}>{log.newStatus}</span>

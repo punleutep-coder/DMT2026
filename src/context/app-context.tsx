@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db, auth } from '@/lib/firebase'
-import { onValue, ref, set, update, push } from 'firebase/database'
+import { ref, onValue, set, update, push, get } from 'firebase/database'
 import { onAuthStateChanged } from 'firebase/auth'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
@@ -39,7 +39,9 @@ type Action =
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
-  | { type: 'SET_ALL_DATA'; payload: Partial<AppState> }
+  | { type: 'SET_DOCUMENTS'; payload: Document[] }
+  | { type: 'SET_LOGS'; payload: Log[] }
+  | { type: 'SET_USERS'; payload: User[] }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' };
 
 const getInitialState = (): AppState => ({
@@ -79,25 +81,31 @@ const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case 'SET_INITIALIZED':
         return { ...state, isInitialized: action.payload };
-    case 'SET_ALL_DATA':
-        const currentData = {
-          users: action.payload.users ? Object.values(action.payload.users) : state.users,
-          documents: action.payload.documents ? Object.values(action.payload.documents).map(d => ({...d, id: sanitizeFirebaseKey(d.id)})) : state.documents,
-          logs: action.payload.logs ? Object.values(action.payload.logs) : state.logs,
-          departments: action.payload.departments || state.departments,
-          documentTypes: action.payload.documentTypes || state.documentTypes,
-          assignedDepartments: action.payload.assignedDepartments || state.assignedDepartments,
-          columnVisibility: action.payload.columnVisibility || state.columnVisibility,
-        }
-        return { ...state, ...currentData, isInitialized: true };
+    case 'SET_DOCUMENTS':
+        return { ...state, documents: action.payload };
+    case 'SET_LOGS':
+        return { ...state, logs: action.payload };
+    case 'SET_USERS':
+        return { ...state, users: action.payload };
+    case 'SET_DEPARTMENTS':
+         if (Array.isArray(action.payload)) {
+             return { ...state, departments: action.payload };
+         }
+         return { ...state, departments: action.payload.newOrder };
+    case 'SET_DOCUMENT_TYPES':
+        return { ...state, documentTypes: action.payload };
+    case 'SET_ASSIGNED_DEPARTMENTS':
+        return { ...state, assignedDepartments: action.payload };
+    case 'SET_COLUMN_VISIBILITY':
+        return { ...state, columnVisibility: action.payload };
     case 'SET_CURRENT_USER':
         return { ...state, currentUser: action.payload };
     case 'LOGIN_SUCCESS':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
-      return { ...state, currentUser: action.payload.user };
+      return { ...state, currentUser: action.payload.user, isInitialized: true };
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
-      return { ...getInitialState(), isInitialized: true, users: state.users, departments: state.departments }; // Keep some data
+      return { ...getInitialState(), isInitialized: true }; // Reset state but keep initialized
     case 'SET_FILTER':
       const newFilter = { ...state.filter, ...action.payload };
       if (typeof window !== 'undefined') {
@@ -161,7 +169,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         updates[`/documents/${sanitizedId}`] = null;
         state.logs.forEach(log => {
             if (log.docId === id) {
-                updates[`/logs/${log.id}`] = null;
+                updates[`/logs/${log.firestoreId}`] = null;
             }
         });
         update(ref(db), updates);
@@ -176,7 +184,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         });
         state.logs.forEach(log => {
             if (idsToDelete.includes(log.docId)) {
-                updates[`/logs/${log.id}`] = null;
+                updates[`/logs/${log.firestoreId}`] = null;
             }
         });
         update(ref(db), updates);
@@ -198,29 +206,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
     case 'ADD_LOG': {
         const newLogRef = push(ref(db, 'logs'));
-        set(newLogRef, action.payload);
+        const logWithId = { ...action.payload, id: newLogRef.key, firestoreId: newLogRef.key };
+        set(newLogRef, logWithId);
         return state;
-    }
-    case 'SET_DEPARTMENTS': {
-      if (Array.isArray(action.payload)) {
-        update(ref(db), { '/departments': action.payload });
-        return { ...state, departments: action.payload };
-      }
-      const { newOrder } = action.payload;
-      update(ref(db), { '/departments': newOrder });
-      return { ...state, departments: newOrder };
-    }
-    case 'SET_ASSIGNED_DEPARTMENTS': {
-        set(ref(db, 'assignedDepartments'), action.payload);
-        return { ...state, assignedDepartments: action.payload };
-    }
-    case 'SET_DOCUMENT_TYPES': {
-        set(ref(db, 'documentTypes'), action.payload);
-        return { ...state, documentTypes: action.payload };
-    }
-    case 'SET_COLUMN_VISIBILITY': {
-        set(ref(db, 'columnVisibility'), action.payload);
-        return { ...state, columnVisibility: action.payload };
     }
     case 'SET_LANGUAGE':
         return { ...state, language: action.payload };
@@ -256,52 +244,63 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    // Listener for all database data
-    const dbRef = ref(db);
-    const unsubscribeDB = onValue(dbRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        dispatch({ type: 'SET_ALL_DATA', payload: data });
-      } else {
-         set(ref(db), initialData).then(() => {
-            dispatch({ type: 'SET_ALL_DATA', payload: initialData });
-         });
-      }
-    }, (error) => {
-      console.error("Firebase onValue error:", error);
-      dispatch({ type: 'SET_INITIALIZED', payload: true }); // Ensure app initializes even on error
-    });
+    // This is the single auth listener. It runs once.
+    const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+      if (authUser) {
+        // User is logged in to Firebase Auth. Now, let's listen to DB.
+        const dbRef = ref(db);
+        const unsubscribeDb = onValue(dbRef, async (snapshot) => {
+          if (!snapshot.exists()) {
+             // If DB is empty, seed it. User must be auth'd to do this.
+             await set(dbRef, initialData);
+             // The onValue will trigger again with the new data.
+             return;
+          }
 
-    // Listener for Authentication state
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        if (state.isInitialized) { // Wait for DB data before setting user
-          const userProfile = state.users.find(u => u.id === user.uid);
-          if (userProfile) {
+          const data = snapshot.val();
+          const users: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+          
+          const userProfile = users.find(u => u.id === authUser.uid);
+          
+          if(userProfile) {
+            dispatch({ type: 'SET_USERS', payload: users });
+            dispatch({ type: 'SET_DOCUMENTS', payload: data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [] });
+            dispatch({ type: 'SET_LOGS', payload: data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [] });
+            dispatch({ type: 'SET_DEPARTMENTS', payload: data.departments || [] });
+            dispatch({ type: 'SET_DOCUMENT_TYPES', payload: data.documentTypes || [] });
+            dispatch({ type: 'SET_ASSIGNED_DEPARTMENTS', payload: data.assignedDepartments || [] });
+            dispatch({ type: 'SET_COLUMN_VISIBILITY', payload: data.columnVisibility || initialColumnVisibility });
             dispatch({ type: 'LOGIN_SUCCESS', payload: { user: userProfile } });
           } else {
-            // This can happen briefly during registration before the DB has updated.
-            // We don't sign out, but wait for the next onValue to trigger a state update.
+            // This can happen if a user exists in Auth but not RTDB.
+            // Sign them out to avoid an inconsistent state.
+            await auth.signOut();
           }
+        }, (error) => {
+            console.error("Firebase onValue error:", error);
+            dispatch({ type: 'SET_INITIALIZED', payload: true }); 
+        });
+
+        // Set up interval to check for delayed docs
+        const interval = setInterval(() => {
+            dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
+        }, 60000);
+
+        return () => {
+            unsubscribeDb();
+            clearInterval(interval);
         }
+
       } else {
+        // User is logged out.
         dispatch({ type: 'LOGOUT' });
       }
     });
 
     return () => {
-      unsubscribeDB();
       unsubscribeAuth();
     };
-  }, [state.isInitialized, state.users]); // Rerun auth check when DB is initialized OR users change
-
-  useEffect(() => {
-    if (!state.currentUser) return;
-    const interval = setInterval(() => {
-      dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [state.currentUser]);
+  }, []); // Empty dependency array ensures this runs only once on mount.
 
 
   const filteredDocs = useMemo(() => {
@@ -364,7 +363,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         } else if (state.filter.mainFilter.startsWith('Completed (')) {
             docs = docs.filter(d => d.status === state.filter.mainFilter);
         }
-    } else if(state.filter.departmentSpecificFilter !== 'All'){
+    } 
+    
+    if(state.filter.departmentSpecificFilter !== 'All'){
         docs = docs.filter(d => d.status === state.filter.departmentSpecificFilter)
     }
 

@@ -82,9 +82,7 @@ export default function LoginForm() {
                 const newUser = userCredential.user;
 
                 // Create a corresponding user profile in the Realtime Database
-                const userProfile: User = {
-                    id: newUser.uid,
-                    firestoreId: newUser.uid, // Using uid for consistency
+                const userProfile: Omit<User, 'id' | 'firestoreId'> = {
                     username: values.email.split('@')[0], // Default username from email
                     email: values.email,
                     role: 'User',
@@ -182,7 +180,7 @@ export default function LoginForm() {
                   </AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={!state.isInitialized || isLoggingIn}>
+              <Button type="submit" className="w-full" disabled={isLoggingIn}>
                 {isLoggingIn ? t('loggingIn') : t('login')}
               </Button>
             </form>
