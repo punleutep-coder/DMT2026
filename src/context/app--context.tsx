@@ -1,8 +1,9 @@
+
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db, auth } from '@/lib/firebase'
-import { ref, onValue, set, update, push, get } from 'firebase/database'
+import { ref, onValue, set, update, push, get, Unsubscribe } from 'firebase/database'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
@@ -41,37 +42,42 @@ type Action =
   | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], documentTypes: string[], assignedDepartments: string[], columnVisibility: {[key:string]: boolean} } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' };
 
-const getInitialState = (): AppState => ({
-    users: [],
-    currentUser: null,
-    documents: [],
-    logs: [],
-    departments: [],
-    documentTypes: [],
-    assignedDepartments: [],
-    filter: {
-        mainFilter: 'All',
-        departmentSpecificFilter: 'All',
-        search: '',
-        startDate: null,
-        endDate: null,
-        assignedDepartment: 'All',
-        documentType: 'All',
-        periodValue: 3,
-        periodUnit: 'days',
-        periodDepartment: 'All',
-    },
-    pagination: {
-        currentPage: 1,
-        rowsPerPage: 30,
-    },
-    columnVisibility: initialColumnVisibility,
-    selectedDocIds: [],
-    isInitialized: false,
-    dialog: { isOpen: false, title: '', message: '' },
-    modal: { type: null },
-    language: 'km',
-})
+const getInitialState = (): AppState => {
+    const savedFilter = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_filterSettings') : null;
+    const savedLanguage = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_language') : 'km';
+    
+    return {
+        users: [],
+        currentUser: null,
+        documents: [],
+        logs: [],
+        departments: [],
+        documentTypes: [],
+        assignedDepartments: [],
+        filter: savedFilter ? JSON.parse(savedFilter) : {
+            mainFilter: 'All',
+            departmentSpecificFilter: 'All',
+            search: '',
+            startDate: null,
+            endDate: null,
+            assignedDepartment: 'All',
+            documentType: 'All',
+            periodValue: 3,
+            periodUnit: 'days',
+            periodDepartment: 'All',
+        },
+        pagination: {
+            currentPage: 1,
+            rowsPerPage: 30,
+        },
+        columnVisibility: initialColumnVisibility,
+        selectedDocIds: [],
+        isInitialized: false,
+        dialog: { isOpen: false, title: '', message: '' },
+        modal: { type: null },
+        language: (savedLanguage === 'en' || savedLanguage === 'km') ? savedLanguage : 'km',
+    }
+}
 
 
 const appReducer = (state: AppState, action: Action): AppState => {
@@ -93,7 +99,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'LOGOUT':
       sessionStorage.removeItem('currentUser');
       auth.signOut();
-      return { ...getInitialState(), isInitialized: true, currentUser: null };
+      return { ...getInitialState(), isInitialized: true, currentUser: null, documents: [], logs: [], users: [] };
     case 'SET_FILTER':
       const newFilter = { ...state.filter, ...action.payload };
       if (typeof window !== 'undefined') {
@@ -282,87 +288,77 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    let authUser: FirebaseUser | null = null;
-    let isDataLoaded = false;
-    let dbUsers: User[] = [];
-
+    let dbListener: Unsubscribe | null = null;
+    let delayInterval: NodeJS.Timeout | null = null;
+  
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      authUser = user;
-      if (isDataLoaded) {
-        if (user) {
-          const userProfile = dbUsers.find(u => u.id === user.uid);
-          if (userProfile) {
-            dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
-          } else {
-            // This case should ideally not be hit if registration is correct
-            console.error(`Authenticated user ${user.uid} not found in database.`);
-            dispatch({ type: 'LOGOUT' });
-          }
-        } else {
-          dispatch({ type: 'LOGOUT' });
-        }
-      }
-    });
+      if (user) {
+        // User is signed in.
+        dbListener = onValue(ref(db), (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+            
+            const userProfile = dbUsers.find(u => u.id === user.uid);
 
-    const dbListener = onValue(ref(db), (snapshot) => {
-      const data = snapshot.val();
-      if (snapshot.exists()) {
-          const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
-          const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-          dbUsers = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-
-          dispatch({
-            type: 'SET_DATA',
-            payload: {
-              users: dbUsers,
-              documents: documents,
-              logs: logs,
-              departments: data.departments || [],
-              documentTypes: data.documentTypes || [],
-              assignedDepartments: data.assignedDepartments || [],
-              columnVisibility: data.columnVisibility || initialColumnVisibility,
-            }
-          });
-
-          isDataLoaded = true;
-          // After data is loaded, re-check auth state
-          if (authUser) {
-              const userProfile = dbUsers.find(u => u.id === authUser!.uid);
-              if (userProfile) {
-                dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
-              } else {
-                console.error(`Authenticated user ${authUser.uid} not found in database.`);
-                dispatch({ type: 'LOGOUT' });
-              }
-          } else {
+            if (userProfile) {
+              const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
+              const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+              
+              dispatch({
+                type: 'SET_DATA',
+                payload: {
+                  users: dbUsers,
+                  documents: documents,
+                  logs: logs,
+                  departments: data.departments || [],
+                  documentTypes: data.documentTypes || [],
+                  assignedDepartments: data.assignedDepartments || [],
+                  columnVisibility: data.columnVisibility || initialColumnVisibility,
+                }
+              });
+              dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
+            } else {
+              console.error(`Authenticated user ${user.uid} not found in database.`);
               dispatch({ type: 'LOGOUT' });
+            }
+          } else {
+            console.log("No data found in DB, attempting to seed.");
+            set(ref(db), initialData).catch(error => {
+                console.error("Failed to seed database:", error);
+            });
           }
+        }, (error) => {
+          console.error("Firebase Realtime Database listener error:", error);
+          dispatch({ type: 'LOGOUT' });
+        });
+
+        delayInterval = setInterval(() => {
+            dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
+        }, 60000);
 
       } else {
-          // Database is empty. User must be logged in to seed data.
-          if (authUser) {
-             console.log("No data found in DB. Seeding database...");
-             set(ref(db), initialData).catch(error => {
-                 console.error("Failed to seed database:", error);
-             });
-          } else {
-             // Not logged in and no data, just initialize
-             dispatch({type: 'SET_INITIALIZED', payload: true});
-          }
-      }
-    }, (error) => {
-        console.error("Firebase Realtime Database listener error:", error);
+        // User is signed out.
+        if (dbListener) {
+          dbListener(); // Detach listener
+          dbListener = null;
+        }
+        if (delayInterval) {
+          clearInterval(delayInterval);
+          delayInterval = null;
+        }
         dispatch({ type: 'LOGOUT' });
+      }
     });
-    
-    const delayInterval = setInterval(() => {
-        dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
-    }, 60000);
 
     return () => {
       unsubscribeAuth();
-      dbListener(); // This detaches the listener
-      clearInterval(delayInterval);
+      if (dbListener) {
+        dbListener();
+      }
+      if (delayInterval) {
+        clearInterval(delayInterval);
+      }
     };
   }, []); 
 
