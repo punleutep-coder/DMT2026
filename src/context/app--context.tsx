@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db, auth } from '@/lib/firebase'
-import { ref, onValue, set, update, push } from 'firebase/database'
+import { ref, onValue, set, update, push, get } from 'firebase/database'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
@@ -285,16 +285,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let authUser: FirebaseUser | null = null;
     let isDataLoaded = false;
+    let dbUsers: User[] = [];
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       authUser = user;
       if (isDataLoaded) {
-        // Data is already loaded, proceed with auth check
         if (user) {
-          const userProfile = state.users.find(u => u.id === user.uid);
+          const userProfile = dbUsers.find(u => u.id === user.uid);
           if (userProfile) {
             dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
           } else {
+            // This case should ideally not be hit if registration is correct
             console.error(`Authenticated user ${user.uid} not found in database.`);
             dispatch({ type: 'LOGOUT' });
           }
@@ -302,19 +303,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           dispatch({ type: 'LOGOUT' });
         }
       }
-      // If data is not loaded yet, do nothing, the onValue listener will handle it.
     });
 
     const dbListener = onValue(ref(db), (snapshot) => {
       const data = snapshot.val();
-      const users = data?.users ? Object.values(data.users) as User[] : [];
-
-      // Check if this is the first data load
-      if (!isDataLoaded) {
-        if (snapshot.exists()) {
+      if (snapshot.exists()) {
           const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
           const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-           const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+          dbUsers = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
 
           dispatch({
             type: 'SET_DATA',
@@ -328,29 +324,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               columnVisibility: data.columnVisibility || initialColumnVisibility,
             }
           });
-        } else {
-            // Database is empty. Seed it.
+
+          isDataLoaded = true;
+          // After data is loaded, re-check auth state
+          if (authUser) {
+              const userProfile = dbUsers.find(u => u.id === authUser!.uid);
+              if (userProfile) {
+                dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
+              } else {
+                console.error(`Authenticated user ${authUser.uid} not found in database.`);
+                dispatch({ type: 'LOGOUT' });
+              }
+          } else {
+              dispatch({ type: 'LOGOUT' });
+          }
+
+      } else {
+          // Database is empty. User must be logged in to seed data.
+          if (authUser) {
              console.log("No data found in DB. Seeding database...");
              set(ref(db), initialData).catch(error => {
                  console.error("Failed to seed database:", error);
              });
-        }
-      }
-
-      isDataLoaded = true;
-
-      // Now that data is loaded, check auth state
-      if (authUser) {
-        const userProfile = users.find(u => u.id === authUser!.uid);
-        if (userProfile) {
-          dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
-        } else {
-          console.error(`Authenticated user ${authUser!.uid} not found in database.`);
-          dispatch({ type: 'LOGOUT' });
-        }
-      } else {
-        // No authenticated user, ensure logout state
-        dispatch({ type: 'LOGOUT' });
+          } else {
+             // Not logged in and no data, just initialize
+             dispatch({type: 'SET_INITIALIZED', payload: true});
+          }
       }
     }, (error) => {
         console.error("Firebase Realtime Database listener error:", error);
@@ -363,10 +362,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       unsubscribeAuth();
-      dbListener();
+      dbListener(); // This detaches the listener
       clearInterval(delayInterval);
     };
-  }, []); // Only run this effect once on mount
+  }, []); 
 
 
   const filteredDocs = useMemo(() => {

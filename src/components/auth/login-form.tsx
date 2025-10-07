@@ -76,36 +76,34 @@ export default function LoginForm() {
         });
     } catch (e: any) {
         if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
-            // If user doesn't exist, offer to create a new account
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
                 const newUser = userCredential.user;
 
                 // Create a corresponding user profile in the Realtime Database
-                const userProfile: User = {
-                    id: newUser.uid,
-                    firestoreId: newUser.uid,
-                    username: values.email.split('@')[0], // Default username from email
+                const userProfile: Omit<User, 'id' | 'firestoreId' | 'passwordHash'> & { email: string } = {
+                    username: values.email.split('@')[0],
                     email: values.email,
-                    role: 'User', // Default role
+                    role: 'User',
                     permissions: {},
                     departmentPermissions: [],
-                    passwordHash: '', // Not used with Firebase Auth
                 };
-
+                
                 await set(ref(db, 'users/' + newUser.uid), userProfile);
                 
                 toast({
                     title: 'Account Created',
                     description: 'New account created successfully. You are now logged in.',
                 });
-                // onAuthStateChanged will handle the login
+                // onAuthStateChanged will handle the login after the user profile is created
 
             } catch (creationError: any) {
                 console.error("Error creating user:", creationError);
                 let errorMessage = 'Failed to create a new account.';
                 if (creationError.code === 'auth/email-already-in-use') {
-                    errorMessage = 'This email is already in use. Please try logging in again.';
+                    errorMessage = 'This email is already in use with a different password. Please try logging in again.';
+                } else if (creationError.code === 'auth/weak-password') {
+                     errorMessage = 'The password is too weak.';
                 }
                 setError(errorMessage);
             }
