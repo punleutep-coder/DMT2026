@@ -3,7 +3,7 @@
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
 import { db, auth } from '@/lib/firebase'
-import { ref, onValue, set, update, push, get } from 'firebase/database'
+import { ref, onValue, set, update, push } from 'firebase/database'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import type { AppState, User, Document, Log, DialogState, ModalState } from '@/lib/types'
 import {
@@ -82,7 +82,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_DATA':
         return { ...state, ...action.payload };
     case 'SET_CURRENT_USER':
-        sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
+        if (action.payload) {
+          sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
+        } else {
+          sessionStorage.removeItem('currentUser');
+        }
         return { ...state, currentUser: action.payload, isInitialized: true };
     case 'LOGIN_SUCCESS':
       sessionStorage.setItem('currentUser', JSON.stringify(action.payload.user));
@@ -207,9 +211,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
 
       if (originalDepartments && Array.isArray(originalDepartments)) {
         originalDepartments.forEach((oldName, index) => {
-            const newName = newOrder.find(n => originalDepartments.includes(n) && originalDepartments.indexOf(n) === index && n !== oldName);
-            const renamed = newOrder.includes(oldName) === false && newOrder.length === originalDepartments.length;
-
+            const renamed = !newOrder.includes(oldName) && newOrder.length === originalDepartments.length;
             if (renamed) {
                 const newNameForOldIndex = newOrder[index];
                 if (newNameForOldIndex && newNameForOldIndex !== oldName) {
@@ -281,78 +283,90 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
 
   useEffect(() => {
-    let dbListener: ReturnType<typeof onValue> | null = null;
-    let delayInterval: NodeJS.Timeout | null = null;
+    let authUser: FirebaseUser | null = null;
+    let isDataLoaded = false;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
-      // Clean up previous listeners
-      if (dbListener) dbListener();
-      if (delayInterval) clearInterval(delayInterval);
-
-      if (authUser) {
-        // User is authenticated, set up database listener
-        dbListener = onValue(ref(db), (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            const users: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-            const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
-            const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-
-            dispatch({
-              type: 'SET_DATA',
-              payload: {
-                users: users,
-                documents: documents,
-                logs: logs,
-                departments: data.departments || [],
-                documentTypes: data.documentTypes || [],
-                assignedDepartments: data.assignedDepartments || [],
-                columnVisibility: data.columnVisibility || initialColumnVisibility,
-              }
-            });
-
-            // Now that data is loaded, find the current user's profile
-            const userProfile = users.find(u => u.id === authUser.uid);
-            if (userProfile) {
-              dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
-            } else {
-              console.error(`Authenticated user ${authUser.uid} not found in database.`);
-              dispatch({ type: 'LOGOUT' });
-            }
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      authUser = user;
+      if (isDataLoaded) {
+        // Data is already loaded, proceed with auth check
+        if (user) {
+          const userProfile = state.users.find(u => u.id === user.uid);
+          if (userProfile) {
+            dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
           } else {
-            // Database is empty, seed it if an admin is the first to log in.
-            const userProfile = state.users.find(u => u.id === authUser.uid);
-            if(userProfile && userProfile.role === 'Admin') {
-                console.log("No data found in DB. Seeding database...");
-                set(ref(db), initialData).catch(error => {
-                    console.error("Failed to seed database:", error);
-                });
-            } else {
-                 dispatch({ type: 'SET_INITIALIZED', payload: true });
-            }
+            console.error(`Authenticated user ${user.uid} not found in database.`);
+            dispatch({ type: 'LOGOUT' });
           }
-        }, (error) => {
-          console.error("Firebase Realtime Database listener error:", error);
+        } else {
           dispatch({ type: 'LOGOUT' });
-        });
+        }
+      }
+      // If data is not loaded yet, do nothing, the onValue listener will handle it.
+    });
 
-        // Start checking for delayed documents
-        delayInterval = setInterval(() => {
-            dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
-        }, 60000);
+    const dbListener = onValue(ref(db), (snapshot) => {
+      const data = snapshot.val();
+      const users = data?.users ? Object.values(data.users) as User[] : [];
 
+      // Check if this is the first data load
+      if (!isDataLoaded) {
+        if (snapshot.exists()) {
+          const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
+          const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+           const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+
+          dispatch({
+            type: 'SET_DATA',
+            payload: {
+              users: dbUsers,
+              documents: documents,
+              logs: logs,
+              departments: data.departments || [],
+              documentTypes: data.documentTypes || [],
+              assignedDepartments: data.assignedDepartments || [],
+              columnVisibility: data.columnVisibility || initialColumnVisibility,
+            }
+          });
+        } else {
+            // Database is empty. Seed it.
+             console.log("No data found in DB. Seeding database...");
+             set(ref(db), initialData).catch(error => {
+                 console.error("Failed to seed database:", error);
+             });
+        }
+      }
+
+      isDataLoaded = true;
+
+      // Now that data is loaded, check auth state
+      if (authUser) {
+        const userProfile = users.find(u => u.id === authUser!.uid);
+        if (userProfile) {
+          dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
+        } else {
+          console.error(`Authenticated user ${authUser!.uid} not found in database.`);
+          dispatch({ type: 'LOGOUT' });
+        }
       } else {
-        // No user is authenticated
+        // No authenticated user, ensure logout state
         dispatch({ type: 'LOGOUT' });
       }
+    }, (error) => {
+        console.error("Firebase Realtime Database listener error:", error);
+        dispatch({ type: 'LOGOUT' });
     });
+    
+    const delayInterval = setInterval(() => {
+        dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
+    }, 60000);
 
     return () => {
       unsubscribeAuth();
-      if (dbListener) dbListener();
-      if (delayInterval) clearInterval(delayInterval);
+      dbListener();
+      clearInterval(delayInterval);
     };
-  }, []); // Empty dependency array ensures this runs only once on mount.
+  }, []); // Only run this effect once on mount
 
 
   const filteredDocs = useMemo(() => {

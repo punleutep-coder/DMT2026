@@ -75,7 +75,7 @@ export default function LoginForm() {
             description: t('loggedInSuccess'),
         });
     } catch (e: any) {
-        if (e.code === 'auth/user-not-found') {
+        if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
             // If user doesn't exist, offer to create a new account
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
@@ -103,7 +103,11 @@ export default function LoginForm() {
 
             } catch (creationError: any) {
                 console.error("Error creating user:", creationError);
-                setError(creationError.message || 'Failed to create a new account.');
+                let errorMessage = 'Failed to create a new account.';
+                if (creationError.code === 'auth/email-already-in-use') {
+                    errorMessage = 'This email is already in use. Please try logging in again.';
+                }
+                setError(errorMessage);
             }
         } else {
             console.error("Error signing in:", e);
