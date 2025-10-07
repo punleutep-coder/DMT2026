@@ -216,6 +216,8 @@ const translations = {
         clearForm: "Clear Form",
         addUser: "Add User",
         cancelEdit: "Cancel Edit & Add New",
+        Admin: "Admin",
+        User: "User",
 
         // Permissions
         canViewMetrics: 'View Metrics Cards',
@@ -463,8 +465,11 @@ const translations = {
         deptAccessDesc: "ប្រសិនបើគ្មាននាយកដ្ឋានណាមួយត្រូវបានជ្រើសរើសទេ អ្នកប្រើប្រាស់នឹងអាចចូលប្រើនាយកដ្ឋានទាំងអស់។",
         allHaveAccess: "មានការអនុញ្ញាតទាំងអស់តាមលំនាំដើម។",
         clearForm: "ជម្រះទម្រង់",
+        saveChanges: "រក្សាទុកការផ្លាស់ប្តូរ",
         addUser: "បន្ថែមអ្នកប្រើប្រាស់",
         cancelEdit: "បោះបង់ការកែសម្រួល & បន្ថែមថ្មី",
+        Admin: "អ្នកគ្រប់គ្រង",
+        User: "អ្នកប្រើប្រាស់",
 
         // Permissions
         canViewMetrics: 'មើលកាតម៉ែត្រ',
@@ -476,7 +481,7 @@ const translations = {
         canViewLog: 'មើលកំណត់ហេតុ',
         canViewCompleted: 'មើលឯកសារដែលបានបញ្ចប់',
         canSplitDocument: 'បំបែកឯកសារ',
-        canEditCurrentNote: 'បន្ថែម/កែសម្រួលចំណាំ',
+        canEditCurrentNote: 'កែសម្រួលកំណត់ចំណាំបច្ចុប្បន្ន',
         canMoveDocument: 'ផ្លាស់ទីឯកសារ (ទៅមុខ/ថយក្រោយ)',
         canDelayDocument: 'ពន្យាពេលឯកសារ',
         canReleaseDocument: 'ចេញផ្សាយឯកសារពីការពន្យាពេល',
@@ -510,7 +515,7 @@ export const useTranslation = () => {
     const { state } = useAppContext();
     const { language } = state;
 
-    const t = (key: keyof typeof translations.en, params?: { [key: string]: string | number | undefined }) => {
+    const t = (key: keyof typeof translations['en'], params?: { [key: string]: string | number | undefined }) => {
         let translation = translations[language]?.[key] || translations.en[key] || key;
         
         if (typeof translation !== 'string') {

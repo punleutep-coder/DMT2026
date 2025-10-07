@@ -38,6 +38,8 @@ import { useToast } from '@/hooks/use-toast'
 import { v4 as uuidv4 } from 'uuid'
 import { FormDescription } from '../ui/form'
 import { useTranslation } from '@/lib/i18n'
+import { auth } from '@/lib/firebase'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 
 const permissionsSchema = z.object(
     Object.keys(PERMISSIONS_CONFIG).reduce(
@@ -217,55 +219,99 @@ export default function UserManagementModal({
   }
   
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // This function can only update RTDB. It cannot create Firebase Auth users.
-    // That must be done through the main login/registration form.
     const isUpdating = !!values.id;
-    if (!isUpdating) {
-      toast({ title: 'Error', description: 'User creation must be done via the main registration form.', variant: 'destructive' });
-      return;
-    }
-    
-    const targetUser = state.users.find(u => u.id === values.id);
-    if (!targetUser) {
-        toast({ title: 'Error', description: 'User not found.', variant: 'destructive' });
-        return;
-    }
-    
-    if (targetUser.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
-        toast({ title: 'Permission Denied', description: 'You cannot edit other Admin users.', variant: 'destructive' });
-        return;
-    }
 
-    const allPermissionKeys = Object.keys(PERMISSIONS_CONFIG);
-    const finalPermissions: { [key: string]: boolean } = {};
+    if (isUpdating) {
+        const targetUser = state.users.find(u => u.id === values.id);
+        if (!targetUser) {
+            toast({ title: 'Error', description: 'User not found.', variant: 'destructive' });
+            return;
+        }
+        
+        if (targetUser.role === 'Admin' && currentUser?.role === 'Admin' && !(currentUser.permissions?.canManageAdmins)) {
+            toast({ title: 'Permission Denied', description: 'You cannot edit other Admin users.', variant: 'destructive' });
+            return;
+        }
 
-    if (values.role === 'User') {
-      allPermissionKeys.forEach(key => {
-        finalPermissions[key] = values.permissions?.[key as keyof typeof values.permissions] ?? false;
-      });
-    }
-    
-    const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
-    
-    const userData: User = {
-        id: values.id!,
-        firestoreId: targetUser.firestoreId,
-        username: values.username,
-        email: values.email,
-        role: values.role,
-        permissions: finalPermissions,
-        departmentPermissions: finalDepartmentPermissions,
-        passwordHash: '', // Not used
-    };
-    
-    if (userData.role === 'Admin') {
-        userData.permissions.canManageAdmins = true;
-    }
-    
-    dispatch({ type: 'UPDATE_USER', payload: userData });
-    toast({ title: 'Success', description: 'User updated successfully.' });
+        const allPermissionKeys = Object.keys(PERMISSIONS_CONFIG);
+        const finalPermissions: { [key: string]: boolean } = {};
 
-    handleSetAddMode();
+        if (values.role === 'User') {
+          allPermissionKeys.forEach(key => {
+            finalPermissions[key] = values.permissions?.[key as keyof typeof values.permissions] ?? false;
+          });
+        }
+        
+        const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
+        
+        const userData: User = {
+            id: values.id!,
+            firestoreId: targetUser.firestoreId,
+            username: values.username,
+            email: values.email,
+            role: values.role,
+            permissions: finalPermissions,
+            departmentPermissions: finalDepartmentPermissions,
+            passwordHash: '', // Not used
+        };
+        
+        if (userData.role === 'Admin') {
+            userData.permissions.canManageAdmins = true;
+        }
+        
+        dispatch({ type: 'UPDATE_USER', payload: userData });
+        toast({ title: 'Success', description: 'User updated successfully.' });
+
+        handleSetAddMode();
+    } else {
+        // Add new user
+        if (!values.password) {
+            form.setError('password', { message: 'Password is required for new users.' });
+            return;
+        }
+        try {
+            // Step 1: Create user in Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+            const authUser = userCredential.user;
+
+            // Step 2: Create user profile in Realtime Database
+            const allPermissionKeys = Object.keys(PERMISSIONS_CONFIG);
+            const finalPermissions: { [key: string]: boolean } = {};
+
+            if (values.role === 'User') {
+              allPermissionKeys.forEach(key => {
+                finalPermissions[key] = values.permissions?.[key as keyof typeof values.permissions] ?? false;
+              });
+            }
+            const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
+
+            const newUserProfile: User = {
+                id: authUser.uid,
+                firestoreId: authUser.uid,
+                username: values.username,
+                email: values.email,
+                role: values.role,
+                permissions: finalPermissions,
+                departmentPermissions: finalDepartmentPermissions,
+                passwordHash: '', // Not used
+            };
+            if (newUserProfile.role === 'Admin') {
+                newUserProfile.permissions.canManageAdmins = true;
+            }
+
+            dispatch({ type: 'ADD_USER', payload: newUserProfile });
+            toast({ title: 'User Created', description: `${values.username} has been added.` });
+            handleSetAddMode();
+
+        } catch (error: any) {
+            console.error("Error creating user:", error);
+            if (error.code === 'auth/email-already-in-use') {
+                form.setError('email', { message: 'This email is already in use.' });
+            } else {
+                toast({ title: 'Error creating user', description: error.message, variant: 'destructive' });
+            }
+        }
+    }
   }
   
   const canManageUser = (userToManage: User) => {
@@ -511,7 +557,7 @@ export default function UserManagementModal({
                     <div className="flex items-center justify-center h-40 text-muted-foreground p-4 border rounded-md bg-muted/30">
                       <div className='text-center'>
                         <Shield className="mx-auto h-8 w-8 text-primary" />
-                        <p className="mt-2 font-medium">{t(role as 'Admin' | 'User')}{t('allHaveAccess')}</p>
+                        <p className="mt-2 font-medium">{t(role as 'Admin' | 'User')} {t('allHaveAccess')}</p>
                       </div>
                     </div>
                   )}
@@ -520,7 +566,7 @@ export default function UserManagementModal({
                         {mode === 'edit' ? t('cancelEdit') : t('clearForm')}
                     </Button>
 
-                    <Button type="submit" disabled={mode === 'add'}>
+                    <Button type="submit">
                       {mode === 'edit' ? t('saveChanges') : t('addUser')}
                     </Button>
                   </DialogFooter>
