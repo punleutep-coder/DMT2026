@@ -292,53 +292,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let delayInterval: NodeJS.Timeout | null = null;
   
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in.
-        dbListener = onValue(ref(db), (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
-            
-            const userProfile = dbUsers.find(u => u.id === user.uid);
-
-            if (userProfile) {
-              const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
-              const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
-              
-              dispatch({
-                type: 'SET_DATA',
-                payload: {
-                  users: dbUsers,
-                  documents: documents,
-                  logs: logs,
-                  departments: data.departments || [],
-                  documentTypes: data.documentTypes || [],
-                  assignedDepartments: data.assignedDepartments || [],
-                  columnVisibility: data.columnVisibility || initialColumnVisibility,
-                }
-              });
-              dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
-            } else {
-              console.error(`Authenticated user ${user.uid} not found in database.`);
-              dispatch({ type: 'LOGOUT' });
-            }
-          } else {
-            console.log("No data found in DB, attempting to seed.");
-            set(ref(db), initialData).catch(error => {
-                console.error("Failed to seed database:", error);
-            });
-          }
-        }, (error) => {
-          console.error("Firebase Realtime Database listener error:", error);
-          dispatch({ type: 'LOGOUT' });
-        });
-
-        delayInterval = setInterval(() => {
-            dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
-        }, 60000);
-
-      } else {
-        // User is signed out.
+      // First, if a user is logging out, clean everything up.
+      if (!user) {
         if (dbListener) {
           dbListener(); // Detach listener
           dbListener = null;
@@ -348,9 +303,67 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           delayInterval = null;
         }
         dispatch({ type: 'LOGOUT' });
+        dispatch({ type: 'SET_INITIALIZED', payload: true });
+        return;
+      }
+  
+      // If a user is logged in, attach the database listener.
+      if (!dbListener) {
+        dbListener = onValue(ref(db), (snapshot) => {
+          if (!snapshot.exists()) {
+             console.log("No data found in DB, attempting to seed.");
+             set(ref(db), initialData).catch(error => {
+                console.error("Failed to seed database:", error);
+             });
+             // Don't proceed further, wait for next onValue trigger after seeding
+             return;
+          }
+          
+          const data = snapshot.val();
+          const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
+          const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
+          const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+
+          // Dispatch all data at once to ensure consistency
+          dispatch({
+            type: 'SET_DATA',
+            payload: {
+              users: dbUsers,
+              documents: documents,
+              logs: logs,
+              departments: data.departments || [],
+              documentTypes: data.documentTypes || [],
+              assignedDepartments: data.assignedDepartments || [],
+              columnVisibility: data.columnVisibility || initialColumnVisibility,
+            }
+          });
+          
+          // Now that data is loaded, find the user profile.
+          const authUser = auth.currentUser;
+          if (authUser) {
+            const userProfile = dbUsers.find(u => u.id === authUser.uid);
+            if (userProfile) {
+              dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
+            } else {
+              console.error(`Authenticated user ${authUser.uid} not found in database.`);
+              dispatch({ type: 'LOGOUT' });
+            }
+          }
+        }, (error) => {
+          console.error("Firebase Realtime Database listener error:", error);
+          dispatch({ type: 'LOGOUT' });
+        });
+      }
+  
+      // Start the interval for checking delayed documents.
+      if (!delayInterval) {
+        delayInterval = setInterval(() => {
+          dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
+        }, 60000);
       }
     });
-
+  
+    // Cleanup function
     return () => {
       unsubscribeAuth();
       if (dbListener) {
@@ -360,7 +373,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         clearInterval(delayInterval);
       }
     };
-  }, []); 
+  }, []); // Empty dependency array ensures this runs only once on mount.
 
 
   const filteredDocs = useMemo(() => {
@@ -460,3 +473,5 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     </AppContext.Provider>
   )
 }
+
+    
