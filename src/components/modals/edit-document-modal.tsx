@@ -248,7 +248,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     name="documentType"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>{t('documentType')}</FormLabel>
+                        <FormLabel style={{ color: '#1D41D5' }}>{t('documentType')}</FormLabel>
                         <Combobox
                           options={documentTypeOptions}
                           value={field.value || ''}
@@ -344,4 +344,5 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     
 
     
+
 

@@ -188,7 +188,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                           name="documentType"
                           render={({ field }) => (
                             <FormItem className="flex flex-col">
-                              <FormLabel>{t('documentType')}</FormLabel>
+                              <FormLabel style={{ color: '#1D41D5' }}>{t('documentType')}</FormLabel>
                               <Combobox
                                 options={documentTypeOptions}
                                 value={field.value}
