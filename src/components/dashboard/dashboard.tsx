@@ -12,10 +12,18 @@ import ConfirmDialog from '../modals/confirm-dialog'
 import ModalManager from '../modals/modal-manager'
 import { Skeleton } from '../ui/skeleton'
 import { hasPermission } from '@/lib/permissions'
+import { Button } from '../ui/button'
+import { FilePlus } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 export default function Dashboard() {
-  const { state } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const { currentUser } = state
+  const t = useTranslation();
+
+  const openModal = (type: any) => {
+    dispatch({ type: 'SET_MODAL', payload: { type } })
+  }
 
   if (!state.isInitialized) {
     return (
@@ -43,6 +51,15 @@ export default function Dashboard() {
           )}
           <DocumentManagement />
         </main>
+        {hasPermission(currentUser, 'canAddDocument') && (
+          <Button 
+            onClick={() => openModal('addDocument')} 
+            className="fixed bottom-8 right-8 h-16 w-16 rounded-full bg-primary/80 hover:bg-primary/90 text-[#000066] shadow-2xl hover:shadow-xl transition-all duration-300 z-50"
+            title={t('addDocument')}
+          >
+            <FilePlus className="h-8 w-8" />
+          </Button>
+        )}
       </div>
       {state.dialog.isOpen && <ConfirmDialog />}
       {state.modal.type && <ModalManager />}

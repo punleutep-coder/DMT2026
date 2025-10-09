@@ -192,11 +192,6 @@ export default function DocumentManagement() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {hasPermission(currentUser, 'canAddDocument') && (
-          <Button onClick={() => openModal('addDocument')} className="bg-primary/80 hover:bg-primary/90 text-[#000066] shadow-lg hover:shadow-xl transition-shadow">
-            <FilePlus /> {t('addDocument')}
-          </Button>
-        )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
           <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-blue-800 hover:bg-blue-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
             <Combine /> {t('combineSelected')}
