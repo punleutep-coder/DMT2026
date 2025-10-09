@@ -261,7 +261,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     )}
                   />
                 )}
-                {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditAssignedDepartment') && (
                   <FormField
                     control={form.control}
@@ -343,6 +343,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     
 
     
+
 
 
 

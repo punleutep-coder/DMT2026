@@ -225,7 +225,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         )}
                       />
                     )}
-                    {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('initialReceiver')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
