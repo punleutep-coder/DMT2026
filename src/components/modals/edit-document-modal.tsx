@@ -1,4 +1,3 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -309,7 +308,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
                 {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('tagsLabel')}</FormLabel>
+                    <FormLabel style={{ color: '#1D41D5' }}>{t('tagsLabel')}</FormLabel>
                     <div className="flex gap-2">
                       <FormControl><Input {...field} /></FormControl>
                       <Button type="button" variant="outline" onClick={handleSuggestTags} disabled={isSuggesting}>
@@ -344,6 +343,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     
 
     
+
 
 
 

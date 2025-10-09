@@ -1,4 +1,3 @@
-
 'use client'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -238,7 +237,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                 {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel>{t('keywords')}</FormLabel><FormControl><Input placeholder={t('keywordsPlaceholder')} {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('tagsLabel')}</FormLabel>
+                    <FormLabel style={{ color: '#1D41D5' }}>{t('tagsLabel')}</FormLabel>
                     <div className="flex gap-2">
                       <FormControl><Input {...field} /></FormControl>
                       <Button type="button" variant="outline" onClick={handleSuggestTags} disabled={isSuggesting}>
