@@ -227,7 +227,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                       />
                     )}
                     {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel>{t('initialReceiver')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('initialReceiver')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel>{t('docLink1')}</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
