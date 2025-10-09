@@ -180,7 +180,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                     )} 
                   />
                 }
-                {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {hasPermission(currentUser, 'canEditDocumentType') && (
                       <FormField
