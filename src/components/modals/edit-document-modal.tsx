@@ -241,7 +241,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             <ScrollArea className="h-[60vh] p-4">
               <div className="space-y-4">
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel>{t('docName')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docName')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditDocumentType') && (
                   <FormField
                     control={form.control}
@@ -344,4 +344,3 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     
 
     
-

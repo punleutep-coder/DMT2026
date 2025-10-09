@@ -173,7 +173,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                     name="name" 
                     render={({ field }) => ( 
                       <FormItem>
-                        <FormLabel>{t('docName')}</FormLabel>
+                        <FormLabel style={{ color: '#1D41D5' }}>{t('docName')}</FormLabel>
                         <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                       </FormItem> 
