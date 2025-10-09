@@ -54,10 +54,10 @@ export default function Dashboard() {
         {hasPermission(currentUser, 'canAddDocument') && (
           <Button 
             onClick={() => openModal('addDocument')} 
-            className="fixed bottom-8 right-8 h-16 w-16 rounded-full bg-primary/80 hover:bg-primary/90 text-[#000066] shadow-2xl hover:shadow-xl transition-all duration-300 z-50"
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary/80 hover:bg-primary/90 text-[#000066] shadow-2xl hover:shadow-xl transition-all duration-300 z-50"
             title={t('addDocument')}
           >
-            <FilePlus className="h-12 w-12" />
+            <FilePlus className="h-8 w-8" />
           </Button>
         )}
       </div>
