@@ -211,7 +211,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         name="assignedDepartment"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel>{t('assignedDepartment')}</FormLabel>
+                            <FormLabel style={{ color: '#1D41D5' }}>{t('assignedDepartment')}</FormLabel>
                             <Combobox
                               options={assignedDepartmentOptions}
                               value={field.value || ''}
