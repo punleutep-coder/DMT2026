@@ -338,7 +338,7 @@ const translations = {
         // Metrics
         totalDocuments: "ឯកសារ​សរុប",
         inProgress: "កំពុង​ដំណើរការ",
-        delayed: "ពន្យាពេល",
+        delayed: "ឯកសាររក្សាទុក",
         releaseDateReached: "ដល់កាលបរិច្ឆេទចេញផ្សាយ",
         completed: "បាន​បញ្ចប់",
         completedSuccess: "បានបញ្ចប់ (ជោគជ័យ)",
@@ -548,3 +548,4 @@ export const languages = [
     
 
     
+
