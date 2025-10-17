@@ -58,7 +58,7 @@ export default function Dashboard() {
             title={t('addDocument')}
           >
             <div className="loader relative flex items-center justify-center">
-              <FilePlus className="absolute h-10 w-10 text-white/80 z-10" style={{ filter: 'drop-shadow(0 0 5px rgba(0,0,0,0.5))' }} />
+              <FilePlus className="absolute h-8 w-8 text-white/80 z-10" style={{ filter: 'drop-shadow(0 0 5px rgba(0,0,0,0.5))' }} />
               <svg width="100" height="100" viewBox="0 0 100 100">
                 <defs>
                   <mask id="clipping">

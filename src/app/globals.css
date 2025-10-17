@@ -111,7 +111,7 @@
   --color-four: #bf4a1d80;
   --color-five: #ffbf4740;
   --time-animation: 2s;
-  --size: 1; /* You can change the size */
+  --size: 0.5; /* You can change the size */
   position: relative;
   border-radius: 50%;
   transform: scale(var(--size));
