@@ -124,7 +124,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
 
     const now = new Date().toISOString()
     const newDoc: Document = {
-        id: values.id, // Store original ID
+        id: values.id, // Store original ID, ensuring no duplicates.
         firestoreId: `doc-${Date.now()}`,
         name: values.name,
         documentType: values.documentType || null,
