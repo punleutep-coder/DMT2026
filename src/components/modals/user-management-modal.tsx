@@ -1,3 +1,4 @@
+
 'use client'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -32,14 +33,14 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { PERMISSIONS_CONFIG } from '@/lib/initial-data'
 import { Checkbox } from '../ui/checkbox'
-import { Pencil, Shield, Trash2 } from 'lucide-react'
+import { Pencil, Shield, Trash2, KeyRound } from 'lucide-react'
 import type { User } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
 import { v4 as uuidv4 } from 'uuid'
 import { FormDescription } from '../ui/form'
 import { useTranslation } from '@/lib/i18n'
 import { auth } from '@/lib/firebase'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 
 const permissionsSchema = z.object(
     Object.keys(PERMISSIONS_CONFIG).reduce(
@@ -184,6 +185,27 @@ export default function UserManagementModal({
       departmentPermissions: [],
     })
   }
+
+  const handleResetPassword = async (user: User) => {
+    if (!canManageUser(user)) {
+      toast({ title: 'Permission Denied', description: 'You do not have permission to reset this user\'s password.', variant: 'destructive' });
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      toast({
+        title: 'Password Reset Email Sent',
+        description: `A password reset link has been sent to ${user.email}.`,
+      });
+    } catch (error: any) {
+      console.error("Error sending password reset email:", error);
+      toast({
+        title: 'Error',
+        description: 'Could not send password reset email. Please try again later.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleDeleteUser = (user: User) => {
     if (currentUser?.id === user.id) {
@@ -357,6 +379,15 @@ export default function UserManagementModal({
                     </div>
                     {canManageUser(user) && (
                       <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleResetPassword(user)}
+                            title="Send Password Reset"
+                          >
+                            <KeyRound className="h-4 w-4 text-blue-600" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
