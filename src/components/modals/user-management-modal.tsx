@@ -191,6 +191,16 @@ export default function UserManagementModal({
       toast({ title: 'Permission Denied', description: 'You do not have permission to reset this user\'s password.', variant: 'destructive' });
       return;
     }
+
+    if (!user.email) {
+      toast({
+        title: 'Missing Email',
+        description: `Cannot send password reset because user ${user.username} does not have an email address.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       await sendPasswordResetEmail(auth, user.email);
       toast({
