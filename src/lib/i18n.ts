@@ -272,7 +272,7 @@ const translations = {
         note: "កំណត់ចំណាំ",
         status: "ស្ថានភាព",
         actions: "សកម្មភាព",
-        name: "ឈ្មោះឯកសារ",
+        name: "កម្មវត្ថុ",
         office: "ការិយាល័យ",
         lastUpdate: "កែចុងក្រោយ",
         clear: "ជម្រះ",
@@ -548,5 +548,6 @@ export const languages = [
     
 
     
+
 
 
