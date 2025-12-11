@@ -60,7 +60,7 @@ type ReportData = {
 }
 
 export default function ReportingModal({ isOpen, onClose }: ReportingModalProps) {
-  const { state } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const { documents } = state
   const t = useTranslation()
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
@@ -111,6 +111,25 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
     }, {})
 
     setReportData(data)
+  }
+  
+  const handleBarClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const documentType = data.activePayload[0].payload.name;
+      dispatch({ 
+        type: 'SET_FILTER', 
+        payload: { 
+          documentType, 
+          mainFilter: 'All', 
+          departmentSpecificFilter: 'All',
+          assignedDepartment: 'All',
+          search: '',
+          startDate: null,
+          endDate: null,
+        }
+      });
+      onClose();
+    }
   }
 
   const clearReport = () => {
@@ -286,7 +305,12 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                         <h4 className="font-semibold text-lg mb-2">{t('docsPerType')}:</h4>
                         <div className="h-[400px] w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={reportTotals.chartData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+                                <BarChart 
+                                    data={reportTotals.chartData} 
+                                    margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                                    onClick={handleBarClick}
+                                    className="cursor-pointer"
+                                >
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} style={{ fontSize: '12px' }} />
                                     <YAxis allowDecimals={false} />
