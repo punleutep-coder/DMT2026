@@ -388,7 +388,7 @@ const translations = {
         selectAssignedDept: "ជ្រើសរើសនាយកដ្ឋាន...",
         searchAssignedDept: "ស្វែងរក ឬបង្កើត...",
         noAssignedDeptFound: "រកមិនឃើញនាយកដ្ឋានដែលត្រូវគ្នាទេ។",
-        initialReceiver: "ឈ្មោះអ្នកទទួលដំបូង",
+        initialReceiver: "ឈ្មោះអ្នកទទួល",
         keywords: "ពាក្យគន្លឹះ",
         keywordsPlaceholder: "ដើម្បីលទ្ធផលស្វែងរកប្រសើរជាងមុន...",
         tagsLabel: "ស្លាក (បំបែកដោយក្បៀស)",
@@ -548,6 +548,7 @@ export const languages = [
     
 
     
+
 
 
 
