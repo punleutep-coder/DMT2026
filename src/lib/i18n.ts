@@ -378,7 +378,7 @@ const translations = {
         // Modals
         addNewDocument: "បន្ថែមឯកសារថ្មី",
         docName: "កម្មវត្ថុ",
-        docIdPrimary: "លេខសម្គាល់ឯកសារ (ចម្បង)",
+        docIdPrimary: "លេខឯកសារដើម",
         selectDocType: "ជ្រើសរើសប្រភេទឯកសារ...",
         searchDocType: "ស្វែងរកប្រភេទ...",
         noDocTypeFound: "រកមិនឃើញប្រភេទដែលត្រូវគ្នាទេ។",
@@ -548,6 +548,7 @@ export const languages = [
     
 
     
+
 
 
 
