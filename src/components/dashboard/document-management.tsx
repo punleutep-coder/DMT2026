@@ -16,6 +16,7 @@ import {
   FileDigit,
   FileCog,
   FileOutput,
+  Redo2,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -192,6 +193,11 @@ export default function DocumentManagement() {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {hasPermission(currentUser, 'canMoveDocument') && (
+          <Button onClick={() => openModal('bulkAdvance')} disabled={state.selectedDocIds.length === 0} className="bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <Redo2 /> Bulk Advance
+          </Button>
+        )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
           <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} className="bg-blue-800 hover:bg-blue-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
             <Combine /> {t('combineSelected')}

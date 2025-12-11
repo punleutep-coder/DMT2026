@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useAppContext } from "@/hooks/use-app-context"
@@ -19,6 +20,7 @@ import ManageDocumentTypesModal from "./manage-document-types-modal"
 import ManageAssignedDepartmentsModal from "./manage-assigned-departments-modal"
 import GlobalActivityLogModal from "./global-activity-log-modal"
 import ExportXLSXModal from "./export-xlsx-modal"
+import BulkAdvanceModal from "./bulk-advance-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -69,6 +71,8 @@ export default function ModalManager() {
             return <CompleteDocumentModal isOpen={true} onClose={handleClose} docId={docId!} firestoreId={firestoreId!} />
         case 'exportXLSX':
             return <ExportXLSXModal isOpen={true} onClose={handleClose} />
+        case 'bulkAdvance':
+            return <BulkAdvanceModal isOpen={true} onClose={handleClose} />
         default:
             return null;
     }
