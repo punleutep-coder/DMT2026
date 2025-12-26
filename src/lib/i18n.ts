@@ -381,7 +381,7 @@ const translations = {
       selectDocType: "ជ្រើសរើសប្រភេទឯកសារ...",
       searchDocType: "ស្វែងរកប្រភេទ...",
       noDocTypeFound: "រកមិនឃើញប្រភេទដែលត្រូវគ្នាទេ។",
-      secondaryId: "លេខសម្គាល់បន្ទាប់បន្សំ",
+      secondaryId: "លេខសម្គាល់ទីពីរ",
       tertiaryId: "លេខសម្គាល់ទីបី",
       quaternaryId: "លេខសម្គាល់ទីបួន",
       selectAssignedDept: "ជ្រើសរើសនាយកដ្ឋាន...",
@@ -559,5 +559,6 @@ export const languages = [
 
 
     
+
 
 
