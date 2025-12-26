@@ -108,10 +108,10 @@ const translations = {
 
         // Action Menu
         viewLog: "View Log",
-        docLink1: "ឯកសារដើម",
-        docLink2: "លសនបនប",
-        docLink3: "លសអធម",
-        docLink4: "ឯកសារសម្រេច",
+        docLink1: "ឯកសារទី១",
+        docLink2: "ឯកសារទី២",
+        docLink3: "ឯកសារទី៣",
+        docLink4: "ឯកសារទី៤",
         editDetails: "Edit Details",
         splitDocument: "Split Document",
         delay: "Delay",
@@ -125,8 +125,8 @@ const translations = {
 
         // Modals
         addNewDocument: "Add New Document",
-        docName: "Document Name",
-        docIdPrimary: "Document ID (Primary)",
+        docName: "កម្មវត្ថុ",
+        docIdPrimary: "លេខឯកសារដើម",
         selectDocType: "Select a document type...",
         searchDocType: "Search types...",
         noDocTypeFound: "No matching type found.",
@@ -136,7 +136,7 @@ const translations = {
         selectAssignedDept: "Select a department...",
         searchAssignedDept: "Search or create...",
         noAssignedDeptFound: "No matching department found.",
-        initialReceiver: "Initial Receiver Name",
+        initialReceiver: "ឈ្មោះអ្នកទទួល",
         keywords: "Keywords",
         keywordsPlaceholder: "For better search results...",
         tagsLabel: "Tags (comma-separated)",
