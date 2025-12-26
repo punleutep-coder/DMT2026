@@ -360,7 +360,7 @@ const translations = {
         
         // Action Menu
         viewLog: "មើលកំណត់ហេតុ",
-        docLink1: "បន្ថែមតំណភ្ជាប់ឯកសារដើម",
+        docLink1: "ឯកសារទី១",
         docLink2: "លសនបនប",
         docLink3: "លសអធម",
         docLink4: "ឯកសារសម្រេច",
@@ -548,6 +548,7 @@ export const languages = [
     
 
     
+
 
 
 
