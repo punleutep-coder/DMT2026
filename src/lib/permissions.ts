@@ -19,3 +19,16 @@ export const hasDepartmentPermission = (user: User | null, departmentName: strin
     }
     return user.departmentPermissions.includes(departmentName);
 }
+
+export const hasLabelPermission = (user: User | null, label: string | null): boolean => {
+    if (!user) return false;
+    if (user.role === 'Admin') return true;
+    // If a document has no label, everyone can see it
+    if (!label) return true;
+    // If the user has no specific label permissions, they can see all labels
+    if (!user.labelPermissions || user.labelPermissions.length === 0) {
+        return true;
+    }
+    // Otherwise, check if the user has permission for this specific label
+    return user.labelPermissions.includes(label);
+}

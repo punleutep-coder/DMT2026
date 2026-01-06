@@ -58,6 +58,7 @@ export interface User {
   role: 'Admin' | 'User';
   permissions: { [key: string]: boolean };
   departmentPermissions: string[];
+  labelPermissions: string[];
 }
 
 export interface AppState {

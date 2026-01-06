@@ -61,6 +61,7 @@ const formSchema = z
     role: z.enum(['Admin', 'User']),
     permissions: permissionsSchema,
     departmentPermissions: z.array(z.string()).default([]),
+    labelPermissions: z.array(z.string()).default([]),
   })
   .refine(
     (data) => {
@@ -86,7 +87,7 @@ const permissionGroups = {
   dashboardPermissions: [ 'canViewMetrics', 'canViewWorkflowChart' ],
   generalDocPermissions: [ 'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted' ],
   docActionPermissions: [ 'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote' ],
-  docFieldEditPermissions: [ 'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditOffice', 'canEditAssignedDepartment', 'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote' ],
+  docFieldEditPermissions: [ 'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditLabel', 'canEditAssignedDepartment', 'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote' ],
   docLinkPermissions: [ 'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4', 'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4' ],
   adminPermissions: ['canManageAdmins', 'canViewGlobalActivity']
 };
@@ -117,6 +118,7 @@ export default function UserManagementModal({
       role: 'User' as const,
       permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       departmentPermissions: [],
+      labelPermissions: [],
     },
   })
 
@@ -133,6 +135,7 @@ export default function UserManagementModal({
           role: user.role,
           permissions: user.permissions || Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
           departmentPermissions: user.departmentPermissions || [],
+          labelPermissions: user.labelPermissions || [],
         })
       }
     } else {
@@ -145,6 +148,7 @@ export default function UserManagementModal({
         role: 'User' as const,
         permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
         departmentPermissions: [],
+        labelPermissions: [],
       })
     }
   }, [initialUserId, state.users, form])
@@ -170,6 +174,7 @@ export default function UserManagementModal({
       role: user.role,
       permissions: user.permissions || Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       departmentPermissions: user.departmentPermissions || [],
+      labelPermissions: user.labelPermissions || [],
     })
   }
 
@@ -183,6 +188,7 @@ export default function UserManagementModal({
       role: 'User' as const,
       permissions: Object.keys(PERMISSIONS_CONFIG).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       departmentPermissions: [],
+      labelPermissions: [],
     })
   }
 
@@ -275,6 +281,7 @@ export default function UserManagementModal({
         }
         
         const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
+        const finalLabelPermissions = values.role === 'Admin' ? [] : values.labelPermissions;
         
         const userData: User = {
             id: values.id!,
@@ -284,6 +291,7 @@ export default function UserManagementModal({
             role: values.role,
             permissions: finalPermissions,
             departmentPermissions: finalDepartmentPermissions,
+            labelPermissions: finalLabelPermissions,
             passwordHash: '', // Not used
         };
         
@@ -316,6 +324,8 @@ export default function UserManagementModal({
               });
             }
             const finalDepartmentPermissions = values.role === 'Admin' ? [] : values.departmentPermissions;
+            const finalLabelPermissions = values.role === 'Admin' ? [] : values.labelPermissions;
+
 
             const newUserProfile: User = {
                 id: authUser.uid,
@@ -325,6 +335,7 @@ export default function UserManagementModal({
                 role: values.role,
                 permissions: finalPermissions,
                 departmentPermissions: finalDepartmentPermissions,
+                labelPermissions: finalLabelPermissions,
                 passwordHash: '', // Not used
             };
             if (newUserProfile.role === 'Admin') {
@@ -581,6 +592,59 @@ export default function UserManagementModal({
                                             </FormControl>
                                             <FormLabel className="font-normal">
                                                 {dept}
+                                            </FormLabel>
+                                            </FormItem>
+                                        );
+                                        }}
+                                    />
+                                    ))}
+                                </div>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                      </div>
+                      <div className="p-4 border rounded-md space-y-4">
+                        <h3 className="font-semibold text-foreground">
+                          Label Access Permissions
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          If no labels are selected, the user will have access to all labels.
+                        </p>
+                        <FormField
+                            control={form.control}
+                            name="labelPermissions"
+                            render={() => (
+                                <FormItem>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {state.labels.map((label) => (
+                                    <FormField
+                                        key={label}
+                                        control={form.control}
+                                        name="labelPermissions"
+                                        render={({ field }) => {
+                                        return (
+                                            <FormItem
+                                            key={label}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                            >
+                                            <FormControl>
+                                                <Checkbox
+                                                checked={field.value?.includes(label)}
+                                                onCheckedChange={(checked) => {
+                                                    const currentValue = field.value || [];
+                                                    return checked
+                                                    ? field.onChange([...currentValue, label])
+                                                    : field.onChange(
+                                                        currentValue.filter(
+                                                            (value) => value !== label
+                                                        )
+                                                        );
+                                                }}
+                                                />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                                {label}
                                             </FormLabel>
                                             </FormItem>
                                         );

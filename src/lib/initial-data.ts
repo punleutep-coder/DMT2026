@@ -32,7 +32,7 @@ const DEFAULT_LOGS: { [key: string]: Omit<Log, 'id'> } = {
 };
 
 const DEFAULT_USERS: { [key: string]: Omit<User, 'id'> } = {
-    'user-admin': { firestoreId: 'user-admin', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: {}, departmentPermissions: [] }
+    'user-admin': { email: 'admin@example.com', firestoreId: 'user-admin', username: 'admin', passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', role: 'Admin', permissions: {}, departmentPermissions: [], labelPermissions: [] }
 };
 
 export const COLUMN_CONFIG: { [key: string]: { name: string } } = {
