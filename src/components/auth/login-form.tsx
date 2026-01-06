@@ -75,7 +75,8 @@ export default function LoginForm() {
             description: t('loggedInSuccess'),
         });
     } catch (e: any) {
-        if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+        if (e.code === 'auth/user-not-found') {
+            // If user does not exist, try to create a new account for them
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
                 const newUser = userCredential.user;
@@ -107,9 +108,11 @@ export default function LoginForm() {
                 }
                 setError(errorMessage);
             }
+        } else if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+             setError(t('invalidCredentials'));
         } else {
             console.error("Error signing in:", e);
-            setError(e.message || t('invalidCredentials'));
+            setError(e.message || 'An unknown error occurred during login.');
         }
     } finally {
         setIsLoggingIn(false);
