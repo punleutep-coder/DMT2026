@@ -381,16 +381,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []); // Empty dependency array ensures this runs only once on mount.
 
+  // Base documents filtered by user permissions (department and label)
+  const permissionFilteredDocs = useMemo(() => {
+    if (!state.isInitialized || !state.currentUser) return [];
+
+    return state.documents.filter(doc =>
+        hasDepartmentPermission(state.currentUser, doc.status) &&
+        hasLabelPermission(state.currentUser, doc.label)
+    );
+  }, [state.documents, state.currentUser, state.isInitialized]);
+
 
   const filteredDocs = useMemo(() => {
     if (!state.isInitialized || !state.currentUser) return [];
     
-    let docs = state.documents;
-
-    // Filter by department and label permissions first
-    if (state.currentUser?.role !== 'Admin') {
-        docs = docs.filter(doc => hasDepartmentPermission(state.currentUser, doc.status) && hasLabelPermission(state.currentUser, doc.label));
-    }
+    let docs = permissionFilteredDocs;
 
     if (!hasPermission(state.currentUser, 'canViewCompleted')) {
         docs = docs.filter(doc => !doc.status.startsWith('Completed'));
@@ -450,15 +455,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return docs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
-  }, [state.documents, state.filter, state.currentUser, state.isInitialized]);
+  }, [permissionFilteredDocs, state.filter, state.currentUser, state.isInitialized]);
   
   const activeDocs = useMemo(() => {
-    return state.documents.filter(d => d.status !== 'Combined' && d.status !== 'Split');
-  }, [state.documents]);
+    // Metrics should also respect permissions
+    return permissionFilteredDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
+  }, [permissionFilteredDocs]);
 
 
   const metrics = useMemo(() => {
-    const allDocs = state.documents; 
+    // The base for all metrics calculations is now the permission-filtered docs
+    const allDocs = permissionFilteredDocs; 
     const exceedingDocs = activeDocs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
 
     return {
@@ -471,7 +478,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       completedUnsuccess: allDocs.filter(d => d.status === 'Completed (Unsuccess)').length,
       exceeding: exceedingDocs.length,
     }
-  }, [activeDocs, state.documents, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
+  }, [activeDocs, permissionFilteredDocs, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
 
 
   return (
