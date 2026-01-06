@@ -21,6 +21,7 @@ import ManageAssignedDepartmentsModal from "./manage-assigned-departments-modal"
 import GlobalActivityLogModal from "./global-activity-log-modal"
 import ExportXLSXModal from "./export-xlsx-modal"
 import BulkAdvanceModal from "./bulk-advance-modal"
+import ManageLabelsModal from "./manage-labels-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -55,6 +56,8 @@ export default function ModalManager() {
             return <ManageDocumentTypesModal isOpen={true} onClose={handleClose} />
         case 'manageAssignedDepartments':
             return <ManageAssignedDepartmentsModal isOpen={true} onClose={handleClose} />
+        case 'manageLabels':
+            return <ManageLabelsModal isOpen={true} onClose={handleClose} />
         case 'manageColumns':
             return <ManageColumnsModal isOpen={true} onClose={handleClose} />
         case 'combineDocuments':

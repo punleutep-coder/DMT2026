@@ -16,7 +16,7 @@ export interface Document {
   id: string;
   firestoreId: string;
   name: string;
-  office: string | null;
+  label: string | null;
   documentType: string | null;
   status: string;
   initialDepartment: string;
@@ -68,6 +68,7 @@ export interface AppState {
   departments: string[];
   documentTypes: string[];
   assignedDepartments: string[];
+  labels: string[];
   filter: {
     mainFilter: string;
     departmentSpecificFilter: string;
@@ -116,6 +117,7 @@ export type ModalType =
   | 'manageDepartments'
   | 'manageDocumentTypes'
   | 'manageAssignedDepartments'
+  | 'manageLabels'
   | 'manageColumns'
   | 'combineDocuments'
   | 'splitDocument'

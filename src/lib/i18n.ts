@@ -21,7 +21,7 @@ const translations = {
     status: "Status",
     actions: "Actions",
     name: "Name",
-    office: "Office",
+    label: "Label",
     lastUpdate: "Last Update",
     clear: "Clear",
     user: "User",
@@ -47,6 +47,7 @@ const translations = {
     manageWorkflowDepts: "Manage Workflow Depts",
     manageDocTypes: "Manage Document Types",
     manageAssignedDepts: "Manage Assigned Depts",
+    manageLabels: "Manage Labels",
     manageColumns: "Manage Columns",
     exportData: "Export Data (JSON)",
     importData: "Import Data (JSON)",
@@ -137,6 +138,9 @@ const translations = {
     selectAssignedDept: "Select a department...",
     searchAssignedDept: "Search or create...",
     noAssignedDeptFound: "No matching department found.",
+    selectLabel: "Select a label...",
+    searchLabel: "Search or create...",
+    noLabelFound: "No matching label found.",
     initialReceiver: "Initial Receiver",
     keywords: "Keywords",
     keywordsPlaceholder: "For better search results...",
@@ -240,7 +244,7 @@ const translations = {
     canEditDocumentId: 'Edit Document ID (Primary)',
     canEditDocumentName: 'Edit Document Name',
     canEditDocumentType: 'Edit Document Type',
-    canEditOffice: 'Edit Office',
+    canEditLabel: 'Edit Label',
     canEditAssignedDepartment: 'Edit Assigned Department',
     canEditSecondaryId: 'Edit Secondary ID',
     canEditTertiaryId: 'Edit Tertiary ID',
@@ -271,7 +275,7 @@ const translations = {
       status: "ស្ថានភាព",
       actions: "សកម្មភាព",
       name: "ឈ្មោះ",
-      office: "ការិយាល័យ",
+      label: "ស្លាក",
       lastUpdate: "ធ្វើបច្ចុប្បន្នភាពចុងក្រោយ",
       clear: "សម្អាត",
       user: "អ្នកប្រើប្រាស់",
@@ -297,6 +301,7 @@ const translations = {
       manageWorkflowDepts: "គ្រប់គ្រងនាយកដ្ឋានលំហូរការងារ",
       manageDocTypes: "គ្រប់គ្រងប្រភេទឯកសារ",
       manageAssignedDepts: "គ្រប់គ្រងនាយកដ្ឋានដែលបានចាត់តាំង",
+      manageLabels: "គ្រប់គ្រងស្លាក",
       manageColumns: "គ្រប់គ្រងជួរឈរ",
       exportData: "នាំចេញទិន្នន័យ (JSON)",
       importData: "នាំចូលទិន្នន័យ (JSON)",
@@ -387,6 +392,9 @@ const translations = {
       selectAssignedDept: "ជ្រើសរើសនាយកដ្ឋាន...",
       searchAssignedDept: "ស្វែងរក ឬបង្កើត...",
       noAssignedDeptFound: "រកមិនឃើញនាយកដ្ឋានដែលត្រូវគ្នាទេ។",
+      selectLabel: "ជ្រើសរើសស្លាក...",
+      searchLabel: "ស្វែងរក ឬបង្កើតស្លាក...",
+      noLabelFound: "រកមិនឃើញស្លាកដែលត្រូវគ្នាទេ។",
       initialReceiver: "ឈ្មោះអ្នកទទួល",
       keywords: "ពាក្យគន្លឹះ",
       keywordsPlaceholder: "ដើម្បីលទ្ធផលស្វែងរកកាន់តែប្រសើរ...",
@@ -490,7 +498,7 @@ const translations = {
       canEditDocumentId: 'កែសម្រួលលេខសម្គាល់ឯកសារ (ចម្បង)',
       canEditDocumentName: 'កែសម្រួលខ្លឹមសារ',
       canEditDocumentType: 'កែសម្រួលប្រភេទឯកសារ',
-      canEditOffice: 'កែសម្រួលការិយាល័យ',
+      canEditLabel: 'កែសម្រួលស្លាក',
       canEditAssignedDepartment: 'កែសម្រួលនាយកដ្ឋានដែលបានចាត់តាំង',
       canEditSecondaryId: 'កែសម្រួលលេខសម្គាល់បន្ទាប់បន្សំ',
       canEditTertiaryId: 'កែសម្រួលលេខសម្គាល់ទីបី',
@@ -559,6 +567,7 @@ export const languages = [
 
 
     
+
 
 
 

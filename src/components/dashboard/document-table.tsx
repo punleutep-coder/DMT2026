@@ -127,7 +127,7 @@ export default function DocumentTable() {
     { key: 'assignedDepartment', name: t('assignedDepartment') },
     { key: 'name', name: t('name') },
     { key: 'documentType', name: t('documentType') },
-    { key: 'office', name: t('office') },
+    { key: 'label', name: t('label') },
     { key: 'currentStatus', name: t('currentStatus') },
     { key: 'lastUpdate', name: t('lastUpdate') },
     { key: 'actions', name: '' },

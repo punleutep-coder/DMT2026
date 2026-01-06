@@ -27,7 +27,7 @@ const formSchema = z.object({
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
   assignedDepartment: z.string().optional(),
-  office: z.string().optional(),
+  label: z.string().optional(),
   documentLink1: z.string().url().optional().or(z.literal('')),
   documentLink2: z.string().url().optional().or(z.literal('')),
   documentLink3: z.string().url().optional().or(z.literal('')),
@@ -45,7 +45,7 @@ interface AddDocumentModalProps {
 
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
-  const { currentUser, documentTypes, assignedDepartments, departments } = state
+  const { currentUser, documentTypes, assignedDepartments, departments, labels } = state
   const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
   const t = useTranslation()
@@ -60,7 +60,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
       tertiaryId: '',
       quaternaryId: '',
       assignedDepartment: '',
-      office: '',
+      label: '',
       documentLink1: '',
       documentLink2: '',
       documentLink3: '',
@@ -105,6 +105,22 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     toast({ title: "Assigned Department Created", description: `"${deptName}" has been added.` });
   }
 
+  const handleCreateLabel = (labelName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new labels.", variant: "destructive" });
+      return;
+    }
+    if (labels.some(l => l.toLowerCase() === labelName.toLowerCase())) {
+        toast({ title: "Duplicate Label", description: "This label already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newLabels = [...labels, labelName];
+    dispatch({ type: 'SET_LABELS', payload: newLabels });
+    form.setValue('label', labelName);
+    toast({ title: "Label Created", description: `"${labelName}" has been added.` });
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
     if (state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
@@ -128,7 +144,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         firestoreId: `doc-${Date.now()}`,
         name: values.name,
         documentType: values.documentType || null,
-        office: values.office || null,
+        label: values.label || null,
         status: initialDepartment,
         initialDepartment: initialDepartment,
         assignedDepartment: values.assignedDepartment || null,
@@ -155,6 +171,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
 
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
   const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
+  const labelOptions = labels.map(label => ({ value: label, label: label }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -225,7 +242,27 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         )}
                       />
                     )}
-                    {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditLabel') && (
+                        <FormField
+                            control={form.control}
+                            name="label"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                <FormLabel style={{ color: '#1D41D5' }}>{t('label')}</FormLabel>
+                                <Combobox
+                                    options={labelOptions}
+                                    value={field.value || ''}
+                                    onChange={field.onChange}
+                                    placeholder={t('selectLabel')}
+                                    searchPlaceholder={t('searchLabel')}
+                                    notFoundText={t('noLabelFound')}
+                                    onCreate={currentUser?.role === 'Admin' ? handleCreateLabel : undefined}
+                                />
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
                     <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('initialReceiver')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

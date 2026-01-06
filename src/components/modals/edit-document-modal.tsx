@@ -22,7 +22,7 @@ const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
   name: z.string().min(1, 'Document name is required.'),
   documentType: z.string().optional(),
-  office: z.string().optional(),
+  label: z.string().optional(),
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
@@ -45,7 +45,7 @@ interface EditDocumentModalProps {
 export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId }: EditDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
-  const { currentUser, documentTypes, assignedDepartments } = state
+  const { currentUser, documentTypes, assignedDepartments, labels } = state
   const { toast } = useToast()
   const [isSuggesting, setIsSuggesting] = useState(false)
   const t = useTranslation()
@@ -56,7 +56,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
       id: docToUpdate?.id || '',
       name: docToUpdate?.name || '',
       documentType: docToUpdate?.documentType || '',
-      office: docToUpdate?.office || '',
+      label: docToUpdate?.label || '',
       secondaryId: docToUpdate?.secondaryId || '',
       tertiaryId: docToUpdate?.tertiaryId || '',
       quaternaryId: docToUpdate?.quaternaryId || '',
@@ -105,6 +105,22 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     toast({ title: "Assigned Department Created", description: `"${deptName}" has been added.` });
   }
 
+  const handleCreateLabel = (labelName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new labels.", variant: "destructive" });
+      return;
+    }
+    if (labels.some(l => l.toLowerCase() === labelName.toLowerCase())) {
+        toast({ title: "Duplicate Label", description: "This label already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newLabels = [...labels, labelName];
+    dispatch({ type: 'SET_LABELS', payload: newLabels });
+    form.setValue('label', labelName);
+    toast({ title: "Label Created", description: `"${labelName}" has been added.` });
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
     if (sanitizedId !== sanitizeFirebaseKey(docToUpdate.id) && state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
@@ -118,7 +134,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             id: values.id,
             name: values.name,
             documentType: values.documentType || null,
-            office: values.office || null,
+            label: values.label || null,
             assignedDepartment: values.assignedDepartment || null,
             secondaryId: values.secondaryId || null,
             tertiaryId: values.tertiaryId || null,
@@ -163,9 +179,9 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             updatedFields.documentType = values.documentType || null;
             compareAndPush('Document Type', docToUpdate.documentType, values.documentType);
         }
-        if (hasPermission(currentUser, 'canEditOffice') && values.office !== (docToUpdate.office || '')) {
-            updatedFields.office = values.office || null;
-            compareAndPush('Office', docToUpdate.office, values.office);
+        if (hasPermission(currentUser, 'canEditLabel') && values.label !== (docToUpdate.label || '')) {
+            updatedFields.label = values.label || null;
+            compareAndPush('Label', docToUpdate.label, values.label);
         }
         if (hasPermission(currentUser, 'canEditAssignedDepartment') && values.assignedDepartment !== (docToUpdate.assignedDepartment || '')) {
             updatedFields.assignedDepartment = values.assignedDepartment || null;
@@ -226,6 +242,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
   const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
+  const labelOptions = labels.map(label => ({ value: label, label: label }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -261,7 +278,27 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     )}
                   />
                 )}
-                {hasPermission(currentUser, 'canEditOffice') && <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('office')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditLabel') && (
+                    <FormField
+                        control={form.control}
+                        name="label"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                            <FormLabel style={{ color: '#1D41D5' }}>{t('label')}</FormLabel>
+                            <Combobox
+                                options={labelOptions}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                placeholder={t('selectLabel')}
+                                searchPlaceholder={t('searchLabel')}
+                                notFoundText={t('noLabelFound')}
+                                onCreate={currentUser?.role === 'Admin' ? handleCreateLabel : undefined}
+                            />
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
                 {hasPermission(currentUser, 'canEditAssignedDepartment') && (
                   <FormField
                     control={form.control}
@@ -343,6 +380,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     
 
     
+
 
 
 

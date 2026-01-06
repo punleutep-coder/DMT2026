@@ -144,7 +144,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   const isTerminal = isCompleted || isCombinedOrSplit;
   
   const editPermissions = [
-      'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditOffice', 
+      'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditLabel', 
       'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 
       'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4', 
       'canEditAssignedDepartment'
@@ -186,8 +186,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       {columnVisibility.documentType && (
         <TableCell className="text-foreground">{doc.documentType || 'N/A'}</TableCell>
       )}
-      {columnVisibility.office && (
-        <TableCell className="text-foreground">{doc.office || 'N/A'}</TableCell>
+      {columnVisibility.label && (
+        <TableCell className="text-foreground">{doc.label || 'N/A'}</TableCell>
       )}
       {columnVisibility.currentStatus && (
         <TableCell>

@@ -70,7 +70,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
         firestoreId: `doc-${Date.now()}-${newDocData.id}`,
         name: newDocData.name,
         documentType: newDocData.documentType || null,
-        office: docToSplit.office,
+        label: docToSplit.label,
         status: initialDepartment,
         initialDepartment: initialDepartment,
         assignedDepartment: docToSplit.assignedDepartment,

@@ -38,8 +38,9 @@ type Action =
   | { type: 'SET_DEPARTMENTS'; payload: string[] | { newOrder: string[], originalDepartments: string[]} }
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
+  | { type: 'SET_LABELS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
-  | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], documentTypes: string[], assignedDepartments: string[], columnVisibility: {[key:string]: boolean} } }
+  | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], documentTypes: string[], assignedDepartments: string[], labels: string[], columnVisibility: {[key:string]: boolean} } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' };
 
 const getInitialState = (): AppState => {
@@ -54,6 +55,7 @@ const getInitialState = (): AppState => {
         departments: [],
         documentTypes: [],
         assignedDepartments: [],
+        labels: [],
         filter: savedFilter ? JSON.parse(savedFilter) : {
             mainFilter: 'All',
             departmentSpecificFilter: 'All',
@@ -248,6 +250,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_ASSIGNED_DEPARTMENTS':
         set(ref(db, 'assignedDepartments'), action.payload);
         return { ...state, assignedDepartments: action.payload };
+    case 'SET_LABELS':
+        set(ref(db, 'labels'), action.payload);
+        return { ...state, labels: action.payload };
      case 'SET_COLUMN_VISIBILITY':
         set(ref(db, 'columnVisibility'), action.payload);
         return { ...state, columnVisibility: action.payload };
@@ -334,6 +339,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               departments: data.departments || [],
               documentTypes: data.documentTypes || [],
               assignedDepartments: data.assignedDepartments || [],
+              labels: data.labels || [],
               columnVisibility: data.columnVisibility || initialColumnVisibility,
             }
           });
@@ -393,7 +399,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const searchLower = state.filter.search.toLowerCase();
       docs = docs.filter(doc => {
           const fieldsToSearch = [
-            doc.id, doc.name, doc.documentType, doc.office, doc.secondaryId,
+            doc.id, doc.name, doc.documentType, doc.label, doc.secondaryId,
             doc.tertiaryId, doc.quaternaryId, doc.assignedDepartment, doc.keywords,
             ...(doc.tags || [])
           ];

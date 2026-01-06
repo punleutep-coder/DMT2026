@@ -48,7 +48,7 @@ const formSchema = z.object({
   newDocName: z.string().min(1, 'New Document Name is required.'),
   documentType: z.string().min(1, 'Document type is required.'),
   assignedDepartment: z.string().optional(),
-  office: z.string().optional(),
+  label: z.string().optional(),
   targetDepartment: z.string().min(1, 'Please select a target department.'),
   receiverName: z.string().min(1, 'Receiver name is required.'),
   customDate: z.date().optional(),
@@ -77,7 +77,7 @@ export default function CombineDocumentsModal({
       newDocName: '',
       documentType: '',
       assignedDepartment: '',
-      office: '',
+      label: '',
       targetDepartment: '',
       receiverName: '',
       customDate: undefined,
@@ -110,7 +110,7 @@ export default function CombineDocumentsModal({
       const fieldsToAggregate = [
         doc.name,
         doc.keywords,
-        doc.office,
+        doc.label,
         doc.assignedDepartment,
         doc.secondaryId,
         doc.tertiaryId,
@@ -129,7 +129,7 @@ export default function CombineDocumentsModal({
       firestoreId: `doc-${Date.now()}`,
       name: values.newDocName,
       documentType: values.documentType,
-      office: values.office || null,
+      label: values.label || null,
       status: values.targetDepartment,
       initialDepartment: values.targetDepartment,
       assignedDepartment: values.assignedDepartment || null,
@@ -239,7 +239,7 @@ export default function CombineDocumentsModal({
                       )}
                     />
                     <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Department (Assigned to Document)</FormLabel><FormControl><Input placeholder="e.g., Finance, HR, Legal" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="office" render={({ field }) => ( <FormItem><FormLabel>Office</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="label" render={({ field }) => ( <FormItem><FormLabel>Label</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <FormField control={form.control} name="targetDepartment" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Select Target Department</FormLabel>
