@@ -438,7 +438,7 @@ const translations = {
       totalDocs: "ឯកសារសរុប",
       types: "ប្រភេទ",
       count: "ចំនួន",
-      pleaseSelectDateRange: "សូមជ្រើសរើសช่วงวันที่และสร้างรายงาน។",
+      pleaseSelectDateRange: "សូមជ្រើសរើសចន្លោះកាលបរិច្ឆេទ ហើយបង្កើតរបាយការណ៍។",
       areYouSureDeleteDoc: "តើអ្នកប្រាកដទេថាចង់លុបឯកសារ {docId}? វានឹងលុបកំណត់ហេតុដែលពាក់ព័ន្ធទាំងអស់ផងដែរ។ សកម្មភាពនេះមិនអាចមិនធ្វើវិញបានទេ។",
       delayedUntil: "បានពន្យាពេលរហូតដល់ {date}",
       completionStatus: "ស្ថានភាព​នៃ​ការ​បញ្ចប់",
@@ -567,6 +567,7 @@ export const languages = [
 
 
     
+
 
 
 
