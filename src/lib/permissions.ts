@@ -14,9 +14,18 @@ export const hasPermission = (user: User | null, permissionKey: keyof typeof PER
 export const hasDepartmentPermission = (user: User | null, departmentName: string): boolean => {
     if (!user) return false;
     if (user.role === 'Admin') return true;
-    if (!user.departmentPermissions || user.departmentPermissions.length === 0) {
-        return true; // Access to all departments if none are specified
+
+    // If the document is in a 'Completed' state, access is governed by the specific 'canViewCompleted' permission.
+    if (departmentName.startsWith('Completed')) {
+        return hasPermission(user, 'canViewCompleted');
     }
+
+    // If no specific department permissions are set for the user, they can see all non-completed documents.
+    if (!user.departmentPermissions || user.departmentPermissions.length === 0) {
+        return true;
+    }
+
+    // Otherwise, check if the user has permission for the specific department.
     return user.departmentPermissions.includes(departmentName);
 }
 

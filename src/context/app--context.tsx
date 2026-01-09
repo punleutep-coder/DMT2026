@@ -397,10 +397,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     let docs = permissionFilteredDocs;
 
-    if (!hasPermission(state.currentUser, 'canViewCompleted')) {
-        docs = docs.filter(doc => !doc.status.startsWith('Completed'));
-    }
-
     if (state.filter.search) {
       const searchLower = state.filter.search.toLowerCase();
       docs = docs.filter(doc => {
