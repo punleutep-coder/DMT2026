@@ -36,11 +36,12 @@ type Action =
   | { type: 'DELETE_USER'; payload: { id: string } }
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> & {reason?: string | null} }
   | { type: 'SET_DEPARTMENTS'; payload: string[] | { newOrder: string[], originalDepartments: string[]} }
+  | { type: 'SET_DEPARTMENT_COLORS'; payload: { [key: string]: string } }
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_LABELS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
-  | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], documentTypes: string[], assignedDepartments: string[], labels: string[], columnVisibility: {[key:string]: boolean} } }
+  | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], departmentColors: { [key: string]: string }, documentTypes: string[], assignedDepartments: string[], labels: string[], columnVisibility: {[key:string]: boolean} } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' };
 
 const getInitialState = (): AppState => {
@@ -53,6 +54,7 @@ const getInitialState = (): AppState => {
         documents: [],
         logs: [],
         departments: [],
+        departmentColors: {},
         documentTypes: [],
         assignedDepartments: [],
         labels: [],
@@ -87,7 +89,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_INITIALIZED':
         return { ...state, isInitialized: action.payload };
     case 'SET_DATA':
-        return { ...state, ...action.payload };
+        return { 
+            ...state, 
+            ...action.payload,
+            departmentColors: action.payload.departmentColors || state.departmentColors,
+        };
     case 'SET_CURRENT_USER':
         if (action.payload) {
           sessionStorage.setItem('currentUser', JSON.stringify(action.payload));
@@ -244,6 +250,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
       update(ref(db), updates);
       return { ...state, departments: newOrder };
     }
+    case 'SET_DEPARTMENT_COLORS':
+        set(ref(db, 'departmentColors'), action.payload);
+        return { ...state, departmentColors: action.payload };
     case 'SET_DOCUMENT_TYPES':
         set(ref(db, 'documentTypes'), action.payload);
         return { ...state, documentTypes: action.payload };
@@ -337,6 +346,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               documents: documents,
               logs: logs,
               departments: data.departments || [],
+              departmentColors: data.departmentColors || {},
               documentTypes: data.documentTypes || [],
               assignedDepartments: data.assignedDepartments || [],
               labels: data.labels || [],

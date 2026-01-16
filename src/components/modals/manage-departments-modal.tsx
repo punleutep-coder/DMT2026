@@ -18,6 +18,7 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
   const { state, dispatch } = useAppContext()
   const { toast } = useToast()
   const [departments, setDepartments] = useState([...state.departments])
+  const [colors, setColors] = useState<{ [key: string]: string }>({...state.departmentColors});
   const [newDepartment, setNewDepartment] = useState('')
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -25,17 +26,24 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
 
   useEffect(() => {
     setDepartments([...state.departments]);
-  }, [state.departments]);
+    setColors({...state.departmentColors});
+  }, [state.departments, state.departmentColors]);
 
   const handleAddDepartment = () => {
     if (newDepartment.trim() && !departments.includes(newDepartment.trim())) {
-      setDepartments([...departments, newDepartment.trim()])
+      const newDeptName = newDepartment.trim();
+      setDepartments([...departments, newDeptName])
+      setColors(prev => ({...prev, [newDeptName]: '#cccccc'}));
       setNewDepartment('')
     }
   }
 
   const handleDeleteDepartment = (index: number) => {
-    setDepartments(departments.filter((_, i) => i !== index))
+    const deptToDelete = departments[index];
+    setDepartments(departments.filter((_, i) => i !== index));
+    const newColors = {...colors};
+    delete newColors[deptToDelete];
+    setColors(newColors);
   }
 
   const handleStartEditing = (index: number, currentValue: string) => {
@@ -53,19 +61,32 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
         toast({ title: 'Error', description: 'Department name cannot be empty.', variant: 'destructive' });
         return;
     }
-    if (departments.includes(editingValue.trim()) && departments[index] !== editingValue.trim()) {
+    const oldDeptName = departments[index];
+    const newDeptName = editingValue.trim();
+
+    if (departments.includes(newDeptName) && oldDeptName !== newDeptName) {
         toast({ title: 'Error', description: 'Department name already exists.', variant: 'destructive' });
         return;
     }
     
     const updatedDepts = [...departments];
-    updatedDepts[index] = editingValue.trim();
+    updatedDepts[index] = newDeptName;
     setDepartments(updatedDepts);
+
+    const newColors = {...colors};
+    if (oldDeptName !== newDeptName) {
+        const color = newColors[oldDeptName];
+        delete newColors[oldDeptName];
+        newColors[newDeptName] = color || '#cccccc';
+    }
+    setColors(newColors);
+
     handleCancelEditing();
   }
 
   const handleSave = () => {
     dispatch({ type: 'SET_DEPARTMENTS', payload: {newOrder: departments, originalDepartments: state.departments } })
+    dispatch({ type: 'SET_DEPARTMENT_COLORS', payload: colors });
     onClose()
   }
 
@@ -106,6 +127,13 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
                             onDragOver={(e) => handleDragOver(e, index)}
                             onDragEnd={handleDragEnd}
                         >
+                            <input
+                                type="color"
+                                value={colors[dept] || '#cccccc'}
+                                onChange={(e) => setColors(prev => ({...prev, [dept]: e.target.value}))}
+                                className="w-8 h-8 p-0 border-none rounded-md cursor-pointer bg-transparent"
+                                title="Change department color"
+                            />
                             <GripVertical className="cursor-move text-muted-foreground" />
                             {editingIndex === index ? (
                                 <Input 

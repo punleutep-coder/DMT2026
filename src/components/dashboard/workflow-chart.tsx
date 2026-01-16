@@ -18,7 +18,7 @@ import { useTranslation } from '@/lib/i18n'
 
 export default function WorkflowChart() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { departments, filter } = state
+  const { departments, filter, departmentColors } = state
   const t = useTranslation();
 
   const chartData = useMemo(() => {
@@ -90,16 +90,7 @@ export default function WorkflowChart() {
               filter="url(#shadow)"
             >
               {chartData.map((entry, index) => {
-                let color;
-                if (entry.name === 'ឯកសារត្រូវបញ្ចូល') {
-                  color = '#FF6600';
-                } else if (entry.name === 'ឯកសារសម្រេច') {
-                  color = 'hsl(var(--chart-3))';
-                } else if (entry.name === 'ឯកសារកែសម្រួល') {
-                  color = '#FF9900';
-                } else {
-                  color = 'hsl(var(--chart-4))';
-                }
+                const color = departmentColors[entry.fullName] || 'hsl(var(--chart-4))';
                 return <Cell key={`cell-${index}`} fill={color} />;
               })}
               <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={25} fontWeight="bold" />

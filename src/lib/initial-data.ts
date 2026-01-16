@@ -11,6 +11,16 @@ export const LS_COLUMNS_KEY = 'documentWorkflow_columnVisibility';
 
 const DEFAULT_DEPARTMENTS = ['Department A', 'Department B', 'Department C', 'Department D', 'Department E', 'Department F', 'Department G'];
 
+const DEFAULT_DEPARTMENT_COLORS: { [key: string]: string } = {
+    'Department A': '#8884d8',
+    'Department B': '#82ca9d',
+    'Department C': '#ffc658',
+    'Department D': '#ff8042',
+    'Department E': '#0088fe',
+    'Department F': '#00c49f',
+    'Department G': '#ffbb28',
+};
+
 const DEFAULT_DOCUMENT_TYPES = ['Contract', 'Invoice', 'Requisition', 'HR Form', 'IT Request', 'Memo'];
 
 const DEFAULT_ASSIGNED_DEPARTMENTS = ['Legal', 'Finance', 'Procurement', 'Human Resources', 'IT'];
@@ -97,6 +107,7 @@ export const initialData = {
     logs: DEFAULT_LOGS,
     users: DEFAULT_USERS,
     departments: DEFAULT_DEPARTMENTS,
+    departmentColors: DEFAULT_DEPARTMENT_COLORS,
     documentTypes: DEFAULT_DOCUMENT_TYPES,
     assignedDepartments: DEFAULT_ASSIGNED_DEPARTMENTS,
     labels: DEFAULT_LABELS,

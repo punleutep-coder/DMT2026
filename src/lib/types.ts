@@ -67,6 +67,7 @@ export interface AppState {
   documents: Document[];
   logs: Log[];
   departments: string[];
+  departmentColors: { [key: string]: string };
   documentTypes: string[];
   assignedDepartments: string[];
   labels: string[];
