@@ -1,4 +1,3 @@
-
 'use client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -136,7 +135,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                        <p><strong className="text-foreground/80">{t('end')}:</strong> {entry.end ? format(new Date(entry.end), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
                        <p><strong className="text-foreground/80">{t('period')}:</strong> <span className="text-foreground font-medium" style={{color: '#0000E2'}}>{formatDuration(entry.start, entry.end)}</span></p>
                        <p><strong className="text-foreground/80">{t('receiverName')}:</strong> {entry.receiver}</p>
-                       <p><strong className="text-foreground/80">{t('note')}:</strong> {entry.note || 'N/A'}</p>
+                       <p><strong className="text-foreground/80">{t('note')}:</strong> <span className="text-destructive">{entry.note || 'N/A'}</span></p>
                     </div>
                   </div>
                 ))}
@@ -156,7 +155,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                         <p className="text-xs text-foreground">{format(new Date(log.timestamp), 'dd/MM/yyyy HH:mm')} by {log.user}</p>
                         {log.reason && (
                             <p className="text-sm mt-2 p-2 bg-muted/20 rounded-md border border-border/30">
-                                <strong className="text-foreground/80">{t('reason')}:</strong> {log.reason}
+                                <strong className="text-foreground/80">{t('reason')}:</strong> <span className="text-destructive">{log.reason}</span>
                             </p>
                         )}
                     </div>
