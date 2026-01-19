@@ -35,7 +35,7 @@ type Action =
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: { id: string } }
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'firestoreId'> & {reason?: string | null} }
-  | { type: 'SET_DEPARTMENTS'; payload: string[] | { newOrder: string[], originalDepartments: string[]} }
+  | { type: 'SET_DEPARTMENTS'; payload: string[] | { newOrder: string[], originalDepartments: string[], colors?: { [key: string]: string }} }
   | { type: 'SET_DEPARTMENT_COLORS'; payload: { [key: string]: string } }
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
@@ -218,9 +218,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return { ...state, departments: action.payload };
       }
       
-      const { newOrder, originalDepartments } = action.payload;
+      const { newOrder, originalDepartments, colors } = action.payload;
       const updates: { [key: string]: any } = {};
       updates['/departments'] = newOrder;
+
+      if (colors) {
+          updates['/departmentColors'] = colors;
+      }
 
       if (originalDepartments && Array.isArray(originalDepartments)) {
         originalDepartments.forEach((oldName, index) => {
@@ -248,7 +252,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
       }
 
       update(ref(db), updates);
-      return { ...state, departments: newOrder };
+      return { ...state, departments: newOrder, departmentColors: colors || state.departmentColors };
     }
     case 'SET_DEPARTMENT_COLORS':
         set(ref(db, 'departmentColors'), action.payload);

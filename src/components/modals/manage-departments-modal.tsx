@@ -1,4 +1,3 @@
-
 'use client'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -85,8 +84,14 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
   }
 
   const handleSave = () => {
-    dispatch({ type: 'SET_DEPARTMENTS', payload: {newOrder: departments, originalDepartments: state.departments } })
-    dispatch({ type: 'SET_DEPARTMENT_COLORS', payload: colors });
+    dispatch({ 
+        type: 'SET_DEPARTMENTS', 
+        payload: {
+            newOrder: departments, 
+            originalDepartments: state.departments,
+            colors: colors 
+        } 
+    })
     onClose()
   }
 
@@ -131,7 +136,7 @@ export default function ManageDepartmentsModal({ isOpen, onClose }: ManageDepart
                                 type="color"
                                 value={colors[dept] || '#cccccc'}
                                 onChange={(e) => setColors(prev => ({...prev, [dept]: e.target.value}))}
-                                className="w-8 h-8 p-0 border-none rounded-md cursor-pointer bg-transparent"
+                                className="w-8 h-8 p-0 border-none rounded-md cursor-pointer"
                                 title="Change department color"
                             />
                             <GripVertical className="cursor-move text-muted-foreground" />
