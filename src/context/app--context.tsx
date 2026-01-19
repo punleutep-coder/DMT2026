@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
@@ -223,7 +222,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
       updates['/departments'] = newOrder;
 
       if (colors) {
-          updates['/departmentColors'] = colors;
+          const sanitizedColors: { [key: string]: string } = {};
+          Object.keys(colors).forEach(deptName => {
+              sanitizedColors[sanitizeFirebaseKey(deptName)] = colors[deptName];
+          });
+          updates['/departmentColors'] = sanitizedColors;
       }
 
       if (originalDepartments && Array.isArray(originalDepartments)) {
@@ -254,9 +257,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
       update(ref(db), updates);
       return { ...state, departments: newOrder, departmentColors: colors || state.departmentColors };
     }
-    case 'SET_DEPARTMENT_COLORS':
-        set(ref(db, 'departmentColors'), action.payload);
+    case 'SET_DEPARTMENT_COLORS': {
+        const sanitizedColors: { [key: string]: string } = {};
+        Object.keys(action.payload).forEach(key => {
+            sanitizedColors[sanitizeFirebaseKey(key)] = action.payload[key];
+        });
+        set(ref(db, 'departmentColors'), sanitizedColors);
         return { ...state, departmentColors: action.payload };
+    }
     case 'SET_DOCUMENT_TYPES':
         set(ref(db, 'documentTypes'), action.payload);
         return { ...state, documentTypes: action.payload };
@@ -341,6 +349,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
           const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
           const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
+          const departmentsFromDb: string[] = data.departments || [];
+          const departmentColorsFromDb: { [key: string]: string } = data.departmentColors || {};
+          
+          const departmentColorsForState: { [key: string]: string } = {};
+          departmentsFromDb.forEach(deptName => {
+              const sanitizedKey = sanitizeFirebaseKey(deptName);
+              if (departmentColorsFromDb[sanitizedKey]) {
+                  departmentColorsForState[deptName] = departmentColorsFromDb[sanitizedKey];
+              }
+              // For backwards compatibility before the fix, if the raw name was a valid key
+              else if (departmentColorsFromDb[deptName]) {
+                  departmentColorsForState[deptName] = departmentColorsFromDb[deptName];
+              }
+          });
+
 
           // Dispatch all data at once to ensure consistency
           dispatch({
@@ -349,8 +372,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               users: dbUsers,
               documents: documents,
               logs: logs,
-              departments: data.departments || [],
-              departmentColors: data.departmentColors || {},
+              departments: departmentsFromDb,
+              departmentColors: departmentColorsForState,
               documentTypes: data.documentTypes || [],
               assignedDepartments: data.assignedDepartments || [],
               labels: data.labels || [],
