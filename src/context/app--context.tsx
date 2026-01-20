@@ -490,15 +490,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return docs.sort((a, b) => new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime());
   }, [permissionFilteredDocs, state.filter, state.currentUser, state.isInitialized]);
   
-  const activeDocs = useMemo(() => {
-    // Metrics should also respect permissions
-    return permissionFilteredDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
-  }, [permissionFilteredDocs]);
-
 
   const metrics = useMemo(() => {
-    // The base for all metrics calculations is now the permission-filtered docs
-    const allDocs = permissionFilteredDocs; 
+    // Start with permission-filtered docs
+    let metricDocs = permissionFilteredDocs;
+
+    // Apply date filter for metrics
+    if (state.filter.startDate && state.filter.endDate) {
+        metricDocs = metricDocs.filter(doc => {
+            if (doc.history && doc.history.length > 0) {
+                const firstEntryStart = fromZonedTime(doc.history[0].start, 'UTC');
+                return firstEntryStart >= state.filter.startDate! && firstEntryStart <= state.filter.endDate!;
+            }
+            return false;
+        });
+    }
+    
+    const allDocs = metricDocs;
+    const activeDocs = allDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
     const exceedingDocs = activeDocs.filter(doc => isDocumentExceedingPeriod(doc, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment));
 
     return {
@@ -511,7 +520,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       completedUnsuccess: allDocs.filter(d => d.status === 'Completed (Unsuccess)').length,
       exceeding: exceedingDocs.length,
     }
-  }, [activeDocs, permissionFilteredDocs, state.filter.periodValue, state.filter.periodUnit, state.filter.periodDepartment]);
+  }, [permissionFilteredDocs, state.filter]);
 
 
   return (
