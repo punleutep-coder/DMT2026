@@ -42,6 +42,8 @@ import { useAppContext } from '@/hooks/use-app-context'
 import { cn } from '@/lib/utils'
 import type { Document } from '@/lib/types'
 import { Combobox } from '../ui/combobox'
+import { useToast } from '@/hooks/use-toast'
+import { useTranslation } from '@/lib/i18n'
 
 const formSchema = z.object({
   newDocId: z.string().min(1, 'New Document ID is required.'),
@@ -65,7 +67,9 @@ export default function CombineDocumentsModal({
   onClose,
 }: CombineDocumentsModalProps) {
   const { state, dispatch } = useAppContext()
-  const { selectedDocIds, departments, currentUser, documentTypes } = state
+  const { selectedDocIds, departments, currentUser, documentTypes, assignedDepartments, labels } = state
+  const { toast } = useToast()
+  const t = useTranslation()
   const docsToCombine = state.documents.filter((d) =>
     selectedDocIds.includes(d.id)
   )
@@ -84,6 +88,38 @@ export default function CombineDocumentsModal({
       note: '',
     },
   })
+
+  const handleCreateAssignedDepartment = (deptName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new assigned departments.", variant: "destructive" });
+      return;
+    }
+    if (assignedDepartments.some(d => d.toLowerCase() === deptName.toLowerCase())) {
+        toast({ title: "Duplicate Department", description: "This assigned department already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newAssignedDepartments = [...assignedDepartments, deptName];
+    dispatch({ type: 'SET_ASSIGNED_DEPARTMENTS', payload: newAssignedDepartments });
+    form.setValue('assignedDepartment', deptName);
+    toast({ title: "Assigned Department Created", description: `"${deptName}" has been added.` });
+  }
+
+  const handleCreateLabel = (labelName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new labels.", variant: "destructive" });
+      return;
+    }
+    if (labels.some(l => l.toLowerCase() === labelName.toLowerCase())) {
+        toast({ title: "Duplicate Label", description: "This label already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newLabels = [...labels, labelName];
+    dispatch({ type: 'SET_LABELS', payload: newLabels });
+    form.setValue('label', labelName);
+    toast({ title: "Label Created", description: `"${labelName}" has been added.` });
+  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (state.documents.some(d => d.id === values.newDocId)) {
@@ -188,6 +224,8 @@ export default function CombineDocumentsModal({
   }
   
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
+  const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
+  const labelOptions = labels.map(label => ({ value: label, label: label }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -238,8 +276,44 @@ export default function CombineDocumentsModal({
                         </FormItem>
                       )}
                     />
-                    <FormField control={form.control} name="assignedDepartment" render={({ field }) => ( <FormItem><FormLabel>Department (Assigned to Document)</FormLabel><FormControl><Input placeholder="e.g., Finance, HR, Legal" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="label" render={({ field }) => ( <FormItem><FormLabel>Label</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField
+                      control={form.control}
+                      name="assignedDepartment"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>{t('assignedDepartment')}</FormLabel>
+                          <Combobox
+                            options={assignedDepartmentOptions}
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            placeholder={t('selectAssignedDept')}
+                            searchPlaceholder={t('searchAssignedDept')}
+                            notFoundText={t('noAssignedDeptFound')}
+                            onCreate={currentUser?.role === 'Admin' ? handleCreateAssignedDepartment : undefined}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="label"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                            <FormLabel>{t('label')}</FormLabel>
+                            <Combobox
+                                options={labelOptions}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                placeholder={t('selectLabel')}
+                                searchPlaceholder={t('searchLabel')}
+                                notFoundText={t('noLabelFound')}
+                                onCreate={currentUser?.role === 'Admin' ? handleCreateLabel : undefined}
+                            />
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <FormField control={form.control} name="targetDepartment" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Select Target Department</FormLabel>
