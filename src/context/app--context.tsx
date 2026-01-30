@@ -132,13 +132,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
             if (doc.isDelayed && doc.releaseDate) {
                 const releaseDate = new Date(doc.releaseDate).setHours(0, 0, 0, 0);
                 if (today >= releaseDate && !doc.releaseDateReached) {
-                    updates[`documents/${sanitizedId}/releaseDateReached`] = true;
-                    updates[`documents/${sanitizedId}/justReleased`] = true;
+                    updates[`authorized_users_data/documents/${sanitizedId}/releaseDateReached`] = true;
+                    updates[`authorized_users_data/documents/${sanitizedId}/justReleased`] = true;
                     needsUpdate = true;
                 }
             }
             if (doc.justReleased) {
-                updates[`documents/${sanitizedId}/justReleased`] = false;
+                updates[`authorized_users_data/documents/${sanitizedId}/justReleased`] = false;
                 needsUpdate = true;
             }
         });
@@ -150,7 +150,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
      case 'ADD_DOCUMENT': {
         const { firestoreId, ...docData } = action.payload;
         const sanitizedId = sanitizeFirebaseKey(action.payload.id);
-        set(ref(db, `documents/${sanitizedId}`), docData);
+        set(ref(db, `authorized_users_data/documents/${sanitizedId}`), docData);
         return state;
       }
       case 'UPDATE_DOCUMENT': {
@@ -158,7 +158,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const sanitizedId = sanitizeFirebaseKey(id);
         const updates: {[key: string]: any} = {};
         Object.keys(docData).forEach(key => {
-            updates[`documents/${sanitizedId}/${key}`] = (docData as any)[key];
+            updates[`authorized_users_data/documents/${sanitizedId}/${key}`] = (docData as any)[key];
         });
         update(ref(db), updates);
         return state;
@@ -167,10 +167,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const { id } = action.payload;
         const sanitizedId = sanitizeFirebaseKey(id);
         const updates: {[key: string]: any} = {};
-        updates[`/documents/${sanitizedId}`] = null;
+        updates[`/authorized_users_data/documents/${sanitizedId}`] = null;
         state.logs.forEach(log => {
             if (log.docId === id) {
-                updates[`/logs/${log.firestoreId}`] = null;
+                updates[`/authorized_users_data/logs/${log.firestoreId}`] = null;
             }
         });
         update(ref(db), updates);
@@ -181,11 +181,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const updates: {[key: string]: any} = {};
         idsToDelete.forEach(id => {
           const sanitizedId = sanitizeFirebaseKey(id);
-          updates[`/documents/${sanitizedId}`] = null;
+          updates[`/authorized_users_data/documents/${sanitizedId}`] = null;
         });
         state.logs.forEach(log => {
             if (idsToDelete.includes(log.docId)) {
-                updates[`/logs/${log.firestoreId}`] = null;
+                updates[`/authorized_users_data/logs/${log.firestoreId}`] = null;
             }
         });
         update(ref(db), updates);
@@ -193,40 +193,41 @@ const appReducer = (state: AppState, action: Action): AppState => {
       }
     case 'ADD_USER': {
         const newUser = action.payload;
-        set(ref(db, `users/${newUser.id}`), newUser);
+        set(ref(db, `authorized_users_data/users/${newUser.id}`), newUser);
         return state;
     }
     case 'UPDATE_USER': {
         const updatedUser = action.payload;
-        set(ref(db, `users/${updatedUser.id}`), updatedUser);
+        set(ref(db, `authorized_users_data/users/${updatedUser.id}`), updatedUser);
         return state;
     }
     case 'DELETE_USER': {
-        set(ref(db, `users/${action.payload.id}`), null);
+        set(ref(db, `authorized_users_data/users/${action.payload.id}`), null);
         return state;
     }
     case 'ADD_LOG': {
-        const newLogRef = push(ref(db, 'logs'));
+        const newLogRef = push(ref(db, 'authorized_users_data/logs'));
         const logWithId = { ...action.payload, id: newLogRef.key, firestoreId: newLogRef.key };
         set(newLogRef, logWithId);
         return state;
     }
     case 'SET_DEPARTMENTS': {
+      const updates: { [key: string]: any } = {};
+
       if (Array.isArray(action.payload)) {
-        set(ref(db, 'departments'), action.payload)
+        set(ref(db, 'authorized_users_data/departments'), action.payload);
         return { ...state, departments: action.payload };
       }
       
       const { newOrder, originalDepartments, colors } = action.payload;
-      const updates: { [key: string]: any } = {};
-      updates['/departments'] = newOrder;
+      updates['/authorized_users_data/departments'] = newOrder;
 
       if (colors) {
           const sanitizedColors: { [key: string]: string } = {};
           Object.keys(colors).forEach(deptName => {
               sanitizedColors[sanitizeFirebaseKey(deptName)] = colors[deptName];
           });
-          updates['/departmentColors'] = sanitizedColors;
+          updates['/authorized_users_data/departmentColors'] = sanitizedColors;
       }
 
       if (originalDepartments && Array.isArray(originalDepartments)) {
@@ -238,14 +239,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
                     state.documents.forEach(doc => {
                         const sanitizedId = sanitizeFirebaseKey(doc.id);
                         if (doc.status === oldName) {
-                            updates[`/documents/${sanitizedId}/status`] = newNameForOldIndex;
+                            updates[`/authorized_users_data/documents/${sanitizedId}/status`] = newNameForOldIndex;
                         }
                         if (Array.isArray(doc.history)) {
                             const newHistory = doc.history.map(h =>
                                 h.department === oldName ? { ...h, department: newNameForOldIndex } : h
                             );
                             if (JSON.stringify(newHistory) !== JSON.stringify(doc.history)) {
-                                updates[`/documents/${sanitizedId}/history`] = newHistory;
+                                updates[`/authorized_users_data/documents/${sanitizedId}/history`] = newHistory;
                             }
                         }
                     });
@@ -262,20 +263,20 @@ const appReducer = (state: AppState, action: Action): AppState => {
         Object.keys(action.payload).forEach(key => {
             sanitizedColors[sanitizeFirebaseKey(key)] = action.payload[key];
         });
-        set(ref(db, 'departmentColors'), sanitizedColors);
+        set(ref(db, 'authorized_users_data/departmentColors'), sanitizedColors);
         return { ...state, departmentColors: action.payload };
     }
     case 'SET_DOCUMENT_TYPES':
-        set(ref(db, 'documentTypes'), action.payload);
+        set(ref(db, 'authorized_users_data/documentTypes'), action.payload);
         return { ...state, documentTypes: action.payload };
     case 'SET_ASSIGNED_DEPARTMENTS':
-        set(ref(db, 'assignedDepartments'), action.payload);
+        set(ref(db, 'authorized_users_data/assignedDepartments'), action.payload);
         return { ...state, assignedDepartments: action.payload };
     case 'SET_LABELS':
-        set(ref(db, 'labels'), action.payload);
+        set(ref(db, 'authorized_users_data/labels'), action.payload);
         return { ...state, labels: action.payload };
      case 'SET_COLUMN_VISIBILITY':
-        set(ref(db, 'columnVisibility'), action.payload);
+        set(ref(db, 'authorized_users_data/columnVisibility'), action.payload);
         return { ...state, columnVisibility: action.payload };
     case 'SET_LANGUAGE':
         if (typeof window !== 'undefined') {
@@ -335,17 +336,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   
       // If a user is logged in, attach the database listener.
       if (!dbListener) {
-        dbListener = onValue(ref(db), (snapshot) => {
+        dbListener = onValue(ref(db, 'authorized_users_data'), (snapshot) => {
           if (!snapshot.exists()) {
-             console.log("No data found in DB, attempting to seed.");
-             set(ref(db), initialData).catch(error => {
-                console.error("Failed to seed database:", error);
-             });
-             // Don't proceed further, wait for next onValue trigger after seeding
-             return;
+             // Data doesn't exist, maybe it's the first run for this path.
+             // Do not seed data automatically to prevent accidental data wipes.
+             // The app will function with an empty state.
           }
           
-          const data = snapshot.val();
+          const data = snapshot.val() || {}; // Use empty object if data is null
           const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
           const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
           const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
@@ -388,8 +386,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             if (userProfile) {
               dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
             } else {
-              console.error(`Authenticated user ${authUser.uid} not found in database.`);
-              dispatch({ type: 'LOGOUT' });
+              // Auto-create user profile if it doesn't exist
+              console.log(`Authenticated user ${authUser.uid} not found in database. Creating profile.`);
+              const newUserProfile: User = {
+                id: authUser.uid,
+                firestoreId: authUser.uid,
+                username: authUser.email!.split('@')[0],
+                email: authUser.email!,
+                role: 'User',
+                permissions: {},
+                departmentPermissions: [],
+                labelPermissions: [],
+                passwordHash: '',
+              };
+              dispatch({ type: 'ADD_USER', payload: newUserProfile });
+              // We don't set current user here. The next `onValue` trigger will load it.
             }
           }
         }, (error) => {
