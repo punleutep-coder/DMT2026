@@ -1,4 +1,3 @@
-
 'use client'
 
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -178,8 +177,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       )}
       {columnVisibility.name && <TableCell className="text-foreground">
         <div className="flex items-center gap-2">
-            {isCombined && <Combine className="h-4 w-4 text-blue-500" title="Combined Document" />}
-            {isSplit && <Split className="h-4 w-4 text-purple-500" title="Split Document" />}
+            {isCombined && <Combine className="h-5 w-5 text-blue-500" title="Combined Document" />}
+            {isSplit && <Split className="h-5 w-5 text-purple-500" title="Split Document" />}
             <span>{doc.name}</span>
         </div>
       </TableCell>}
