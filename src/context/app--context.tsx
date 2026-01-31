@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch, useMemo } from 'react'
@@ -67,6 +68,7 @@ const getInitialState = (): AppState => {
             endDate: null,
             assignedDepartment: 'All',
             documentType: 'All',
+            label: 'All',
             periodValue: 3,
             periodUnit: 'days',
             periodDepartment: 'All',
@@ -483,6 +485,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     if (state.filter.documentType !== 'All') {
       docs = docs.filter(doc => doc.documentType === state.filter.documentType);
+    }
+
+    if (state.filter.label !== 'All') {
+      docs = docs.filter(doc => doc.label === state.filter.label);
     }
 
     if (state.filter.mainFilter === 'Exceeding Period') {

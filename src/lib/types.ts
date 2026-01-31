@@ -80,6 +80,7 @@ export interface AppState {
     endDate: Date | null;
     assignedDepartment: string;
     documentType: string;
+    label: string;
     periodValue: number;
     periodUnit: 'days' | 'hours' | 'minutes';
     periodDepartment: string;

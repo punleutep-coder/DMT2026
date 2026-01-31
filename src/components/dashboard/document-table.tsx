@@ -64,7 +64,7 @@ const EmptyState = () => {
 
 export default function DocumentTable() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { columnVisibility, selectedDocIds, pagination, documentTypes } = state
+  const { columnVisibility, selectedDocIds, pagination, documentTypes, labels } = state
   const t = useTranslation();
 
   const totalPages = Math.ceil(filteredDocs.length / pagination.rowsPerPage);
@@ -108,6 +108,11 @@ export default function DocumentTable() {
     const newType = state.filter.documentType === type ? 'All' : type;
     dispatch({ type: 'SET_FILTER', payload: { documentType: newType } });
   }
+  
+  const handleLabelFilterChange = (label: string) => {
+    const newLabel = state.filter.label === label ? 'All' : label;
+    dispatch({ type: 'SET_FILTER', payload: { label: newLabel } });
+  };
 
   const handleRowsPerPageChange = (value: string) => {
     dispatch({ type: 'SET_PAGINATION', payload: { rowsPerPage: parseInt(value, 10), currentPage: 1 }});
@@ -209,6 +214,32 @@ export default function DocumentTable() {
                             >
                                 {dept}
                            </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {col.key === 'label' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <ListFilter className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuCheckboxItem
+                          checked={state.filter.label === 'All'}
+                          onCheckedChange={() => handleLabelFilterChange('All')}
+                        >
+                          {t('all')}
+                        </DropdownMenuCheckboxItem>
+                        {labels.map((label) => (
+                          <DropdownMenuCheckboxItem
+                            key={label}
+                            checked={state.filter.label === label}
+                            onCheckedChange={() => handleLabelFilterChange(label)}
+                          >
+                            {label}
+                          </DropdownMenuCheckboxItem>
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
