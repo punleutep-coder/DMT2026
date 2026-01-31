@@ -123,6 +123,11 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     toast({ title: "Label Created", description: `"${labelName}" has been added.` });
   }
 
+  const handleCreateReceiver = (receiverName: string) => {
+    form.setValue('initialReceiver', receiverName);
+    toast({ title: "Custom Receiver", description: `Receiver name set to "${receiverName}".` });
+  }
+
   const onSubmit = async (values: AddDocumentFormValues) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
     if (state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
@@ -277,8 +282,9 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                             value={field.value}
                             onChange={field.onChange}
                             placeholder={t('selectReceiver')}
-                            searchPlaceholder={t('searchReceiver')}
+                            searchPlaceholder={t('searchLabel')}
                             notFoundText={t('noReceiverFound')}
+                            onCreate={handleCreateReceiver}
                           />
                           <FormMessage />
                         </FormItem>
