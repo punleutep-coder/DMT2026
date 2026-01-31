@@ -35,6 +35,8 @@ const formSchema = z.object({
   docTags: z.string().optional(),
 })
 
+type EditDocumentFormValues = z.infer<typeof formSchema>;
+
 interface EditDocumentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -50,7 +52,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
   const [isSuggesting, setIsSuggesting] = useState(false)
   const t = useTranslation()
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<EditDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: docToUpdate?.id || '',
@@ -121,7 +123,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     toast({ title: "Label Created", description: `"${labelName}" has been added.` });
   }
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: EditDocumentFormValues) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
     if (sanitizedId !== sanitizeFirebaseKey(docToUpdate.id) && state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
         form.setError('id', { message: 'This Document ID already exists.' });
@@ -374,16 +376,3 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     </Dialog>
   )
 }
-
-    
-
-    
-
-    
-
-
-
-
-
-
-

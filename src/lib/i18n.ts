@@ -142,6 +142,9 @@ const translations = {
     searchLabel: "Search or create...",
     noLabelFound: "No matching label found.",
     initialReceiver: "Initial Receiver",
+    selectReceiver: "Select receiver...",
+    searchReceiver: "Search receivers...",
+    noReceiverFound: "No receiver found.",
     keywords: "Keywords",
     keywordsPlaceholder: "For better search results...",
     tagsLabel: "Tags (comma-separated)",
@@ -396,6 +399,9 @@ const translations = {
       searchLabel: "ស្វែងរក ឬបង្កើតស្លាក...",
       noLabelFound: "រកមិនឃើញស្លាកដែលត្រូវគ្នាទេ។",
       initialReceiver: "ឈ្មោះអ្នកទទួល",
+      selectReceiver: "ជ្រើសរើសអ្នកទទួល...",
+      searchReceiver: "ស្វែងរកអ្នកទទួល...",
+      noReceiverFound: "រកមិនឃើញអ្នកទទួលទេ។",
       keywords: "ពាក្យគន្លឹះ",
       keywordsPlaceholder: "ដើម្បីលទ្ធផលស្វែងរកកាន់តែប្រសើរ...",
       tagsLabel: "ស្លាក (បំបែកដោយក្បៀស)",
@@ -567,6 +573,7 @@ export const languages = [
 
 
     
+
 
 
 

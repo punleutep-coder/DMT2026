@@ -38,6 +38,8 @@ const formSchema = z.object({
   initialNote: z.string().optional(),
 })
 
+type AddDocumentFormValues = z.infer<typeof formSchema>;
+
 interface AddDocumentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -45,12 +47,12 @@ interface AddDocumentModalProps {
 
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
-  const { currentUser, documentTypes, assignedDepartments, departments, labels } = state
+  const { currentUser, documentTypes, assignedDepartments, departments, labels, users } = state
   const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
   const t = useTranslation()
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<AddDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: '',
@@ -121,7 +123,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     toast({ title: "Label Created", description: `"${labelName}" has been added.` });
   }
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: AddDocumentFormValues) => {
     const sanitizedId = sanitizeFirebaseKey(values.id);
     if (state.documents.some(d => sanitizeFirebaseKey(d.id) === sanitizedId)) {
         form.setError('id', { message: 'This Document ID already exists.' });
@@ -172,6 +174,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
   const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
   const labelOptions = labels.map(label => ({ value: label, label: label }));
+  const userOptions = users.map(user => ({ value: user.username, label: user.username }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -263,7 +266,24 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                             )}
                         />
                     )}
-                    <FormField control={form.control} name="initialReceiver" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('initialReceiver')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField
+                      control={form.control}
+                      name="initialReceiver"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel style={{ color: '#1D41D5' }}>{t('initialReceiver')}</FormLabel>
+                          <Combobox
+                            options={userOptions}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder={t('selectReceiver')}
+                            searchPlaceholder={t('searchReceiver')}
+                            notFoundText={t('noReceiverFound')}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docLink1')}</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
