@@ -372,11 +372,11 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                 </div>
 
                 <Accordion type="single" collapsible className="w-full">
-                  {sortedDepartments.map(dept => (
+                  {sortedDepartments.map((dept, index) => (
                       <AccordionItem value={dept} key={dept}>
                           <AccordionTrigger>
                               <div className="flex justify-between w-full pr-4">
-                                  <span className="font-semibold text-lg">{dept}</span>
+                                  <span className="font-semibold text-lg">{index + 1}. {dept}</span>
                                   <span className="text-muted-foreground">{t('totalDocs')}: {reportData[dept].totalDocs} | {t('types')}: {Object.keys(reportData[dept].docTypes).length}</span>
                               </div>
                           </AccordionTrigger>
