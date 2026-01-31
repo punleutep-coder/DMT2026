@@ -1,4 +1,3 @@
-
 'use client'
 
 import {
@@ -131,6 +130,22 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
       onClose();
     }
   }
+
+  const handleTableRowClick = (department: string, documentType: string) => {
+    dispatch({
+      type: 'SET_FILTER',
+      payload: {
+        documentType: documentType === 'No Type' ? 'All' : documentType,
+        assignedDepartment: department === 'Unassigned' ? 'All' : department,
+        mainFilter: 'All',
+        departmentSpecificFilter: 'All',
+        search: '',
+        startDate: null,
+        endDate: null
+      }
+    });
+    onClose();
+  };
 
   const clearReport = () => {
     setDateRange({})
@@ -375,7 +390,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
                               </TableHeader>
                               <TableBody>
                                   {Object.entries(reportData[dept].docTypes).sort(([a], [b]) => a.localeCompare(b)).map(([type, count]) => (
-                                  <TableRow key={type}>
+                                  <TableRow key={type} onClick={() => handleTableRowClick(dept, type)} className="cursor-pointer hover:bg-muted/50">
                                       <TableCell>{type}</TableCell>
                                       <TableCell className="text-right">{count}</TableCell>
                                   </TableRow>
