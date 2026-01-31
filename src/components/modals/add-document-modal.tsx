@@ -129,12 +129,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
       return;
     }
     
-    const combinedReceivers = [
-        ...users.map(u => u.username), 
-        ...receivers
-    ];
-
-    if (combinedReceivers.some(r => r.toLowerCase() === receiverName.toLowerCase())) {
+    if (receivers.some(r => r.toLowerCase() === receiverName.toLowerCase())) {
         toast({ title: "Duplicate Receiver", description: "This receiver name already exists.", variant: "destructive" });
         return;
     }
@@ -197,12 +192,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
   const labelOptions = labels.map(label => ({ value: label, label: label }));
   const receiverOptions = useMemo(() => {
-    const allReceivers = new Set([
-        ...users.map(user => user.username),
-        ...receivers
-    ]);
-    return Array.from(allReceivers).sort().map(r => ({ value: r, label: r }));
-  }, [users, receivers]);
+    return receivers.sort().map(r => ({ value: r, label: r }));
+  }, [receivers]);
 
 
   return (
