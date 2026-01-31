@@ -519,7 +519,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // Start with permission-filtered docs
     let metricDocs = permissionFilteredDocs;
 
-    // Apply date filter for metrics
+    // Apply all filters that are not related to the metric cards themselves
     if (state.filter.startDate && state.filter.endDate) {
         metricDocs = metricDocs.filter(doc => {
             if (doc.history && doc.history.length > 0) {
@@ -528,6 +528,37 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             }
             return false;
         });
+    }
+
+    if (state.filter.search) {
+      const searchLower = state.filter.search.toLowerCase();
+      metricDocs = metricDocs.filter(doc => {
+          const fieldsToSearch = [
+            doc.id, doc.name, doc.documentType, doc.label, doc.secondaryId,
+            doc.tertiaryId, doc.quaternaryId, doc.assignedDepartment, doc.keywords,
+            ...(doc.tags || [])
+          ];
+          const historyText = (doc.history || []).map(h => `${h.receiver} ${h.note}`).join(' ');
+          fieldsToSearch.push(historyText);
+
+          return fieldsToSearch.some(field => field && field.toLowerCase().includes(searchLower));
+      });
+    }
+
+    if (state.filter.assignedDepartment !== 'All') {
+        metricDocs = metricDocs.filter(doc => doc.assignedDepartment === state.filter.assignedDepartment);
+    }
+    
+    if (state.filter.documentType !== 'All') {
+      metricDocs = metricDocs.filter(doc => doc.documentType === state.filter.documentType);
+    }
+
+    if (state.filter.label !== 'All') {
+      metricDocs = metricDocs.filter(doc => doc.label === state.filter.label);
+    }
+    
+    if(state.filter.departmentSpecificFilter !== 'All'){
+        metricDocs = metricDocs.filter(d => d.status === state.filter.departmentSpecificFilter)
     }
     
     const allDocs = metricDocs;
