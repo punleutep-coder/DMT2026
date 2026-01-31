@@ -48,6 +48,7 @@ const translations = {
     manageDocTypes: "Manage Document Types",
     manageAssignedDepts: "Manage Assigned Depts",
     manageLabels: "Manage Labels",
+    manageReceivers: "Manage Receivers",
     manageColumns: "Manage Columns",
     exportData: "Export Data (JSON)",
     importData: "Import Data (JSON)",
@@ -140,6 +141,7 @@ const translations = {
     noAssignedDeptFound: "No matching department found.",
     selectLabel: "Select a label...",
     searchLabel: "Search or create...",
+    notFoundText: "No option found.",
     noLabelFound: "No matching label found.",
     initialReceiver: "Initial Receiver",
     selectReceiver: "Select receiver...",
@@ -200,6 +202,8 @@ const translations = {
     totalCombinedDocs: "Total Combined Documents",
     totalSplitDocs: "Split Docs by Type",
     none: "None",
+    manageReceiversDesc: "Add, edit, or remove the custom receiver names available in dropdowns.",
+    newReceiverName: "New receiver name",
 
     // User Management
     userManagementDesc: "Add, edit, or remove users and manage their roles and permissions.",
@@ -305,6 +309,7 @@ const translations = {
       manageDocTypes: "គ្រប់គ្រងប្រភេទឯកសារ",
       manageAssignedDepts: "គ្រប់គ្រងនាយកដ្ឋានដែលបានចាត់តាំង",
       manageLabels: "គ្រប់គ្រងស្លាក",
+      manageReceivers: "គ្រប់គ្រងអ្នកទទួល",
       manageColumns: "គ្រប់គ្រងជួរឈរ",
       exportData: "នាំចេញទិន្នន័យ (JSON)",
       importData: "នាំចូលទិន្នន័យ (JSON)",
@@ -457,6 +462,8 @@ const translations = {
       totalCombinedDocs: "ឯកសាររួមបញ្ចូលគ្នាសរុប",
       totalSplitDocs: "បំបែកឯកសារតាមប្រភេទ",
       none: "គ្មាន",
+      manageReceiversDesc: "បន្ថែម កែសម្រួល ឬលុបឈ្មោះអ្នកទទួលផ្ទាល់ខ្លួនដែលមាននៅក្នុងបញ្ជីទម្លាក់ចុះ។",
+      newReceiverName: "ឈ្មោះអ្នកទទួលថ្មី",
 
       // User Management
       userManagementDesc: "បន្ថែម កែសម្រួល ឬលុបអ្នកប្រើប្រាស់ និងគ្រប់គ្រងតួនាទី និងការអនុញ្ញាតរបស់ពួកគេ។",
@@ -573,6 +580,7 @@ export const languages = [
 
 
     
+
 
 
 

@@ -39,8 +39,9 @@ type Action =
   | { type: 'SET_DOCUMENT_TYPES'; payload: string[] }
   | { type: 'SET_ASSIGNED_DEPARTMENTS'; payload: string[] }
   | { type: 'SET_LABELS'; payload: string[] }
+  | { type: 'SET_RECEIVERS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
-  | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], departmentColors: { [key: string]: string }, documentTypes: string[], assignedDepartments: string[], labels: string[], columnVisibility: {[key:string]: boolean} } }
+  | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], departmentColors: { [key: string]: string }, documentTypes: string[], assignedDepartments: string[], labels: string[], receivers: string[], columnVisibility: {[key:string]: boolean} } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' };
 
 const getInitialState = (): AppState => {
@@ -57,6 +58,7 @@ const getInitialState = (): AppState => {
         documentTypes: [],
         assignedDepartments: [],
         labels: [],
+        receivers: [],
         filter: savedFilter ? JSON.parse(savedFilter) : {
             mainFilter: 'All',
             departmentSpecificFilter: 'All',
@@ -91,6 +93,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return { 
             ...state, 
             ...action.payload,
+            receivers: action.payload.receivers || state.receivers,
             departmentColors: action.payload.departmentColors || state.departmentColors,
         };
     case 'SET_CURRENT_USER':
@@ -275,6 +278,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_LABELS':
         set(ref(db, 'authorized_users_data/labels'), action.payload);
         return { ...state, labels: action.payload };
+    case 'SET_RECEIVERS':
+        set(ref(db, 'authorized_users_data/receivers'), action.payload);
+        return { ...state, receivers: action.payload };
      case 'SET_COLUMN_VISIBILITY':
         set(ref(db, 'authorized_users_data/columnVisibility'), action.payload);
         return { ...state, columnVisibility: action.payload };
@@ -375,6 +381,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               documentTypes: data.documentTypes || [],
               assignedDepartments: data.assignedDepartments || [],
               labels: data.labels || [],
+              receivers: data.receivers || [],
               columnVisibility: data.columnVisibility || initialColumnVisibility,
             }
           });

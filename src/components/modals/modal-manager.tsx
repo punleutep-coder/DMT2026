@@ -22,6 +22,7 @@ import GlobalActivityLogModal from "./global-activity-log-modal"
 import ExportXLSXModal from "./export-xlsx-modal"
 import BulkAdvanceModal from "./bulk-advance-modal"
 import ManageLabelsModal from "./manage-labels-modal"
+import ManageReceiversModal from "./manage-receivers-modal"
 
 export default function ModalManager() {
     const { state, dispatch } = useAppContext();
@@ -58,6 +59,8 @@ export default function ModalManager() {
             return <ManageAssignedDepartmentsModal isOpen={true} onClose={handleClose} />
         case 'manageLabels':
             return <ManageLabelsModal isOpen={true} onClose={handleClose} />
+        case 'manageReceivers':
+            return <ManageReceiversModal isOpen={true} onClose={handleClose} />
         case 'manageColumns':
             return <ManageColumnsModal isOpen={true} onClose={handleClose} />
         case 'combineDocuments':

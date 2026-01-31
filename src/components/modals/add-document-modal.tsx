@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -47,7 +47,7 @@ interface AddDocumentModalProps {
 
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
-  const { currentUser, documentTypes, assignedDepartments, departments, labels, users } = state
+  const { currentUser, documentTypes, assignedDepartments, departments, labels, users, receivers } = state
   const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
   const t = useTranslation()
@@ -124,8 +124,25 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   }
 
   const handleCreateReceiver = (receiverName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new receiver names.", variant: "destructive" });
+      return;
+    }
+    
+    const combinedReceivers = [
+        ...users.map(u => u.username), 
+        ...receivers
+    ];
+
+    if (combinedReceivers.some(r => r.toLowerCase() === receiverName.toLowerCase())) {
+        toast({ title: "Duplicate Receiver", description: "This receiver name already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newReceivers = [...receivers, receiverName].sort();
+    dispatch({ type: 'SET_RECEIVERS', payload: newReceivers });
     form.setValue('initialReceiver', receiverName);
-    toast({ title: "Custom Receiver", description: `Receiver name set to "${receiverName}".` });
+    toast({ title: "Receiver Created", description: `"${receiverName}" has been added.` });
   }
 
   const onSubmit = async (values: AddDocumentFormValues) => {
@@ -179,7 +196,14 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
   const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
   const labelOptions = labels.map(label => ({ value: label, label: label }));
-  const userOptions = users.map(user => ({ value: user.username, label: user.username }));
+  const receiverOptions = useMemo(() => {
+    const allReceivers = new Set([
+        ...users.map(user => user.username),
+        ...receivers
+    ]);
+    return Array.from(allReceivers).sort().map(r => ({ value: r, label: r }));
+  }, [users, receivers]);
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -278,13 +302,13 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         <FormItem className="flex flex-col">
                           <FormLabel style={{ color: '#1D41D5' }}>{t('initialReceiver')}</FormLabel>
                           <Combobox
-                            options={userOptions}
+                            options={receiverOptions}
                             value={field.value}
                             onChange={field.onChange}
                             placeholder={t('selectReceiver')}
-                            searchPlaceholder={t('searchLabel')}
+                            searchPlaceholder={t('searchReceiver')}
                             notFoundText={t('noReceiverFound')}
-                            onCreate={handleCreateReceiver}
+                            onCreate={currentUser?.role === 'Admin' ? handleCreateReceiver : undefined}
                           />
                           <FormMessage />
                         </FormItem>

@@ -71,6 +71,7 @@ export interface AppState {
   documentTypes: string[];
   assignedDepartments: string[];
   labels: string[];
+  receivers: string[];
   filter: {
     mainFilter: string;
     departmentSpecificFilter: string;
@@ -120,6 +121,7 @@ export type ModalType =
   | 'manageDocumentTypes'
   | 'manageAssignedDepartments'
   | 'manageLabels'
+  | 'manageReceivers'
   | 'manageColumns'
   | 'combineDocuments'
   | 'splitDocument'

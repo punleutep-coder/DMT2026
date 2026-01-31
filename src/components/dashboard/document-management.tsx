@@ -18,6 +18,7 @@ import {
   FileOutput,
   Redo2,
   Tags,
+  Users2,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -224,6 +225,9 @@ export default function DocumentManagement() {
             </Button>
              <Button variant="secondary" onClick={() => openModal('manageLabels')} className="bg-rose-800 hover:bg-rose-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <Tags /> {t('manageLabels')}
+            </Button>
+            <Button variant="secondary" onClick={() => openModal('manageReceivers')} className="bg-orange-800 hover:bg-orange-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
+                <Users2 /> {t('manageReceivers')}
             </Button>
             <Button variant="secondary" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-800 hover:bg-teal-800/90 text-white shadow-lg hover:shadow-xl transition-shadow">
                 <FileCog /> {t('manageAssignedDepts')}
