@@ -1,22 +1,26 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
+import { Combobox } from '../ui/combobox'
+import { useToast } from '@/hooks/use-toast'
+import { useMemo } from 'react'
+import { useTranslation } from '@/lib/i18n'
 
 const formSchema = z.object({
   nextDepartment: z.string().min(1, 'Please select a department.'),
   receiver: z.string().min(1, 'Receiver name is required.'),
   note: z.string().optional(),
 })
+
+type AdvanceDocumentFormValues = z.infer<typeof formSchema>;
 
 interface AdvanceDocumentModalProps {
   isOpen: boolean
@@ -27,9 +31,16 @@ interface AdvanceDocumentModalProps {
 
 export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestoreId }: AdvanceDocumentModalProps) {
   const { state, dispatch } = useAppContext()
-  const doc = state.documents.find(d => d.id === docId)
+  const { doc, currentUser, receivers } = useMemo(() => ({
+    doc: state.documents.find(d => d.id === docId),
+    currentUser: state.currentUser,
+    receivers: state.receivers
+  }), [state.documents, state.currentUser, state.receivers, docId]);
+  
+  const { toast } = useToast();
+  const t = useTranslation();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<AdvanceDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nextDepartment: '',
@@ -40,10 +51,30 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
 
   if (!doc) return null
 
-  // Allow moving to any department except the current one.
   const availableNextDepts = state.departments.filter(dept => dept !== doc.status)
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const receiverOptions = useMemo(() => {
+    return receivers.sort().map(r => ({ value: r, label: r }));
+  }, [receivers]);
+  
+  const handleCreateReceiver = (receiverName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new receiver names.", variant: "destructive" });
+      return;
+    }
+    
+    if (receivers.some(r => r.toLowerCase() === receiverName.toLowerCase())) {
+        toast({ title: "Duplicate Receiver", description: "This receiver name already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newReceivers = [...receivers, receiverName].sort();
+    dispatch({ type: 'SET_RECEIVERS', payload: newReceivers });
+    form.setValue('receiver', receiverName);
+    toast({ title: "Receiver Created", description: `"${receiverName}" has been added.` });
+  }
+
+  const onSubmit = async (values: AdvanceDocumentFormValues) => {
     const now = new Date().toISOString()
     const oldStatus = doc.status
     
@@ -101,7 +132,25 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
                 </FormItem>
               )}
             />
-             <FormField control={form.control} name="receiver" render={({ field }) => ( <FormItem><FormLabel>Receiver Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />
+            <FormField
+              control={form.control}
+              name="receiver"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>{t('receiverName')}</FormLabel>
+                  <Combobox
+                    options={receiverOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder={t('selectReceiver')}
+                    searchPlaceholder={t('searchReceiver')}
+                    notFoundText={t('noReceiverFound')}
+                    onCreate={currentUser?.role === 'Admin' ? handleCreateReceiver : undefined}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
              <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel>Note</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />
 
             <DialogFooter>

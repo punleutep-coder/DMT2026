@@ -1,10 +1,8 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
@@ -29,16 +27,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import type { Document } from '@/lib/types'
 import { useToast } from '@/hooks/use-toast'
+import { Combobox } from '../ui/combobox'
+import { useMemo } from 'react'
+import { useTranslation } from '@/lib/i18n'
 
 const formSchema = z.object({
   nextDepartment: z.string().min(1, 'Please select a department.'),
   receiver: z.string().min(1, 'Receiver name is required.'),
   note: z.string().optional(),
 })
+
+type BulkAdvanceFormValues = z.infer<typeof formSchema>
 
 interface BulkAdvanceModalProps {
   isOpen: boolean
@@ -50,12 +52,13 @@ export default function BulkAdvanceModal({
   onClose,
 }: BulkAdvanceModalProps) {
   const { state, dispatch } = useAppContext()
-  const { selectedDocIds, departments, currentUser } = state
+  const { selectedDocIds, departments, currentUser, receivers } = state
   const { toast } = useToast()
+  const t = useTranslation()
   
   const docsToAdvance = state.documents.filter(d => selectedDocIds.includes(d.id));
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<BulkAdvanceFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nextDepartment: '',
@@ -68,7 +71,28 @@ export default function BulkAdvanceModal({
   const currentDepartments = [...new Set(docsToAdvance.map(d => d.status))];
   const availableNextDepts = departments.filter(dept => !currentDepartments.includes(dept));
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const receiverOptions = useMemo(() => {
+    return receivers.sort().map(r => ({ value: r, label: r }));
+  }, [receivers]);
+  
+  const handleCreateReceiver = (receiverName: string) => {
+    if (currentUser?.role !== 'Admin') {
+      toast({ title: "Permission Denied", description: "Only Admins can create new receiver names.", variant: "destructive" });
+      return;
+    }
+    
+    if (receivers.some(r => r.toLowerCase() === receiverName.toLowerCase())) {
+        toast({ title: "Duplicate Receiver", description: "This receiver name already exists.", variant: "destructive" });
+        return;
+    }
+    
+    const newReceivers = [...receivers, receiverName].sort();
+    dispatch({ type: 'SET_RECEIVERS', payload: newReceivers });
+    form.setValue('receiver', receiverName);
+    toast({ title: "Receiver Created", description: `"${receiverName}" has been added.` });
+  }
+
+  const onSubmit = async (values: BulkAdvanceFormValues) => {
     const now = new Date().toISOString()
     
     docsToAdvance.forEach(doc => {
@@ -172,11 +196,17 @@ export default function BulkAdvanceModal({
               control={form.control}
               name="receiver"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Receiver Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
+                 <FormItem className="flex flex-col">
+                  <FormLabel>{t('receiverName')}</FormLabel>
+                  <Combobox
+                    options={receiverOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder={t('selectReceiver')}
+                    searchPlaceholder={t('searchReceiver')}
+                    notFoundText={t('noReceiverFound')}
+                    onCreate={currentUser?.role === 'Admin' ? handleCreateReceiver : undefined}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

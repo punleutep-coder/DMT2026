@@ -1,4 +1,3 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,6 +23,8 @@ const formSchema = z.object({
   customDate: z.date().optional(),
 })
 
+type CompleteDocumentFormValues = z.infer<typeof formSchema>
+
 interface CompleteDocumentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -36,7 +37,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
   const docToUpdate = state.documents.find(d => d.id === docId)
   const t = useTranslation()
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<CompleteDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       status: 'Completed (Success)',
@@ -47,7 +48,7 @@ export default function CompleteDocumentModal({ isOpen, onClose, docId, firestor
 
   if (!docToUpdate) return null
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: CompleteDocumentFormValues) => {
     const now = values.customDate ? values.customDate.toISOString() : new Date().toISOString();
     const newHistory = [...docToUpdate.history];
     const lastEntry = newHistory[newHistory.length - 1];

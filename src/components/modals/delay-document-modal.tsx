@@ -1,4 +1,3 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -21,6 +20,8 @@ const formSchema = z.object({
   note: z.string().optional(),
 })
 
+type DelayDocumentFormValues = z.infer<typeof formSchema>
+
 interface DelayDocumentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -32,7 +33,7 @@ export default function DelayDocumentModal({ isOpen, onClose, docId, firestoreId
   const { state, dispatch } = useAppContext()
   const docToUpdate = state.documents.find(d => d.id === docId)
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<DelayDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       releaseDate: undefined,
@@ -42,7 +43,7 @@ export default function DelayDocumentModal({ isOpen, onClose, docId, firestoreId
 
   if (!docToUpdate) return null
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: DelayDocumentFormValues) => {
     const now = new Date().toISOString()
     const updatedFields = {
         id: docId,

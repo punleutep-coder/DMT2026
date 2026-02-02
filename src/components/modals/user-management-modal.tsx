@@ -1,4 +1,3 @@
-
 'use client'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -77,6 +76,8 @@ const formSchema = z
     }
   )
 
+type UserFormValues = z.infer<typeof formSchema>
+
 interface UserManagementModalProps {
   isOpen: boolean
   onClose: () => void
@@ -108,7 +109,7 @@ export default function UserManagementModal({
   const mode = editingUserId ? 'edit' : 'add'
   const userToEdit = state.users.find((u) => u.id === editingUserId)
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<UserFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: undefined,
@@ -256,7 +257,7 @@ export default function UserManagementModal({
     })
   }
   
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: UserFormValues) => {
     const isUpdating = !!values.id;
 
     if (isUpdating) {

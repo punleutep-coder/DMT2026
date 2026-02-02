@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -33,6 +32,8 @@ const formSchema = z.object({
   rememberMe: z.boolean().optional(),
 })
 
+type LoginFormValues = z.infer<typeof formSchema>
+
 export default function LoginForm() {
   const { dispatch } = useAppContext()
   const [error, setError] = useState<string | null>(null)
@@ -40,7 +41,7 @@ export default function LoginForm() {
   const { toast } = useToast()
   const t = useTranslation()
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
@@ -57,7 +58,7 @@ export default function LoginForm() {
     }
   }, [form]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: LoginFormValues) {
     setError(null)
     setIsLoggingIn(true);
 
