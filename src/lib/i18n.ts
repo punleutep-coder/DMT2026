@@ -239,7 +239,8 @@ const translations = {
     canViewCompleted: 'View Completed Docs',
     canSplitDocument: 'Split Document',
     canEditCurrentNote: 'Edit Current Note',
-    canMoveDocument: 'Move Document (Advance/Back)',
+    canMoveDocumentAdvance: 'Move Document (Advance)',
+    canMoveDocumentBack: 'Move Document (Back)',
     canDelayDocument: 'Delay Document',
     canReleaseDocument: 'Release Document from Delay',
     canCompleteDocument: 'Complete Document',
@@ -499,7 +500,8 @@ const translations = {
       canViewCompleted: 'មើលឯកសារដែលបានបញ្ចប់',
       canSplitDocument: 'បំបែកឯកសារ',
       canEditCurrentNote: 'កែសម្រួលកំណត់ចំណាំបច្ចុប្បន្ន',
-      canMoveDocument: 'ផ្លាស់ទីឯកសារ (ទៅមុខ/ថយក្រោយ)',
+      canMoveDocumentAdvance: 'ផ្លាស់ទីឯកសារ (ទៅមុខ)',
+      canMoveDocumentBack: 'ផ្លាស់ទីឯកសារ (ថយក្រោយ)',
       canDelayDocument: 'ពន្យាពេលឯកសារ',
       canReleaseDocument: 'ចេញផ្សាយឯកសារពីការពន្យាពេល',
       canCompleteDocument: 'បញ្ចប់ឯកសារ',
@@ -580,6 +582,7 @@ export const languages = [
 
 
     
+
 
 
 

@@ -1,3 +1,4 @@
+
 'use client'
 
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -254,15 +255,15 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         </DropdownMenuItem>
                     )}
                     
-                    {(hasPermission(currentUser, 'canMoveDocument') || hasPermission(currentUser, 'canCompleteDocument')) && !isTerminal && <DropdownMenuSeparator />}
+                    {(hasPermission(currentUser, 'canMoveDocumentAdvance') || hasPermission(currentUser, 'canMoveDocumentBack') || hasPermission(currentUser, 'canCompleteDocument')) && !isTerminal && <DropdownMenuSeparator />}
                     
-                    {!isTerminal && hasPermission(currentUser, 'canMoveDocument') && Array.isArray(doc.history) && doc.history.length > 1 && (
+                    {!isTerminal && hasPermission(currentUser, 'canMoveDocumentBack') && Array.isArray(doc.history) && doc.history.length > 1 && (
                         <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
                             <Undo2 className="mr-2 h-4 w-4" />{t('moveBack')}
                         </DropdownMenuItem>
                     )}
 
-                    {!isTerminal && hasPermission(currentUser, 'canMoveDocument') && (
+                    {!isTerminal && hasPermission(currentUser, 'canMoveDocumentAdvance') && (
                         <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}>
                             <Redo2 className="mr-2 h-4 w-4" />{t('advance')}
                         </DropdownMenuItem>
@@ -274,7 +275,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                         </DropdownMenuItem>
                     )}
 
-                    {isTerminal && hasPermission(currentUser, 'canMoveDocument') && (
+                    {isTerminal && hasPermission(currentUser, 'canMoveDocumentBack') && (
                         <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>

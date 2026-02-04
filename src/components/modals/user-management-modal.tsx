@@ -1,3 +1,4 @@
+
 'use client'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -87,7 +88,7 @@ interface UserManagementModalProps {
 const permissionGroups = {
   dashboardPermissions: [ 'canViewMetrics', 'canViewWorkflowChart' ],
   generalDocPermissions: [ 'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted' ],
-  docActionPermissions: [ 'canMoveDocument', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote' ],
+  docActionPermissions: [ 'canMoveDocumentAdvance', 'canMoveDocumentBack', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote' ],
   docFieldEditPermissions: [ 'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditLabel', 'canEditAssignedDepartment', 'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote' ],
   docLinkPermissions: [ 'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4', 'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4' ],
   adminPermissions: ['canManageAdmins', 'canViewGlobalActivity']

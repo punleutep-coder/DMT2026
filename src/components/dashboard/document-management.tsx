@@ -195,7 +195,7 @@ export default function DocumentManagement() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {hasPermission(currentUser, 'canMoveDocument') && (
+        {hasPermission(currentUser, 'canMoveDocumentAdvance') && (
           <Button onClick={() => openModal('bulkAdvance')} disabled={state.selectedDocIds.length === 0} className="bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl transition-shadow">
             <Redo2 /> {t('bulkAdvance')}
           </Button>
