@@ -1,4 +1,3 @@
-
 'use client'
 import {
   Bar,
@@ -18,14 +17,19 @@ import { useTranslation } from '@/lib/i18n'
 
 export default function WorkflowChart() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { departments, filter, departmentColors } = state
+  const { departments, filter, departmentColors, currentUser } = state
   const t = useTranslation();
 
   const chartData = useMemo(() => {
     // Use filteredDocs to make the chart dynamic
     const activeDocs = filteredDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
     
-    const counts = departments.map(dept => ({
+    // Filter departments based on user permissions
+    const accessibleDepartments = (currentUser?.role === 'Admin' || !currentUser?.departmentPermissions?.length)
+      ? departments
+      : departments.filter(dept => currentUser.departmentPermissions.includes(dept));
+
+    const counts = accessibleDepartments.map(dept => ({
       name: dept.replace('Department ', ''),
       fullName: dept,
       total: activeDocs.filter(doc => doc.status === dept).length,
@@ -33,7 +37,7 @@ export default function WorkflowChart() {
 
     return counts;
 
-  }, [filteredDocs, departments])
+  }, [filteredDocs, departments, currentUser])
 
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
