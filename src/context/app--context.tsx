@@ -49,6 +49,28 @@ const getInitialState = (): AppState => {
     const savedFilter = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_filterSettings') : null;
     const savedLanguage = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_language') : 'km';
     
+    let filter = savedFilter ? JSON.parse(savedFilter) : {
+        mainFilter: 'All',
+        departmentSpecificFilter: 'All',
+        search: '',
+        startDate: null,
+        endDate: null,
+        assignedDepartment: 'All',
+        documentType: 'All',
+        label: 'All',
+        periodValue: 3,
+        periodUnit: 'days',
+        periodDepartment: 'All',
+        lastUpdateStart: null,
+        lastUpdateEnd: null,
+    };
+
+    // Revive dates from localStorage strings
+    if (filter.startDate) filter.startDate = new Date(filter.startDate);
+    if (filter.endDate) filter.endDate = new Date(filter.endDate);
+    if (filter.lastUpdateStart) filter.lastUpdateStart = new Date(filter.lastUpdateStart);
+    if (filter.lastUpdateEnd) filter.lastUpdateEnd = new Date(filter.lastUpdateEnd);
+
     return {
         users: [],
         currentUser: null,
@@ -60,19 +82,7 @@ const getInitialState = (): AppState => {
         assignedDepartments: [],
         labels: [],
         receivers: [],
-        filter: savedFilter ? JSON.parse(savedFilter) : {
-            mainFilter: 'All',
-            departmentSpecificFilter: 'All',
-            search: '',
-            startDate: null,
-            endDate: null,
-            assignedDepartment: 'All',
-            documentType: 'All',
-            label: 'All',
-            periodValue: 3,
-            periodUnit: 'days',
-            periodDepartment: 'All',
-        },
+        filter,
         pagination: {
             currentPage: 1,
             rowsPerPage: 30,
@@ -327,10 +337,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let delayInterval: NodeJS.Timeout | null = null;
   
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      // First, if a user is logging out, clean everything up.
       if (!user) {
         if (dbListener) {
-          dbListener(); // Detach listener
+          dbListener();
           dbListener = null;
         }
         if (delayInterval) {
@@ -342,16 +351,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
   
-      // If a user is logged in, attach the database listener.
       if (!dbListener) {
         dbListener = onValue(ref(db, 'authorized_users_data'), (snapshot) => {
-          if (!snapshot.exists()) {
-             // Data doesn't exist, maybe it's the first run for this path.
-             // Do not seed data automatically to prevent accidental data wipes.
-             // The app will function with an empty state.
-          }
-          
-          const data = snapshot.val() || {}; // Use empty object if data is null
+          const data = snapshot.val() || {};
           const dbUsers: User[] = data.users ? Object.keys(data.users).map(key => ({ id: key, firestoreId: key, ...data.users[key] })) : [];
           const documents: Document[] = data.documents ? Object.keys(data.documents).map(key => ({ id: key, ...data.documents[key] })) : [];
           const logs: Log[] = data.logs ? Object.keys(data.logs).map(key => ({ id: key, firestoreId: key, ...data.logs[key] })) : [];
@@ -363,15 +365,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               const sanitizedKey = sanitizeFirebaseKey(deptName);
               if (departmentColorsFromDb[sanitizedKey]) {
                   departmentColorsForState[deptName] = departmentColorsFromDb[sanitizedKey];
-              }
-              // For backwards compatibility before the fix, if the raw name was a valid key
-              else if (departmentColorsFromDb[deptName]) {
+              } else if (departmentColorsFromDb[deptName]) {
                   departmentColorsForState[deptName] = departmentColorsFromDb[deptName];
               }
           });
 
-
-          // Dispatch all data at once to ensure consistency
           dispatch({
             type: 'SET_DATA',
             payload: {
@@ -388,15 +386,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             }
           });
           
-          // Now that data is loaded, find the user profile.
           const authUser = auth.currentUser;
           if (authUser) {
             const userProfile = dbUsers.find(u => u.id === authUser.uid);
             if (userProfile) {
               dispatch({ type: 'SET_CURRENT_USER', payload: userProfile });
             } else {
-              // Auto-create user profile if it doesn't exist
-              console.log(`Authenticated user ${authUser.uid} not found in database. Creating profile.`);
               const newUserProfile: User = {
                 id: authUser.uid,
                 firestoreId: authUser.uid,
@@ -409,7 +404,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 passwordHash: '',
               };
               dispatch({ type: 'ADD_USER', payload: newUserProfile });
-              // We don't set current user here. The next `onValue` trigger will load it.
             }
           }
         }, (error) => {
@@ -418,7 +412,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         });
       }
   
-      // Start the interval for checking delayed documents.
       if (!delayInterval) {
         delayInterval = setInterval(() => {
           dispatch({ type: 'CHECK_DELAYED_DOCUMENTS' });
@@ -426,19 +419,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     });
   
-    // Cleanup function
     return () => {
       unsubscribeAuth();
-      if (dbListener) {
-        dbListener();
-      }
-      if (delayInterval) {
-        clearInterval(delayInterval);
-      }
+      if (dbListener) dbListener();
+      if (delayInterval) clearInterval(delayInterval);
     };
-  }, []); // Empty dependency array ensures this runs only once on mount.
+  }, []);
 
-  // Base documents filtered by user permissions (department and label)
   const permissionFilteredDocs = useMemo(() => {
     if (!state.isInitialized || !state.currentUser) return [];
 
@@ -476,6 +463,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 return firstEntryStart >= state.filter.startDate! && firstEntryStart <= state.filter.endDate!;
             }
             return false;
+        });
+    }
+
+    if (state.filter.lastUpdateStart && state.filter.lastUpdateEnd) {
+        const start = new Date(state.filter.lastUpdateStart);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(state.filter.lastUpdateEnd);
+        end.setHours(23, 59, 59, 999);
+        docs = docs.filter(doc => {
+            const updateDate = new Date(doc.lastUpdate);
+            return updateDate >= start && updateDate <= end;
         });
     }
   
@@ -516,10 +514,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   
 
   const metrics = useMemo(() => {
-    // Start with permission-filtered docs
     let metricDocs = permissionFilteredDocs;
 
-    // Apply all filters that are not related to the metric cards themselves
     if (state.filter.startDate && state.filter.endDate) {
         metricDocs = metricDocs.filter(doc => {
             if (doc.history && doc.history.length > 0) {
@@ -527,6 +523,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 return firstEntryStart >= state.filter.startDate! && firstEntryStart <= state.filter.endDate!;
             }
             return false;
+        });
+    }
+
+    if (state.filter.lastUpdateStart && state.filter.lastUpdateEnd) {
+        const start = new Date(state.filter.lastUpdateStart);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(state.filter.lastUpdateEnd);
+        end.setHours(23, 59, 59, 999);
+        metricDocs = metricDocs.filter(doc => {
+            const updateDate = new Date(doc.lastUpdate);
+            return updateDate >= start && updateDate <= end;
         });
     }
 

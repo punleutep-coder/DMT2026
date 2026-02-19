@@ -1,5 +1,4 @@
 
-
 'use client'
 
 import {
@@ -29,9 +28,12 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
 import { Button } from '../ui/button'
-import { ListFilter, SearchX, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ListFilter, SearchX, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 
 const EmptyState = () => {
     const { dispatch } = useAppContext();
@@ -44,7 +46,10 @@ const EmptyState = () => {
             startDate: null,
             endDate: null,
             assignedDepartment: 'All',
-            documentType: 'All'
+            documentType: 'All',
+            label: 'All',
+            lastUpdateStart: null,
+            lastUpdateEnd: null,
         }});
     }
 
@@ -243,6 +248,47 @@ export default function DocumentTable() {
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
+                  )}
+                  {col.key === 'lastUpdate' && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <ListFilter className={cn("h-4 w-4", (state.filter.lastUpdateStart || state.filter.lastUpdateEnd) ? "text-blue-600" : "text-muted-foreground")} />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <div className="p-4 bg-muted/20 border-b">
+                            <h4 className="font-medium text-sm">Filter by Last Update</h4>
+                        </div>
+                        <Calendar
+                          initialFocus
+                          mode="range"
+                          selected={{
+                            from: state.filter.lastUpdateStart || undefined,
+                            to: state.filter.lastUpdateEnd || undefined,
+                          }}
+                          onSelect={(range) => {
+                            dispatch({
+                              type: 'SET_FILTER',
+                              payload: {
+                                lastUpdateStart: range?.from || null,
+                                lastUpdateEnd: range?.to || null,
+                              },
+                            });
+                          }}
+                          numberOfMonths={2}
+                        />
+                        <div className="p-2 border-t flex justify-end gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => dispatch({ type: 'SET_FILTER', payload: { lastUpdateStart: null, lastUpdateEnd: null }})}
+                            >
+                                {t('clear')}
+                            </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </div>
               </TableHead>

@@ -84,6 +84,8 @@ export interface AppState {
     periodValue: number;
     periodUnit: 'days' | 'hours' | 'minutes';
     periodDepartment: string;
+    lastUpdateStart: Date | null;
+    lastUpdateEnd: Date | null;
   };
   pagination: {
     currentPage: number;
