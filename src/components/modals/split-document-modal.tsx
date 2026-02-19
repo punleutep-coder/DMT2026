@@ -66,6 +66,10 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
     const now = new Date().toISOString();
     const initialDepartment = state.departments.length > 0 ? state.departments[0] : 'N/A';
     
+    // Carry over links and tags from the original document
+    const sourceLinks = Array.isArray(docToSplit.documentLink) ? [...docToSplit.documentLink] : [];
+    const sourceTags = Array.isArray(docToSplit.tags) ? [...docToSplit.tags] : [];
+
     const newDocs: Document[] = values.newDocuments.map(newDocData => ({
         id: newDocData.id,
         firestoreId: `doc-${Date.now()}-${newDocData.id}`,
@@ -79,9 +83,9 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
         secondaryId: null,
         tertiaryId: null,
         quaternaryId: null,
-        documentLink: [] as string[],
+        documentLink: sourceLinks,
         history: [{ department: initialDepartment, start: now, end: null, receiver: state.currentUser!.username, note: `Split from ${docId}. ${values.note || ''}` }],
-        tags: Array.isArray(docToSplit.tags) ? [...docToSplit.tags] : [],
+        tags: sourceTags,
         isDelayed: false,
         releaseDate: null,
         releaseDateReached: false,
