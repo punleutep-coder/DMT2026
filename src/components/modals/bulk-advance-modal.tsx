@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Combobox } from '../ui/combobox'
 import { useMemo } from 'react'
 import { useTranslation } from '@/lib/i18n'
+import { hasDepartmentPermission } from '@/lib/permissions'
 
 const formSchema = z.object({
   nextDepartment: z.string().min(1, 'Please select a department.'),
@@ -69,11 +70,24 @@ export default function BulkAdvanceModal({
 
   // We should not be able to advance to a department that any selected document is currently in.
   const currentDepartments = [...new Set(docsToAdvance.map(d => d.status))];
-  const availableNextDepts = departments.filter(dept => !currentDepartments.includes(dept));
+  const availableNextDepts = departments.filter(dept => 
+    !currentDepartments.includes(dept) && hasDepartmentPermission(currentUser, dept)
+  );
 
+  const selectedNextDept = form.watch('nextDepartment');
   const receiverOptions = useMemo(() => {
-    return receivers.sort().map(r => ({ value: r, label: r }));
-  }, [receivers]);
+    if (!selectedNextDept) return [];
+    return receivers
+      .filter(receiverName => {
+        const matchingUser = state.users.find(u => u.username === receiverName);
+        if (matchingUser) {
+          return hasDepartmentPermission(matchingUser, selectedNextDept);
+        }
+        return true; // Keep unregistered receivers
+      })
+      .sort()
+      .map(r => ({ value: r, label: r }));
+  }, [receivers, state.users, selectedNextDept]);
   
   const handleCreateReceiver = (receiverName: string) => {
     if (currentUser?.role !== 'Admin') {

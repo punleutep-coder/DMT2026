@@ -1,4 +1,3 @@
-
 'use client'
 import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
@@ -16,7 +15,7 @@ import { Sparkles, Link as LinkIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
 import { sanitizeFirebaseKey } from '@/lib/utils'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission, hasDepartmentPermission } from '@/lib/permissions'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
 import {
@@ -214,9 +213,21 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
   const assignedDepartmentOptions = assignedDepartments.map(dept => ({ value: dept, label: dept }));
   const labelOptions = labels.map(label => ({ value: label, label: label }));
+  
+  const initialDepartment = state.departments.length > 0 ? state.departments[0] : null;
   const receiverOptions = useMemo(() => {
-    return receivers.sort().map(r => ({ value: r, label: r }));
-  }, [receivers]);
+    if (!initialDepartment) return [];
+    return receivers
+      .filter(receiverName => {
+        const matchingUser = users.find(u => u.username === receiverName);
+        if (matchingUser) {
+          return hasDepartmentPermission(matchingUser, initialDepartment);
+        }
+        return true; // Keep unregistered receivers as their permissions cannot be checked.
+      })
+      .sort()
+      .map(r => ({ value: r, label: r }));
+  }, [receivers, users, initialDepartment]);
 
 
   return (

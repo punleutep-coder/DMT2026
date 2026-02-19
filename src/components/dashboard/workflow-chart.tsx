@@ -14,6 +14,7 @@ import { CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { useAppContext } from '@/hooks/use-app-context'
 import { useMemo } from 'react'
 import { useTranslation } from '@/lib/i18n'
+import { hasDepartmentPermission } from '@/lib/permissions'
 
 export default function WorkflowChart() {
   const { state, dispatch, filteredDocs } = useAppContext()
@@ -25,9 +26,7 @@ export default function WorkflowChart() {
     const activeDocs = filteredDocs.filter(d => d.status !== 'Combined' && d.status !== 'Split');
     
     // Filter departments based on user permissions
-    const accessibleDepartments = (currentUser?.role === 'Admin' || !currentUser?.departmentPermissions?.length)
-      ? departments
-      : departments.filter(dept => currentUser.departmentPermissions.includes(dept));
+    const accessibleDepartments = departments.filter(dept => hasDepartmentPermission(currentUser, dept));
 
     const counts = accessibleDepartments.map(dept => ({
       name: dept.replace('Department ', ''),

@@ -1,4 +1,3 @@
-
 'use client'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,6 +24,8 @@ const formSchema = z.object({
   note: z.string().optional(),
 })
 
+type SplitDocumentFormValues = z.infer<typeof formSchema>;
+
 interface SplitDocumentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -36,7 +37,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
   const { state, dispatch } = useAppContext()
   const docToSplit = state.documents.find(d => d.id === docId);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<SplitDocumentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       newDocuments: [{ id: '', name: '', documentType: docToSplit?.documentType || '' }],
@@ -53,7 +54,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
 
   const documentTypeOptions = state.documentTypes.map(type => ({ value: type, label: type }));
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: SplitDocumentFormValues) => {
     const newDocIds = values.newDocuments.map(d => d.id);
     const existingIds = newDocIds.filter(id => state.documents.some(d => d.id === id));
 
@@ -80,7 +81,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
         quaternaryId: null,
         documentLink: [] as string[],
         history: [{ department: initialDepartment, start: now, end: null, receiver: state.currentUser!.username, note: `Split from ${docId}. ${values.note || ''}` }],
-        tags: [...docToSplit.tags],
+        tags: Array.isArray(docToSplit.tags) ? [...docToSplit.tags] : [],
         isDelayed: false,
         releaseDate: null,
         releaseDateReached: false,
