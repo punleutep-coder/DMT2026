@@ -64,7 +64,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
     }
 
     const now = new Date().toISOString();
-    const initialDepartment = state.departments.length > 0 ? state.departments[0] : 'N/A';
+    const currentDepartment = docToSplit.status;
     
     // Carry over links and tags from the original document
     const sourceLinks = Array.isArray(docToSplit.documentLink) ? [...docToSplit.documentLink] : [];
@@ -76,15 +76,15 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
         name: newDocData.name,
         documentType: newDocData.documentType || null,
         label: docToSplit.label,
-        status: initialDepartment,
-        initialDepartment: initialDepartment,
+        status: currentDepartment,
+        initialDepartment: currentDepartment,
         assignedDepartment: docToSplit.assignedDepartment,
         lastUpdate: now,
         secondaryId: null,
         tertiaryId: null,
         quaternaryId: null,
         documentLink: sourceLinks,
-        history: [{ department: initialDepartment, start: now, end: null, receiver: state.currentUser!.username, note: `Split from ${docId}. ${values.note || ''}` }],
+        history: [{ department: currentDepartment, start: now, end: null, receiver: state.currentUser!.username, note: `Split from ${docId}. ${values.note || ''}` }],
         tags: sourceTags,
         isDelayed: false,
         releaseDate: null,
@@ -103,7 +103,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
     // Add new documents and their logs
     newDocs.forEach(nd => {
         dispatch({ type: 'ADD_DOCUMENT', payload: nd });
-        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: 'Created via Split', user: state.currentUser!.username, timestamp: now, reason: `Split from: ${docId}` } });
+        dispatch({ type: 'ADD_LOG', payload: { docId: nd.id, oldStatus: 'N/A', newStatus: `Created via Split at ${currentDepartment}`, user: state.currentUser!.username, timestamp: now, reason: `Split from: ${docId}` } });
     });
     
     onClose();
