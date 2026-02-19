@@ -1,3 +1,4 @@
+
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,10 +14,16 @@ import { hasPermission } from '@/lib/permissions'
 import { useToast } from '@/hooks/use-toast'
 import { sanitizeFirebaseKey } from '@/lib/utils'
 import { useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Link as LinkIcon } from 'lucide-react'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -30,6 +37,12 @@ const formSchema = z.object({
   documentLink2: z.string().url().optional().or(z.literal('')),
   documentLink3: z.string().url().optional().or(z.literal('')),
   documentLink4: z.string().url().optional().or(z.literal('')),
+  documentLink5: z.string().url().optional().or(z.literal('')),
+  documentLink6: z.string().url().optional().or(z.literal('')),
+  documentLink7: z.string().url().optional().or(z.literal('')),
+  documentLink8: z.string().url().optional().or(z.literal('')),
+  documentLink9: z.string().url().optional().or(z.literal('')),
+  documentLink10: z.string().url().optional().or(z.literal('')),
   assignedDepartment: z.string().optional(),
   keywords: z.string().optional(),
   docTags: z.string().optional(),
@@ -66,6 +79,12 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
       documentLink2: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[1] || '' : '',
       documentLink3: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[2] || '' : '',
       documentLink4: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[3] || '' : '',
+      documentLink5: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[4] || '' : '',
+      documentLink6: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[5] || '' : '',
+      documentLink7: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[6] || '' : '',
+      documentLink8: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[7] || '' : '',
+      documentLink9: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[8] || '' : '',
+      documentLink10: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[9] || '' : '',
       assignedDepartment: docToUpdate?.assignedDepartment || '',
       keywords: docToUpdate?.keywords || '',
       docTags: Array.isArray(docToUpdate?.tags) ? docToUpdate.tags.join(', ') : '',
@@ -141,7 +160,11 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             secondaryId: values.secondaryId || null,
             tertiaryId: values.tertiaryId || null,
             quaternaryId: values.quaternaryId || null,
-            documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
+            documentLink: [
+                values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
+                values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
+                values.documentLink9, values.documentLink10
+            ].filter(Boolean) as string[],
             keywords: values.keywords || '',
             tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
             lastUpdate: new Date().toISOString(),
@@ -213,7 +236,11 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             compareAndPush('Tags', oldTags.join(', '), newTags.join(', '));
         }
         
-        const newLinks = [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[];
+        const newLinks = [
+            values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
+            values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
+            values.documentLink9, values.documentLink10
+        ].filter(Boolean) as string[];
         const oldLinks = docToUpdate.documentLink || [];
         if (JSON.stringify(newLinks) !== JSON.stringify(oldLinks)) {
             updatedFields.documentLink = newLinks;
@@ -329,6 +356,39 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>{t('quaternaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
 
+                <Accordion type="single" collapsible className="w-full border rounded-md px-4">
+                  <AccordionItem value="links" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-2">
+                        <LinkIcon className="h-4 w-4 text-blue-600" />
+                        <span className="font-semibold text-blue-600">{t('documentLinks')}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                          const linkKey = `documentLink${num}` as keyof EditDocumentFormValues;
+                          const editPerm = `canEditDocumentLink${num}` as any;
+                          return hasPermission(currentUser, editPerm) && (
+                            <FormField 
+                              key={num}
+                              control={form.control} 
+                              name={linkKey} 
+                              render={({ field }) => ( 
+                                <FormItem>
+                                  <FormLabel style={num === 1 ? { color: '#1D41D5' } : undefined}>{t(`docLink${num}` as any)}</FormLabel>
+                                  <FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem> 
+                              )} 
+                            />
+                          );
+                        })}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
                 {hasPermission(currentUser, 'canEditKeywords') && (
                   <FormField
                     control={form.control}
@@ -357,13 +417,6 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     <FormMessage />
                   </FormItem>
                 )} />}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docLink1')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink2') && <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>{t('docLink2')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink3') && <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>{t('docLink3')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink4') && <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>{t('docLink4')}</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                </div>
               </div>
             </ScrollArea>
             <DialogFooter className="pt-4">

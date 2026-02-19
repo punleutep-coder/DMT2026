@@ -1,5 +1,4 @@
 
-
 'use client'
 
 import { useAppContext } from "@/hooks/use-app-context";
@@ -115,6 +114,12 @@ const translations = {
     docLink2: "Open Link 2",
     docLink3: "Open Link 3",
     docLink4: "Open Link 4",
+    docLink5: "Open Link 5",
+    docLink6: "Open Link 6",
+    docLink7: "Open Link 7",
+    docLink8: "Open Link 8",
+    docLink9: "Open Link 9",
+    docLink10: "Open Link 10",
     editDetails: "Edit Details",
     splitDocument: "Split Document",
     delay: "Delay",
@@ -204,6 +209,7 @@ const translations = {
     none: "None",
     manageReceiversDesc: "Add, edit, or remove the custom receiver names available in dropdowns.",
     newReceiverName: "New receiver name",
+    documentLinks: "Document Links",
 
     // User Management
     userManagementDesc: "Add, edit, or remove users and manage their roles and permissions.",
@@ -249,6 +255,12 @@ const translations = {
     canOpenDocumentLink2: 'Open Document (Link 2)',
     canOpenDocumentLink3: 'Open Document (Link 3)',
     canOpenDocumentLink4: 'Open Document (Link 4)',
+    canOpenDocumentLink5: 'Open Document (Link 5)',
+    canOpenDocumentLink6: 'Open Document (Link 6)',
+    canOpenDocumentLink7: 'Open Document (Link 7)',
+    canOpenDocumentLink8: 'Open Document (Link 8)',
+    canOpenDocumentLink9: 'Open Document (Link 9)',
+    canOpenDocumentLink10: 'Open Document (Link 10)',
     canEditDocumentId: 'Edit Document ID (Primary)',
     canEditDocumentName: 'Edit Document Name',
     canEditDocumentType: 'Edit Document Type',
@@ -261,6 +273,12 @@ const translations = {
     canEditDocumentLink2: 'Edit Document Link 2',
     canEditDocumentLink3: 'Edit Document Link 3',
     canEditDocumentLink4: 'Edit Document Link 4',
+    canEditDocumentLink5: 'Edit Document Link 5',
+    canEditDocumentLink6: 'Edit Document Link 6',
+    canEditDocumentLink7: 'Edit Document Link 7',
+    canEditDocumentLink8: 'Edit Document Link 8',
+    canEditDocumentLink9: 'Edit Document Link 9',
+    canEditDocumentLink10: 'Edit Document Link 10',
     canEditKeywords: 'Edit Keywords',
     canEditTags: 'Edit Tags',
     canEditInitialNote: 'Edit Initial Note',
@@ -377,6 +395,12 @@ const translations = {
       docLink2: "ឯកសារទី២",
       docLink3: "ឯកសារទី៣",
       docLink4: "ឯកសារទី៤",
+      docLink5: "ឯកសារទី៥",
+      docLink6: "ឯកសារទី៦",
+      docLink7: "ឯកសារទី៧",
+      docLink8: "ឯកសារទី៨",
+      docLink9: "ឯកសារទី៩",
+      docLink10: "ឯកសារទី១០",
       editDetails: "កែសម្រួលព័ត៌មានលម្អិត",
       splitDocument: "បំបែកឯកសារ",
       delay: "ពន្យាពេល",
@@ -465,6 +489,7 @@ const translations = {
       none: "គ្មាន",
       manageReceiversDesc: "បន្ថែម កែសម្រួល ឬលុបឈ្មោះអ្នកទទួលផ្ទាល់ខ្លួនដែលមាននៅក្នុងបញ្ជីទម្លាក់ចុះ។",
       newReceiverName: "ឈ្មោះអ្នកទទួលថ្មី",
+      documentLinks: "តំណភ្ជាប់ឯកសារ",
 
       // User Management
       userManagementDesc: "បន្ថែម កែសម្រួល ឬលុបអ្នកប្រើប្រាស់ និងគ្រប់គ្រងតួនាទី និងការអនុញ្ញាតរបស់ពួកគេ។",
@@ -510,6 +535,12 @@ const translations = {
       canOpenDocumentLink2: 'បើកឯកសារ (តំណទី 2)',
       canOpenDocumentLink3: 'បើកឯកសារ (តំណទី 3)',
       canOpenDocumentLink4: 'បើកឯកសារ (តំណទី 4)',
+      canOpenDocumentLink5: 'បើកឯកសារ (តំណទី 5)',
+      canOpenDocumentLink6: 'បើកឯកសារ (តំណទី 6)',
+      canOpenDocumentLink7: 'បើកឯកសារ (តំណទី 7)',
+      canOpenDocumentLink8: 'បើកឯកសារ (តំណទី 8)',
+      canOpenDocumentLink9: 'បើកឯកសារ (តំណទី 9)',
+      canOpenDocumentLink10: 'បើកឯកសារ (តំណទី 10)',
       canEditDocumentId: 'កែសម្រួលលេខសម្គាល់ឯកសារ (ចម្បង)',
       canEditDocumentName: 'កែសម្រួលខ្លឹមសារ',
       canEditDocumentType: 'កែសម្រួលប្រភេទឯកសារ',
@@ -522,6 +553,12 @@ const translations = {
       canEditDocumentLink2: 'កែសម្រួលតំណឯកសារទី ២',
       canEditDocumentLink3: 'កែសម្រួលតំណឯកសារទី ៣',
       canEditDocumentLink4: 'កែសម្រួលតំណឯកសារទី ៤',
+      canEditDocumentLink5: 'កែសម្រួលតំណឯកសារទី ៥',
+      canEditDocumentLink6: 'កែសម្រួលតំណឯកសារទី ៦',
+      canEditDocumentLink7: 'កែសម្រួលតំណឯកសារទី ៧',
+      canEditDocumentLink8: 'កែសម្រួលតំណឯកសារទី ៨',
+      canEditDocumentLink9: 'កែសម្រួលតំណឯកសារទី ៩',
+      canEditDocumentLink10: 'កែសម្រួលតំណឯកសារទី ១០',
       canEditKeywords: 'កែសម្រួលពាក្យគន្លឹះ',
       canEditTags: 'កែសម្រួលស្លាក',
       canEditInitialNote: 'កែសម្រួលកំណត់ចំណាំដំបូង',
@@ -560,34 +597,3 @@ export const languages = [
     { code: 'en', name: 'English' },
     { code: 'km', name: 'ភាសាខ្មែរ' }
 ];
-
-    
-
-
-
-
-
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-

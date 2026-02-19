@@ -1,5 +1,4 @@
 
-
 import type { Document, Log, User } from './types';
 
 // These keys are no longer used for localStorage but are kept for reference
@@ -86,6 +85,12 @@ export const PERMISSIONS_CONFIG: { [key: string]: string } = {
     canOpenDocumentLink2: 'Open Document (Link 2)',
     canOpenDocumentLink3: 'Open Document (Link 3)',
     canOpenDocumentLink4: 'Open Document (Link 4)',
+    canOpenDocumentLink5: 'Open Document (Link 5)',
+    canOpenDocumentLink6: 'Open Document (Link 6)',
+    canOpenDocumentLink7: 'Open Document (Link 7)',
+    canOpenDocumentLink8: 'Open Document (Link 8)',
+    canOpenDocumentLink9: 'Open Document (Link 9)',
+    canOpenDocumentLink10: 'Open Document (Link 10)',
     canEditDocumentId: 'Edit Document ID (Primary)',
     canEditDocumentName: 'Edit Document Name',
     canEditDocumentType: 'Edit Document Type',
@@ -98,6 +103,12 @@ export const PERMISSIONS_CONFIG: { [key: string]: string } = {
     canEditDocumentLink2: 'Edit Document Link 2',
     canEditDocumentLink3: 'Edit Document Link 3',
     canEditDocumentLink4: 'Edit Document Link 4',
+    canEditDocumentLink5: 'Edit Document Link 5',
+    canEditDocumentLink6: 'Edit Document Link 6',
+    canEditDocumentLink7: 'Edit Document Link 7',
+    canEditDocumentLink8: 'Edit Document Link 8',
+    canEditDocumentLink9: 'Edit Document Link 9',
+    canEditDocumentLink10: 'Edit Document Link 10',
     canEditKeywords: 'Edit Keywords',
     canEditTags: 'Edit Tags',
     canEditInitialNote: 'Edit Initial Note',

@@ -1,3 +1,4 @@
+
 'use client'
 import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
@@ -11,13 +12,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Link as LinkIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
 import { sanitizeFirebaseKey } from '@/lib/utils'
 import { hasPermission } from '@/lib/permissions'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -32,6 +39,12 @@ const formSchema = z.object({
   documentLink2: z.string().url().optional().or(z.literal('')),
   documentLink3: z.string().url().optional().or(z.literal('')),
   documentLink4: z.string().url().optional().or(z.literal('')),
+  documentLink5: z.string().url().optional().or(z.literal('')),
+  documentLink6: z.string().url().optional().or(z.literal('')),
+  documentLink7: z.string().url().optional().or(z.literal('')),
+  documentLink8: z.string().url().optional().or(z.literal('')),
+  documentLink9: z.string().url().optional().or(z.literal('')),
+  documentLink10: z.string().url().optional().or(z.literal('')),
   keywords: z.string().optional(),
   docTags: z.string().optional(),
   initialReceiver: z.string().min(1, 'Initial Receiver is required.'),
@@ -67,6 +80,12 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
       documentLink2: '',
       documentLink3: '',
       documentLink4: '',
+      documentLink5: '',
+      documentLink6: '',
+      documentLink7: '',
+      documentLink8: '',
+      documentLink9: '',
+      documentLink10: '',
       keywords: '',
       docTags: '',
       initialReceiver: '',
@@ -171,7 +190,11 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         secondaryId: values.secondaryId || null,
         tertiaryId: values.tertiaryId || null,
         quaternaryId: values.quaternaryId || null,
-        documentLink: [values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4].filter(Boolean) as string[],
+        documentLink: [
+            values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
+            values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
+            values.documentLink9, values.documentLink10
+        ].filter(Boolean) as string[],
         history: [{ department: initialDepartment, start: now, end: null, receiver: values.initialReceiver, note: values.initialNote || '' }],
         tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
         isDelayed: false,
@@ -306,12 +329,40 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                       )}
                     />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {hasPermission(currentUser, 'canEditDocumentLink1') && <FormField control={form.control} name="documentLink1" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docLink1')}</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink2') && <FormField control={form.control} name="documentLink2" render={({ field }) => ( <FormItem><FormLabel>{t('docLink2')}</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink3') && <FormField control={form.control} name="documentLink3" render={({ field }) => ( <FormItem><FormLabel>{t('docLink3')}</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentLink4') && <FormField control={form.control} name="documentLink4" render={({ field }) => ( <FormItem><FormLabel>{t('docLink4')}</FormLabel><FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                </div>
+
+                <Accordion type="single" collapsible className="w-full border rounded-md px-4">
+                  <AccordionItem value="links" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-2">
+                        <LinkIcon className="h-4 w-4 text-blue-600" />
+                        <span className="font-semibold text-blue-600">{t('documentLinks')}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                          const linkKey = `documentLink${num}` as keyof AddDocumentFormValues;
+                          const editPerm = `canEditDocumentLink${num}` as any;
+                          return hasPermission(currentUser, editPerm) && (
+                            <FormField 
+                              key={num}
+                              control={form.control} 
+                              name={linkKey} 
+                              render={({ field }) => ( 
+                                <FormItem>
+                                  <FormLabel style={num === 1 ? { color: '#1D41D5' } : undefined}>{t(`docLink${num}` as any)}</FormLabel>
+                                  <FormControl><Input type="url" placeholder="https://://" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem> 
+                              )} 
+                            />
+                          );
+                        })}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
                 {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel>{t('keywords')}</FormLabel><FormControl><Input placeholder={t('keywordsPlaceholder')} {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
