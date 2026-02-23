@@ -1,4 +1,3 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,9 +12,7 @@ import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
 import { useToast } from '@/hooks/use-toast'
 import { sanitizeFirebaseKey } from '@/lib/utils'
-import { useState } from 'react'
-import { Sparkles, Link as LinkIcon, Fingerprint } from 'lucide-react'
-import { suggestTagsAction } from '@/app/actions/ai'
+import { Link as LinkIcon, Fingerprint } from 'lucide-react'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
 import {
@@ -68,7 +65,6 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
   const docToUpdate = state.documents.find(d => d.id === docId)
   const { currentUser, documentTypes, assignedDepartments, labels } = state
   const { toast } = useToast()
-  const [isSuggesting, setIsSuggesting] = useState(false)
   const t = useTranslation()
 
   const form = useForm<EditDocumentFormValues>({
@@ -105,23 +101,6 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
   if (!docToUpdate) return null
   
-  const handleSuggestTags = async () => {
-    const docName = form.getValues('name')
-    if (!docName) {
-      form.setError('name', { message: 'Please enter a name first.' })
-      return
-    }
-    setIsSuggesting(true)
-    try {
-      const tags = await suggestTagsAction(docName)
-      form.setValue('docTags', tags.join(', '))
-    } catch (error) {
-      console.error('Failed to suggest tags', error)
-    } finally {
-      setIsSuggesting(false)
-    }
-  }
-
   const handleCreateAssignedDepartment = (deptName: string) => {
     if (currentUser?.role !== 'Admin') {
       toast({ title: "Permission Denied", description: "Only Admins can create new assigned departments.", variant: "destructive" });
@@ -486,12 +465,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                 {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
                     <FormLabel style={{ color: '#1D41D5' }}>{t('tagsLabel')}</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl><Input {...field} /></FormControl>
-                      <Button type="button" variant="outline" onClick={handleSuggestTags} disabled={isSuggesting}>
-                        <Sparkles className="mr-2 h-4 w-4" /> {isSuggesting ? t('suggesting') : t('suggest')}
-                      </Button>
-                    </div>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />}

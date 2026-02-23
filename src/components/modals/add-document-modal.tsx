@@ -1,4 +1,3 @@
-
 'use client'
 import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
@@ -11,8 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
-import { suggestTagsAction } from '@/app/actions/ai'
-import { Sparkles, Link as LinkIcon, Fingerprint } from 'lucide-react'
+import { Link as LinkIcon, Fingerprint } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
 import { sanitizeFirebaseKey } from '@/lib/utils'
@@ -67,7 +65,6 @@ interface AddDocumentModalProps {
 export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalProps) {
   const { state, dispatch } = useAppContext()
   const { currentUser, documentTypes, assignedDepartments, departments, labels, users, receivers } = state
-  const [isSuggesting, setIsSuggesting] = useState(false)
   const { toast } = useToast()
   const t = useTranslation()
 
@@ -104,23 +101,6 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
       initialNote: '',
     },
   })
-  
-  const handleSuggestTags = async () => {
-    const docName = form.getValues('name')
-    if (!docName) {
-      form.setError('name', { message: 'Please enter a name first.' })
-      return
-    }
-    setIsSuggesting(true)
-    try {
-      const tags = await suggestTagsAction(docName)
-      form.setValue('docTags', tags.join(', '))
-    } catch (error) {
-      console.error('Failed to suggest tags', error)
-    } finally {
-      setIsSuggesting(false)
-    }
-  }
 
   const handleCreateAssignedDepartment = (deptName: string) => {
     if (currentUser?.role !== 'Admin') {
@@ -436,12 +416,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                 {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                   <FormItem>
                     <FormLabel style={{ color: '#1D41D5' }}>{t('tagsLabel')}</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl><Input {...field} /></FormControl>
-                      <Button type="button" variant="outline" onClick={handleSuggestTags} disabled={isSuggesting}>
-                        <Sparkles className="mr-2 h-4 w-4" /> {isSuggesting ? t('suggesting') : t('suggest')}
-                      </Button>
-                    </div>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />}
