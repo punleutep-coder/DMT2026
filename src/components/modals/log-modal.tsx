@@ -1,4 +1,3 @@
-
 'use client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -85,7 +84,13 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                              <div className="flex flex-wrap gap-2 mt-2">
                                 {sourceDoc.secondaryId && <Badge variant="secondary">{sourceDoc.secondaryId}</Badge>}
                                 {sourceDoc.tertiaryId && <Badge variant="secondary">{sourceDoc.tertiaryId}</Badge>}
+                                {sourceDoc.quaternaryId && <Badge variant="secondary">{sourceDoc.quaternaryId}</Badge>}
                                 {sourceDoc.quinaryId && <Badge variant="secondary">{sourceDoc.quinaryId}</Badge>}
+                                {sourceDoc.senaryId && <Badge variant="secondary">{sourceDoc.senaryId}</Badge>}
+                                {sourceDoc.septenaryId && <Badge variant="secondary">{sourceDoc.septenaryId}</Badge>}
+                                {sourceDoc.octonaryId && <Badge variant="secondary">{sourceDoc.octonaryId}</Badge>}
+                                {sourceDoc.nonaryId && <Badge variant="secondary">{sourceDoc.nonaryId}</Badge>}
+                                {sourceDoc.denaryId && <Badge variant="secondary">{sourceDoc.denaryId}</Badge>}
                              </div>
                            </div>
                             {sourceDoc.documentLink && sourceDoc.documentLink.length > 0 && (
@@ -117,6 +122,13 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {splitSourceDocument.secondaryId && <Badge variant="secondary">{splitSourceDocument.secondaryId}</Badge>}
                                 {splitSourceDocument.tertiaryId && <Badge variant="secondary">{splitSourceDocument.tertiaryId}</Badge>}
+                                {splitSourceDocument.quaternaryId && <Badge variant="secondary">{splitSourceDocument.quaternaryId}</Badge>}
+                                {splitSourceDocument.quinaryId && <Badge variant="secondary">{splitSourceDocument.quinaryId}</Badge>}
+                                {splitSourceDocument.senaryId && <Badge variant="secondary">{splitSourceDocument.senaryId}</Badge>}
+                                {splitSourceDocument.septenaryId && <Badge variant="secondary">{splitSourceDocument.septenaryId}</Badge>}
+                                {splitSourceDocument.octonaryId && <Badge variant="secondary">{splitSourceDocument.octonaryId}</Badge>}
+                                {splitSourceDocument.nonaryId && <Badge variant="secondary">{splitSourceDocument.nonaryId}</Badge>}
+                                {splitSourceDocument.denaryId && <Badge variant="secondary">{splitSourceDocument.denaryId}</Badge>}
                               </div>
                           </div>
                           <Button variant="ghost" size="icon" onClick={() => handleSplitAgain(splitSourceDocument)} title="Split Again">

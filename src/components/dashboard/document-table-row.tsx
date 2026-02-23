@@ -1,4 +1,3 @@
-
 'use client'
 
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -165,11 +164,16 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       )}
       {columnVisibility.documentId && (
         <TableCell>
-            <div className="text-foreground font-bold">{doc.id}</div>
+            <div className="text-foreground">{doc.id}</div>
             {doc.secondaryId && <div className="text-xs text-muted-foreground">Sec: {doc.secondaryId}</div>}
             {doc.tertiaryId && <div className="text-xs text-muted-foreground">Ter: {doc.tertiaryId}</div>}
             {doc.quaternaryId && <div className="text-xs text-muted-foreground">Qua: {doc.quaternaryId}</div>}
             {doc.quinaryId && <div className="text-xs text-muted-foreground">Qui: {doc.quinaryId}</div>}
+            {doc.senaryId && <div className="text-xs text-muted-foreground">Sen: {doc.senaryId}</div>}
+            {doc.septenaryId && <div className="text-xs text-muted-foreground">Sep: {doc.septenaryId}</div>}
+            {doc.octonaryId && <div className="text-xs text-muted-foreground">Oct: {doc.octonaryId}</div>}
+            {doc.nonaryId && <div className="text-xs text-muted-foreground">Non: {doc.nonaryId}</div>}
+            {doc.denaryId && <div className="text-xs text-muted-foreground">Den: {doc.denaryId}</div>}
             <div className="flex flex-wrap gap-1 mt-2">
                 {Array.isArray(doc.tags) && doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs whitespace-nowrap">{tag}</Badge>)}
             </div>
