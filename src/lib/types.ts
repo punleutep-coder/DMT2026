@@ -25,6 +25,12 @@ export interface Document {
   secondaryId: string | null;
   tertiaryId: string | null;
   quaternaryId: string | null;
+  quinaryId?: string | null;
+  senaryId?: string | null;
+  septenaryId?: string | null;
+  octonaryId?: string | null;
+  nonaryId?: string | null;
+  denaryId?: string | null;
   documentLink: string[];
   history: HistoryEntry[];
   tags: string[];

@@ -89,7 +89,12 @@ const permissionGroups = {
   dashboardPermissions: [ 'canViewMetrics', 'canViewWorkflowChart' ],
   generalDocPermissions: [ 'canAddDocument', 'canCombineDocuments', 'canSplitDocument', 'canDeleteDocument', 'canViewLog', 'canExportData', 'canManageColumns', 'canViewCompleted' ],
   docActionPermissions: [ 'canMoveDocumentAdvance', 'canMoveDocumentBack', 'canCompleteDocument', 'canDelayDocument', 'canReleaseDocument', 'canEditCurrentNote' ],
-  docFieldEditPermissions: [ 'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditLabel', 'canEditAssignedDepartment', 'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 'canEditKeywords', 'canEditTags', 'canEditInitialNote' ],
+  docFieldEditPermissions: [ 
+    'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditLabel', 'canEditAssignedDepartment', 
+    'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 'canEditQuinaryId', 'canEditSenaryId',
+    'canEditSeptenaryId', 'canEditOctonaryId', 'canEditNonaryId', 'canEditDenaryId',
+    'canEditKeywords', 'canEditTags', 'canEditInitialNote' 
+  ],
   docLinkPermissions: [ 
     'canOpenDocumentLink1', 'canOpenDocumentLink2', 'canOpenDocumentLink3', 'canOpenDocumentLink4', 'canOpenDocumentLink5', 'canOpenDocumentLink6', 'canOpenDocumentLink7', 'canOpenDocumentLink8', 'canOpenDocumentLink9', 'canOpenDocumentLink10',
     'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4', 'canEditDocumentLink5', 'canEditDocumentLink6', 'canEditDocumentLink7', 'canEditDocumentLink8', 'canEditDocumentLink9', 'canEditDocumentLink10'

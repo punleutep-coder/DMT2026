@@ -134,7 +134,6 @@ export default function CombineDocumentsModal({
     const allKeywords = new Set<string>()
     const allLinks = new Set<string>()
     const allNames = new Set<string>()
-    const allInfo = new Set<string>()
 
     docsToCombine.forEach(doc => {
       // Aggregate tags, links, and names
@@ -151,6 +150,12 @@ export default function CombineDocumentsModal({
         doc.secondaryId,
         doc.tertiaryId,
         doc.quaternaryId,
+        doc.quinaryId,
+        doc.senaryId,
+        doc.septenaryId,
+        doc.octonaryId,
+        doc.nonaryId,
+        doc.denaryId,
       ];
 
       fieldsToAggregate.forEach(field => {
@@ -173,6 +178,12 @@ export default function CombineDocumentsModal({
       secondaryId: null,
       tertiaryId: null,
       quaternaryId: null,
+      quinaryId: null,
+      senaryId: null,
+      septenaryId: null,
+      octonaryId: null,
+      nonaryId: null,
+      denaryId: null,
       documentLink: Array.from(allLinks),
       history: [
         {

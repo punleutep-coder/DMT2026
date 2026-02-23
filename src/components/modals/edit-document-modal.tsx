@@ -14,7 +14,7 @@ import { hasPermission } from '@/lib/permissions'
 import { useToast } from '@/hooks/use-toast'
 import { sanitizeFirebaseKey } from '@/lib/utils'
 import { useState } from 'react'
-import { Sparkles, Link as LinkIcon } from 'lucide-react'
+import { Sparkles, Link as LinkIcon, Fingerprint } from 'lucide-react'
 import { suggestTagsAction } from '@/app/actions/ai'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
@@ -33,6 +33,12 @@ const formSchema = z.object({
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
+  quinaryId: z.string().optional(),
+  senaryId: z.string().optional(),
+  septenaryId: z.string().optional(),
+  octonaryId: z.string().optional(),
+  nonaryId: z.string().optional(),
+  denaryId: z.string().optional(),
   documentLink1: z.string().url().optional().or(z.literal('')),
   documentLink2: z.string().url().optional().or(z.literal('')),
   documentLink3: z.string().url().optional().or(z.literal('')),
@@ -75,6 +81,12 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
       secondaryId: docToUpdate?.secondaryId || '',
       tertiaryId: docToUpdate?.tertiaryId || '',
       quaternaryId: docToUpdate?.quaternaryId || '',
+      quinaryId: docToUpdate?.quinaryId || '',
+      senaryId: docToUpdate?.senaryId || '',
+      septenaryId: docToUpdate?.septenaryId || '',
+      octonaryId: docToUpdate?.octonaryId || '',
+      nonaryId: docToUpdate?.nonaryId || '',
+      denaryId: docToUpdate?.denaryId || '',
       documentLink1: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[0] || '' : '',
       documentLink2: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[1] || '' : '',
       documentLink3: Array.isArray(docToUpdate?.documentLink) ? docToUpdate?.documentLink[2] || '' : '',
@@ -160,6 +172,12 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             secondaryId: values.secondaryId || null,
             tertiaryId: values.tertiaryId || null,
             quaternaryId: values.quaternaryId || null,
+            quinaryId: values.quinaryId || null,
+            senaryId: values.senaryId || null,
+            septenaryId: values.septenaryId || null,
+            octonaryId: values.octonaryId || null,
+            nonaryId: values.nonaryId || null,
+            denaryId: values.denaryId || null,
             documentLink: [
                 values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
                 values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
@@ -224,6 +242,30 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             updatedFields.quaternaryId = values.quaternaryId || null;
             compareAndPush('Quaternary ID', docToUpdate.quaternaryId, values.quaternaryId);
         }
+        if (hasPermission(currentUser, 'canEditQuinaryId') && values.quinaryId !== (docToUpdate.quinaryId || '')) {
+            updatedFields.quinaryId = values.quinaryId || null;
+            compareAndPush('Quinary ID', docToUpdate.quinaryId, values.quinaryId);
+        }
+        if (hasPermission(currentUser, 'canEditSenaryId') && values.senaryId !== (docToUpdate.senaryId || '')) {
+            updatedFields.senaryId = values.senaryId || null;
+            compareAndPush('Senary ID', docToUpdate.senaryId, values.senaryId);
+        }
+        if (hasPermission(currentUser, 'canEditSeptenaryId') && values.septenaryId !== (docToUpdate.septenaryId || '')) {
+            updatedFields.septenaryId = values.septenaryId || null;
+            compareAndPush('Septenary ID', docToUpdate.septenaryId, values.septenaryId);
+        }
+        if (hasPermission(currentUser, 'canEditOctonaryId') && values.octonaryId !== (docToUpdate.octonaryId || '')) {
+            updatedFields.octonaryId = values.octonaryId || null;
+            compareAndPush('Octonary ID', docToUpdate.octonaryId, values.octonaryId);
+        }
+        if (hasPermission(currentUser, 'canEditNonaryId') && values.nonaryId !== (docToUpdate.nonaryId || '')) {
+            updatedFields.nonaryId = values.nonaryId || null;
+            compareAndPush('Nonary ID', docToUpdate.nonaryId, values.nonaryId);
+        }
+        if (hasPermission(currentUser, 'canEditDenaryId') && values.denaryId !== (docToUpdate.denaryId || '')) {
+            updatedFields.denaryId = values.denaryId || null;
+            compareAndPush('Denary ID', docToUpdate.denaryId, values.denaryId);
+        }
          if (hasPermission(currentUser, 'canEditKeywords') && values.keywords !== (docToUpdate.keywords || '')) {
             updatedFields.keywords = values.keywords || '';
             compareAndPush('Keywords', docToUpdate.keywords, values.keywords);
@@ -287,6 +329,48 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
               <div className="space-y-4">
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                 {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docName')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                
+                <Accordion type="single" collapsible className="w-full border rounded-md px-4">
+                  <AccordionItem value="extra-ids" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-2">
+                        <Fingerprint className="h-4 w-4 text-emerald-600" />
+                        <span className="font-semibold text-emerald-600">{t('documentExtraIds')}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { name: 'secondaryId', perm: 'canEditSecondaryId' },
+                          { name: 'tertiaryId', perm: 'canEditTertiaryId' },
+                          { name: 'quaternaryId', perm: 'canEditQuaternaryId' },
+                          { name: 'quinaryId', perm: 'canEditQuinaryId' },
+                          { name: 'senaryId', perm: 'canEditSenaryId' },
+                          { name: 'septenaryId', perm: 'canEditSeptenaryId' },
+                          { name: 'octonaryId', perm: 'canEditOctonaryId' },
+                          { name: 'nonaryId', perm: 'canEditNonaryId' },
+                          { name: 'denaryId', perm: 'canEditDenaryId' },
+                        ].map((extraId) => (
+                          hasPermission(currentUser, extraId.perm as any) && (
+                            <FormField 
+                              key={extraId.name}
+                              control={form.control} 
+                              name={extraId.name as any} 
+                              render={({ field }) => ( 
+                                <FormItem>
+                                  <FormLabel>{t(extraId.name as any)}</FormLabel>
+                                  <FormControl><Input {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem> 
+                              )} 
+                            />
+                          )
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
                 {hasPermission(currentUser, 'canEditDocumentType') && (
                   <FormField
                     control={form.control}
@@ -350,12 +434,6 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                   />
                 )}
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>{t('secondaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>{t('tertiaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>{t('quaternaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                </div>
-
                 <Accordion type="single" collapsible className="w-full border rounded-md px-4">
                   <AccordionItem value="links" className="border-b-0">
                     <AccordionTrigger className="hover:no-underline py-3">

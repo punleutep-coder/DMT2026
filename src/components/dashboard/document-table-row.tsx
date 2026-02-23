@@ -146,6 +146,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   const editPermissions = [
       'canEditDocumentId', 'canEditDocumentName', 'canEditDocumentType', 'canEditLabel', 
       'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 
+      'canEditQuinaryId', 'canEditSenaryId', 'canEditSeptenaryId', 'canEditOctonaryId', 'canEditNonaryId', 'canEditDenaryId',
       'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4', 
       'canEditAssignedDepartment'
   ];
@@ -164,10 +165,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       )}
       {columnVisibility.documentId && (
         <TableCell>
-            <div className="text-foreground">{doc.id}</div>
+            <div className="text-foreground font-bold">{doc.id}</div>
             {doc.secondaryId && <div className="text-xs text-muted-foreground">Sec: {doc.secondaryId}</div>}
             {doc.tertiaryId && <div className="text-xs text-muted-foreground">Ter: {doc.tertiaryId}</div>}
             {doc.quaternaryId && <div className="text-xs text-muted-foreground">Qua: {doc.quaternaryId}</div>}
+            {doc.quinaryId && <div className="text-xs text-muted-foreground">Qui: {doc.quinaryId}</div>}
             <div className="flex flex-wrap gap-1 mt-2">
                 {Array.isArray(doc.tags) && doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs whitespace-nowrap">{tag}</Badge>)}
             </div>

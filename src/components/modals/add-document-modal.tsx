@@ -1,3 +1,4 @@
+
 'use client'
 import { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
@@ -11,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { suggestTagsAction } from '@/app/actions/ai'
-import { Sparkles, Link as LinkIcon } from 'lucide-react'
+import { Sparkles, Link as LinkIcon, Fingerprint } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
 import { sanitizeFirebaseKey } from '@/lib/utils'
@@ -32,6 +33,12 @@ const formSchema = z.object({
   secondaryId: z.string().optional(),
   tertiaryId: z.string().optional(),
   quaternaryId: z.string().optional(),
+  quinaryId: z.string().optional(),
+  senaryId: z.string().optional(),
+  septenaryId: z.string().optional(),
+  octonaryId: z.string().optional(),
+  nonaryId: z.string().optional(),
+  denaryId: z.string().optional(),
   assignedDepartment: z.string().optional(),
   label: z.string().optional(),
   documentLink1: z.string().url().optional().or(z.literal('')),
@@ -73,6 +80,12 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
       secondaryId: '',
       tertiaryId: '',
       quaternaryId: '',
+      quinaryId: '',
+      senaryId: '',
+      septenaryId: '',
+      octonaryId: '',
+      nonaryId: '',
+      denaryId: '',
       assignedDepartment: '',
       label: '',
       documentLink1: '',
@@ -189,6 +202,12 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         secondaryId: values.secondaryId || null,
         tertiaryId: values.tertiaryId || null,
         quaternaryId: values.quaternaryId || null,
+        quinaryId: values.quinaryId || null,
+        senaryId: values.senaryId || null,
+        septenaryId: values.septenaryId || null,
+        octonaryId: values.octonaryId || null,
+        nonaryId: values.nonaryId || null,
+        denaryId: values.denaryId || null,
         documentLink: [
             values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
             values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
@@ -254,6 +273,48 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                   />
                 }
                 {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel style={{ color: '#1D41D5' }}>{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
+                
+                <Accordion type="single" collapsible className="w-full border rounded-md px-4">
+                  <AccordionItem value="extra-ids" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-2">
+                        <Fingerprint className="h-4 w-4 text-emerald-600" />
+                        <span className="font-semibold text-emerald-600">{t('documentExtraIds')}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { name: 'secondaryId', perm: 'canEditSecondaryId' },
+                          { name: 'tertiaryId', perm: 'canEditTertiaryId' },
+                          { name: 'quaternaryId', perm: 'canEditQuaternaryId' },
+                          { name: 'quinaryId', perm: 'canEditQuinaryId' },
+                          { name: 'senaryId', perm: 'canEditSenaryId' },
+                          { name: 'septenaryId', perm: 'canEditSeptenaryId' },
+                          { name: 'octonaryId', perm: 'canEditOctonaryId' },
+                          { name: 'nonaryId', perm: 'canEditNonaryId' },
+                          { name: 'denaryId', perm: 'canEditDenaryId' },
+                        ].map((extraId) => (
+                          hasPermission(currentUser, extraId.perm as any) && (
+                            <FormField 
+                              key={extraId.name}
+                              control={form.control} 
+                              name={extraId.name as any} 
+                              render={({ field }) => ( 
+                                <FormItem>
+                                  <FormLabel>{t(extraId.name as any)}</FormLabel>
+                                  <FormControl><Input {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem> 
+                              )} 
+                            />
+                          )
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {hasPermission(currentUser, 'canEditDocumentType') && (
                       <FormField
@@ -275,9 +336,6 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                           )}
                         />
                     )}
-                    {hasPermission(currentUser, 'canEditSecondaryId') && <FormField control={form.control} name="secondaryId" render={({ field }) => ( <FormItem><FormLabel>{t('secondaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditTertiaryId') && <FormField control={form.control} name="tertiaryId" render={({ field }) => ( <FormItem><FormLabel>{t('tertiaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditQuaternaryId') && <FormField control={form.control} name="quaternaryId" render={({ field }) => ( <FormItem><FormLabel>{t('quaternaryId')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditAssignedDepartment') && (
                       <FormField
                         control={form.control}

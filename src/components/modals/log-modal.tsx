@@ -1,3 +1,4 @@
+
 'use client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -81,7 +82,11 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                                <span style={{color: '#0000E2'}}>{sourceDoc.id}</span> - {sourceDoc.name}
                              </h4>
                              <p className="text-sm text-foreground">{t('department')}: {sourceDoc.assignedDepartment}</p>
-                             {sourceDoc.secondaryId && <p className="text-sm text-foreground mt-2 inline-block bg-background/50 px-2 py-1 rounded">{sourceDoc.secondaryId}</p>}
+                             <div className="flex flex-wrap gap-2 mt-2">
+                                {sourceDoc.secondaryId && <Badge variant="secondary">{sourceDoc.secondaryId}</Badge>}
+                                {sourceDoc.tertiaryId && <Badge variant="secondary">{sourceDoc.tertiaryId}</Badge>}
+                                {sourceDoc.quinaryId && <Badge variant="secondary">{sourceDoc.quinaryId}</Badge>}
+                             </div>
                            </div>
                             {sourceDoc.documentLink && sourceDoc.documentLink.length > 0 && (
                               <div className="mt-2 self-end">

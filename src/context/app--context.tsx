@@ -446,7 +446,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       docs = docs.filter(doc => {
           const fieldsToSearch = [
             doc.id, doc.name, doc.documentType, doc.label, doc.secondaryId,
-            doc.tertiaryId, doc.quaternaryId, doc.assignedDepartment, doc.keywords,
+            doc.tertiaryId, doc.quaternaryId, doc.quinaryId, doc.senaryId,
+            doc.septenaryId, doc.octonaryId, doc.nonaryId, doc.denaryId,
+            doc.assignedDepartment, doc.keywords,
             ...(doc.tags || [])
           ];
           const historyText = (doc.history || []).map(h => `${h.receiver} ${h.note}`).join(' ');
@@ -542,7 +544,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       metricDocs = metricDocs.filter(doc => {
           const fieldsToSearch = [
             doc.id, doc.name, doc.documentType, doc.label, doc.secondaryId,
-            doc.tertiaryId, doc.quaternaryId, doc.assignedDepartment, doc.keywords,
+            doc.tertiaryId, doc.quaternaryId, doc.quinaryId, doc.senaryId,
+            doc.septenaryId, doc.octonaryId, doc.nonaryId, doc.denaryId,
+            doc.assignedDepartment, doc.keywords,
             ...(doc.tags || [])
           ];
           const historyText = (doc.history || []).map(h => `${h.receiver} ${h.note}`).join(' ');
