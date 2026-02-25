@@ -58,7 +58,10 @@ const MetricCard = ({
       <CardContent className="p-5 flex flex-col h-full justify-between">
         <div className="flex items-start justify-between mb-4">
           <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+            <p 
+              className="text-sm font-bold uppercase tracking-wide text-[#000099]"
+              style={{ fontFamily: "'Khmer OS Battambang', serif" }}
+            >
               {title}
             </p>
             <h3 className={cn("text-3xl font-black tabular-nums", colors.text)}>
