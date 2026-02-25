@@ -1,7 +1,6 @@
-
 'use client'
 import { useAppContext } from '@/hooks/use-app-context'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { 
   FileStack, 
   Activity, 
@@ -20,15 +19,13 @@ const MetricCard = ({
   value, 
   filter, 
   icon: Icon, 
-  valueColorClass = 'text-[#000066]',
-  accentColorClass = 'bg-primary'
+  baseColor = 'blue'
 }: { 
   title: string; 
   value: number | string; 
   filter: string; 
   icon: any; 
-  valueColorClass?: string;
-  accentColorClass?: string;
+  baseColor: 'blue' | 'teal' | 'amber' | 'red' | 'green' | 'emerald' | 'rose' | 'orange';
 }) => {
   const { state, dispatch } = useAppContext()
   const isActive = state.filter.mainFilter === filter
@@ -37,26 +34,59 @@ const MetricCard = ({
     dispatch({ type: 'SET_FILTER', payload: { mainFilter: filter, departmentSpecificFilter: 'All' } })
   }
 
+  const colorMap = {
+    blue: { text: 'text-[#000066]', bg: 'bg-[#000066]/10', accent: 'bg-[#000066]' },
+    teal: { text: 'text-teal-600', bg: 'bg-teal-600/10', accent: 'bg-teal-600' },
+    amber: { text: 'text-amber-600', bg: 'bg-amber-600/10', accent: 'bg-amber-600' },
+    red: { text: 'text-red-600', bg: 'bg-red-600/10', accent: 'bg-red-600' },
+    green: { text: 'text-green-600', bg: 'bg-green-600/10', accent: 'bg-green-600' },
+    emerald: { text: 'text-emerald-600', bg: 'bg-emerald-600/10', accent: 'bg-emerald-600' },
+    rose: { text: 'text-rose-600', bg: 'bg-rose-600/10', accent: 'bg-rose-600' },
+    orange: { text: 'text-orange-600', bg: 'bg-orange-600/10', accent: 'bg-orange-600' },
+  };
+
+  const colors = colorMap[baseColor];
+
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group",
+        "dashboard-metric-box relative overflow-hidden group border-none transition-all duration-500",
         isActive && "active"
       )}
       onClick={handleClick}
     >
-      <div className={cn("absolute top-0 left-0 w-1 h-full", accentColorClass)} />
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-          {title}
-        </CardTitle>
-        <div className={cn("p-2 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300", valueColorClass.replace('text-', 'text-'))}>
-           <Icon className={cn("h-4 w-4", valueColorClass)} />
+      <CardContent className="p-5 flex flex-col h-full justify-between">
+        <div className="flex items-start justify-between mb-4">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+              {title}
+            </p>
+            <h3 className={cn("text-3xl font-black tabular-nums", colors.text)}>
+              {value}
+            </h3>
+          </div>
+          <div className={cn(
+            "p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            colors.bg
+          )}>
+            <Icon className={cn("h-6 w-6", colors.text)} />
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className={cn("text-3xl font-black tracking-tight", valueColorClass)}>{value}</div>
+        
+        {/* Decorative Progress Bar */}
+        <div className="w-full h-1.5 bg-black/5 rounded-full overflow-hidden mt-auto">
+          <div 
+            className={cn("h-full transition-all duration-1000 ease-in-out", colors.accent)} 
+            style={{ width: isActive ? '100%' : '30%' }}
+          />
+        </div>
       </CardContent>
+      
+      {/* Background Glow */}
+      <div className={cn(
+        "absolute -bottom-12 -right-12 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-full",
+        colors.accent
+      )} />
     </Card>
   )
 }
@@ -71,70 +101,62 @@ export default function Metrics() {
       filter: 'All', 
       metric: metrics.total, 
       icon: FileStack,
-      valueColorClass: 'text-[#000066]',
-      accentColorClass: 'bg-[#000066]'
+      baseColor: 'blue' as const
     },
     { 
       title: t('inProgress'), 
       filter: 'In Progress', 
       metric: metrics.inProgress, 
       icon: Activity,
-      valueColorClass: 'text-teal-600',
-      accentColorClass: 'bg-teal-600'
+      baseColor: 'teal' as const
     },
     { 
       title: t('delayed'), 
       filter: 'Delayed', 
       metric: metrics.delayed, 
       icon: Clock,
-      valueColorClass: 'text-amber-600',
-      accentColorClass: 'bg-amber-600'
+      baseColor: 'amber' as const
     },
     { 
       title: t('releaseDateReached'), 
       filter: 'Release Date Reached', 
       metric: metrics.releaseReached, 
       icon: AlertCircle,
-      valueColorClass: 'text-red-600',
-      accentColorClass: 'bg-red-600'
+      baseColor: 'red' as const
     },
     { 
       title: t('completed'), 
       filter: 'Completed', 
       metric: metrics.completed, 
       icon: CheckCircle2,
-      valueColorClass: 'text-green-600',
-      accentColorClass: 'bg-green-600'
+      baseColor: 'green' as const
     },
     { 
       title: t('completedSuccess'), 
       filter: 'Completed (Success)', 
       metric: metrics.completedSuccess, 
       icon: ShieldCheck,
-      valueColorClass: 'text-emerald-600',
-      accentColorClass: 'bg-emerald-600'
+      baseColor: 'emerald' as const
     },
     { 
       title: t('completedUnsuccess'), 
       filter: 'Completed (Unsuccess)', 
       metric: metrics.completedUnsuccess, 
       icon: ShieldAlert,
-      valueColorClass: 'text-rose-600',
-      accentColorClass: 'bg-rose-600'
+      baseColor: 'rose' as const
     },
     { 
       title: t('exceedingPeriod'), 
       filter: 'Exceeding Period', 
       metric: metrics.exceeding, 
       icon: Timer,
-      valueColorClass: 'text-orange-600',
-      accentColorClass: 'bg-orange-600'
+      baseColor: 'orange' as const
     },
   ]
 
   return (
     <section>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}
@@ -142,8 +164,7 @@ export default function Metrics() {
             value={item.metric}
             filter={item.filter}
             icon={item.icon}
-            valueColorClass={item.valueColorClass}
-            accentColorClass={item.accentColorClass}
+            baseColor={item.baseColor}
           />
         ))}
       </div>
