@@ -50,7 +50,7 @@ const MetricCard = ({
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group border-none transition-all duration-500",
+        "dashboard-metric-box relative overflow-hidden group border border-gray-300 transition-all duration-500",
         isActive && "active"
       )}
       onClick={handleClick}
