@@ -72,17 +72,19 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
         style={{ background: '#EEDCB4', border: '1px solid rgba(255, 255, 255, 0.3)' }}
         >
         <DialogHeader className="p-6 pb-4 border-b bg-white/20 backdrop-blur-md">
-          <div className="flex items-center gap-3 mb-1">
-            <History className="h-6 w-6 text-[#000099]" />
-            <DialogTitle className="text-2xl font-bold tracking-tight" style={{ color: '#000099' }}>
-                {t('documentHistory')}
-            </DialogTitle>
-          </div>
-          <div className="flex flex-wrap items-start gap-2 mt-2">
-            <Badge className="bg-[#FF6600] text-white hover:bg-[#FF6600]/90 text-sm px-3 py-1 font-bold shadow-sm shrink-0 mt-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
+            <div className="flex items-center gap-3">
+              <History className="h-6 w-6 text-[#000099]" />
+              <DialogTitle className="text-2xl font-bold tracking-tight" style={{ color: '#000099' }}>
+                  {t('documentHistory')}
+              </DialogTitle>
+            </div>
+            <Badge className="bg-[#FF6600] text-white hover:bg-[#FF6600]/90 text-sm px-3 py-1 font-bold shadow-sm">
                 {document?.id}
             </Badge>
-            <span className="text-lg font-medium text-foreground/80 flex-1 leading-tight">
+          </div>
+          <div className="mt-1">
+            <span className="text-lg font-medium text-foreground/80 leading-relaxed block">
                 {document?.name}
             </span>
           </div>
