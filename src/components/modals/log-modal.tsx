@@ -78,11 +78,11 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                 {t('documentHistory')}
             </DialogTitle>
           </div>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <Badge className="bg-[#FF6600] text-white hover:bg-[#FF6600]/90 text-sm px-3 py-1 font-bold shadow-sm">
+          <div className="flex flex-wrap items-start gap-2 mt-2">
+            <Badge className="bg-[#FF6600] text-white hover:bg-[#FF6600]/90 text-sm px-3 py-1 font-bold shadow-sm shrink-0 mt-1">
                 {document?.id}
             </Badge>
-            <span className="text-lg font-medium text-foreground/80 line-clamp-1">
+            <span className="text-lg font-medium text-foreground/80 flex-1 leading-tight">
                 {document?.name}
             </span>
           </div>
