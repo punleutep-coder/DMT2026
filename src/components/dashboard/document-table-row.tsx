@@ -20,6 +20,7 @@ import {
   Split,
   MoreVertical,
   Combine,
+  ExternalLink,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { format } from 'date-fns'
@@ -147,6 +148,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       'canEditSecondaryId', 'canEditTertiaryId', 'canEditQuaternaryId', 
       'canEditQuinaryId', 'canEditSenaryId', 'canEditSeptenaryId', 'canEditOctonaryId', 'canEditNonaryId', 'canEditDenaryId',
       'canEditDocumentLink1', 'canEditDocumentLink2', 'canEditDocumentLink3', 'canEditDocumentLink4', 
+      'canEditDocumentLink5', 'canEditDocumentLink6', 'canEditDocumentLink7', 'canEditDocumentLink8', 'canEditDocumentLink9', 'canEditDocumentLink10',
       'canEditAssignedDepartment'
   ];
   const canEditDetails = editPermissions.some(p => hasPermission(currentUser, p as any));
@@ -183,10 +185,27 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         <TableCell className="text-foreground">{doc.assignedDepartment || 'N/A'}</TableCell>
       )}
       {columnVisibility.name && <TableCell className="text-foreground">
-        <div className="flex items-center gap-2">
-            {isCombined && <Combine className="h-20 w-20 text-blue-500" title="Combined Document" />}
-            {isSplit && <Split className="h-20 w-20 text-purple-500" title="Split Document" />}
-            <span>{doc.name}</span>
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+                {isCombined && <Combine className="h-20 w-20 text-blue-500" title="Combined Document" />}
+                {isSplit && <Split className="h-20 w-20 text-purple-500" title="Split Document" />}
+                <span className="font-medium">{doc.name}</span>
+            </div>
+            {/* Quick Access Links below name */}
+            {Array.isArray(doc.documentLink) && doc.documentLink.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                    {doc.documentLink.map((link, i) => (
+                        hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ? (
+                            <a key={i} href={link} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] gap-1 bg-blue-50/50 border-blue-200 hover:bg-blue-100 hover:border-blue-300">
+                                    <ExternalLink className="h-3 w-3" />
+                                    {t(`docLink${i + 1}` as any, { defaultValue: `Link ${i+1}` })}
+                                </Button>
+                            </a>
+                        ) : null
+                    ))}
+                </div>
+            )}
         </div>
       </TableCell>}
       {columnVisibility.documentType && (
@@ -216,21 +235,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     {hasPermission(currentUser, 'canViewLog') && (
-                        <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)} className="text-blue-600">
+                        <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)} className="text-blue-600 font-semibold">
                             <FileText className="mr-2 h-4 w-4" />{t('viewLog')}
                         </DropdownMenuItem>
                     )}
                     
-                    {Array.isArray(doc.documentLink) && doc.documentLink.map((link, i) => (
-                        hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ?
-                        <DropdownMenuItem key={i} asChild>
-                            <a href={link} target="_blank" rel="noopener noreferrer">
-                                <FileSymlink className="mr-2 h-4 w-4"/>
-                                {t(`docLink${i + 1}` as any, { defaultValue: `Open Link ${i+1}` })}
-                            </a>
-                        </DropdownMenuItem> : null
-                    ))}
-
                     {!isTerminal && canEditDetails && (
                         <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)} className="text-green-800">
                             <Pencil className="mr-2 h-4 w-4" />{t('editDetails')}

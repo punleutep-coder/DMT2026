@@ -6,8 +6,9 @@ import { format } from 'date-fns'
 import type { Document } from '@/lib/types'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { Split, Link } from 'lucide-react'
+import { Split, Link, ExternalLink } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
+import { hasPermission } from '@/lib/permissions'
 
 interface LogModalProps {
   isOpen: boolean
@@ -34,6 +35,7 @@ const formatDuration = (start: string, end: string | null) => {
 export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogModalProps) {
   const { state, dispatch } = useAppContext()
   const t = useTranslation()
+  const { currentUser } = state;
   const docLogs = state.logs.filter(log => log.docId === docId).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   const document = state.documents.find(doc => doc.id === docId)
 
@@ -63,13 +65,36 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-3xl"
+        className="max-w-4xl"
         style={{ background: '#EEDCB4', borderColor: 'rgba(255, 255, 255, 0.2)' }}
         >
         <DialogHeader className="pb-4 border-b">
           <DialogTitle className="leading-relaxed" style={{ color: '#000099', textShadow: '1px 1px 2px rgba(0,0,0,0.2)' }}>{t('documentHistory')} <span style={{ color: '#FF6600' }}>{document?.id}</span> / {document?.name}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[60vh] p-4">
+        <ScrollArea className="h-[75vh] p-4">
+          
+          {/* Main Document Quick Links */}
+          {document && Array.isArray(document.documentLink) && document.documentLink.length > 0 && (
+              <div className="mb-8 p-4 bg-white/40 rounded-xl border-2 border-white/50 shadow-sm">
+                  <h3 className="text-lg font-bold text-[#000099] mb-3 flex items-center gap-2">
+                      <Link className="h-5 w-5" />
+                      {t('documentLinks')}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                      {document.documentLink.map((link, i) => (
+                          hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ? (
+                              <a key={i} href={link} target="_blank" rel="noopener noreferrer">
+                                  <Button variant="outline" className="bg-white/60 hover:bg-white/80 border-blue-200">
+                                      <ExternalLink className="mr-2 h-4 w-4 text-blue-600" />
+                                      {t(`docLink${i + 1}` as any, { defaultValue: `Link ${i+1}` })}
+                                  </Button>
+                              </a>
+                          ) : null
+                      ))}
+                  </div>
+              </div>
+          )}
+
           {sourceDocuments.length > 0 && (
               <div className="space-y-4 mb-8">
                 <h3 className="text-lg font-semibold text-foreground">{t('sourceDocuments')}</h3>
