@@ -191,21 +191,6 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 {isSplit && <Split className="h-20 w-20 text-purple-500" title="Split Document" />}
                 <span className="font-medium">{doc.name}</span>
             </div>
-            {/* Quick Access Links below name */}
-            {Array.isArray(doc.documentLink) && doc.documentLink.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                    {doc.documentLink.map((link, i) => (
-                        hasPermission(currentUser, `canOpenDocumentLink${i+1}` as any) && link ? (
-                            <a key={i} href={link} target="_blank" rel="noopener noreferrer">
-                                <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] gap-1 bg-blue-50/50 border-blue-200 hover:bg-blue-100 hover:border-blue-300">
-                                    <ExternalLink className="h-3 w-3" />
-                                    {t(`docLink${i + 1}` as any, { defaultValue: `Link ${i+1}` })}
-                                </Button>
-                            </a>
-                        ) : null
-                    ))}
-                </div>
-            )}
         </div>
       </TableCell>}
       {columnVisibility.documentType && (
