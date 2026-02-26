@@ -55,7 +55,7 @@ const MetricCard = ({
       )}
       onClick={handleClick}
     >
-      <CardContent className="p-5 flex flex-col h-full justify-between">
+      <CardContent className="p-4 sm:p-5 flex flex-col h-full justify-between">
         <div className="flex items-start justify-between mb-4">
           <div className="space-y-1">
             <p 
@@ -64,15 +64,15 @@ const MetricCard = ({
             >
               {title}
             </p>
-            <h3 className={cn("text-3xl font-black tabular-nums", colors.text)}>
+            <h3 className={cn("text-2xl sm:text-3xl font-black tabular-nums", colors.text)}>
               {value}
             </h3>
           </div>
           <div className={cn(
-            "p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            "p-2 sm:p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
             colors.bg
           )}>
-            <Icon className={cn("h-6 w-6", colors.text)} />
+            <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", colors.text)} />
           </div>
         </div>
         
@@ -159,7 +159,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}
