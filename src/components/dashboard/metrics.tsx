@@ -1,3 +1,4 @@
+
 'use client'
 import { useAppContext } from '@/hooks/use-app-context'
 import { Card, CardContent } from '@/components/ui/card'
@@ -55,29 +56,30 @@ const MetricCard = ({
       )}
       onClick={handleClick}
     >
-      <CardContent className="p-4 sm:p-5 flex flex-col h-full justify-between">
-        <div className="flex items-start justify-between mb-4">
-          <div className="space-y-1">
+      <CardContent className="p-1.5 sm:p-5 flex flex-col h-full justify-between">
+        <div className="flex items-start justify-between mb-1 sm:mb-4">
+          <div className="space-y-0 sm:space-y-1 overflow-hidden">
             <p 
-              className="text-sm font-bold uppercase tracking-wide text-[#000099]"
+              className="text-[9px] sm:text-sm font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-[1.1] sm:leading-normal truncate sm:whitespace-normal"
               style={{ fontFamily: "'Khmer OS Battambang', serif" }}
+              title={title}
             >
               {title}
             </p>
-            <h3 className={cn("text-2xl sm:text-3xl font-black tabular-nums", colors.text)}>
+            <h3 className={cn("text-xs sm:text-3xl font-black tabular-nums", colors.text)}>
               {value}
             </h3>
           </div>
           <div className={cn(
-            "p-2 sm:p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            "p-0.5 sm:p-3 rounded-md sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
             colors.bg
           )}>
-            <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", colors.text)} />
+            <Icon className={cn("h-3 w-3 sm:h-6 sm:w-6", colors.text)} />
           </div>
         </div>
         
         {/* Decorative Progress Bar */}
-        <div className="w-full h-1.5 bg-black/5 rounded-full overflow-hidden mt-auto">
+        <div className="w-full h-0.5 sm:h-1.5 bg-black/5 rounded-full overflow-hidden mt-auto">
           <div 
             className={cn("h-full transition-all duration-1000 ease-in-out", colors.accent)} 
             style={{ width: isActive ? '100%' : '30%' }}
@@ -159,7 +161,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-1 sm:gap-6 grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}
