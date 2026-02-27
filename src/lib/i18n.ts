@@ -383,7 +383,7 @@ const translations = {
       totalDocuments: "ឯកសារសរុប",
       inProgress: "កំពុងដំណើរការ",
       delayed: "ពន្យាពេល",
-      releaseDateReached: "បានដល់កាលបរិច្ឆេទចេញផ្សាយ",
+      releaseDateReached: "ដល់ពេលកំណត់",
       completed: "បានបញ្ចប់",
       completedSuccess: "បានបញ្ចប់ (ជោគជ័យ)",
       completedUnsuccess: "បានបញ្ចប់ (មិនជោគជ័យ)",
