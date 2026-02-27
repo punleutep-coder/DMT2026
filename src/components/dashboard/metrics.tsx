@@ -50,26 +50,26 @@ const MetricCard = ({
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group border border-gray-300 transition-all duration-500 rounded-none",
+        "dashboard-metric-box relative overflow-hidden group border border-gray-300 transition-all duration-500 rounded-xl",
         isActive && "active"
       )}
       onClick={handleClick}
     >
-      <CardContent className="p-1 sm:p-2 flex flex-col h-full justify-between">
-        <div className="flex items-start justify-between mb-0.5 sm:mb-2">
-          <div className="space-y-0 sm:space-y-1 overflow-hidden">
+      <CardContent className="p-2 sm:p-4 flex flex-col h-full justify-between">
+        <div className="flex items-start justify-between mb-1 sm:mb-3">
+          <div className="space-y-0.5 sm:space-y-1 overflow-hidden">
             <p 
-              className="text-[9px] sm:text-sm font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-[1.1] sm:leading-normal truncate sm:whitespace-normal font-body"
+              className="text-[10px] sm:text-sm font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-[1.2] sm:leading-normal truncate sm:whitespace-normal font-body"
               title={title}
             >
               {title}
             </p>
-            <h3 className={cn("text-xs sm:text-3xl font-black tabular-nums font-body", colors.text)}>
+            <h3 className={cn("text-sm sm:text-3xl font-black tabular-nums font-body", colors.text)}>
               {value}
             </h3>
           </div>
           <div className={cn(
-            "p-0.5 sm:p-2 rounded-md sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            "p-1 sm:p-2.5 rounded-lg sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner shrink-0",
             colors.bg
           )}>
             <Icon className={cn("h-3 w-3 sm:h-6 sm:w-6", colors.text)} />
@@ -157,7 +157,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-[1px] grid-cols-4 bg-gray-300 rounded-lg overflow-hidden border border-gray-300">
+      <div className="grid gap-3 sm:gap-6 grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}
