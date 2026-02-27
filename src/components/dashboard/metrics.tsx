@@ -157,7 +157,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-3 sm:gap-6 grid-cols-4">
+      <div className="grid gap-1.5 sm:gap-3 grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}
