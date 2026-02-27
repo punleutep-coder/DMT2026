@@ -1,5 +1,4 @@
 
-
 'use client'
 import {
   Sidebar,
@@ -81,7 +80,7 @@ export default function DashboardSidebar() {
       <SidebarHeader className="shadow-md">
         <div className="flex items-center gap-2">
           <Workflow className="size-8 text-[#000066]" />
-          <h2 className="font-bold text-[#000066]" style={{fontFamily: "'Khmer Rotanak Traiy B', serif", fontSize: '16px', textShadow: '2px 2px 4px rgba(0,0,0,0.2)'}}>ប្រព័ន្ធគ្រប់គ្រងឯកសារ</h2>
+          <h2 className="font-bold text-[#000066] font-rotanak" style={{ fontSize: '16px', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>ប្រព័ន្ធគ្រប់គ្រងឯកសារ</h2>
         </div>
       </SidebarHeader>
       <SidebarContent>

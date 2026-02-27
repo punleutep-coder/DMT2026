@@ -12,6 +12,8 @@ export default {
       fontFamily: {
         body: ['"Khmer OS Battambang"', '"PT Sans"', 'sans-serif'],
         headline: ['"Khmer OS Battambang"', '"PT Sans"', 'sans-serif'],
+        moul: ['"Khmer Moul"', 'serif'],
+        rotanak: ['"Khmer Rotanak Traiy B"', 'serif'],
         code: ['"Source Code Pro"', 'monospace'],
       },
       colors: {

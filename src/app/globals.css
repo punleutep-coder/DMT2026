@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -44,6 +45,10 @@
   * {
     @apply border-border;
   }
+  html, body {
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground font-body;
     background: #F6EDCE;
@@ -54,6 +59,10 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
+  }
+
+  button, input, optgroup, select, textarea {
+    font-family: inherit;
   }
 }
 

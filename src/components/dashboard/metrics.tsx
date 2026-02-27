@@ -51,7 +51,7 @@ const MetricCard = ({
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group border border-gray-300 transition-all duration-500",
+        "dashboard-metric-box relative overflow-hidden group border border-gray-600 transition-all duration-500",
         isActive && "active"
       )}
       onClick={handleClick}
@@ -60,8 +60,7 @@ const MetricCard = ({
         <div className="flex items-start justify-between mb-1 sm:mb-3">
           <div className="space-y-0 sm:space-y-1 overflow-hidden">
             <p 
-              className="text-[9px] sm:text-sm font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-[1.1] sm:leading-normal truncate sm:whitespace-normal"
-              style={{ fontFamily: "'Khmer OS Battambang', serif" }}
+              className="text-[9px] sm:text-sm font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-[1.1] sm:leading-normal truncate sm:whitespace-normal font-body"
               title={title}
             >
               {title}
