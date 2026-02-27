@@ -50,7 +50,7 @@ export default function WorkflowChart() {
   return (
     <>
       <CardHeader>
-        <CardTitle className="text-[#000066]" style={{fontFamily: "'Khmer OS Battambang', serif", fontSize: '18px', textShadow: '2px 2px 4px rgba(0,0,0,0.2)'}}>{t('workflowStatus')}</CardTitle>
+        <CardTitle className="text-[18px] text-[#000066] font-body [text-shadow:2px_2px_4px_rgba(0,0,0,0.2)]">{t('workflowStatus')}</CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
@@ -70,6 +70,7 @@ export default function WorkflowChart() {
               angle={-45}
               textAnchor="end"
               height={80}
+              className="font-body"
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
@@ -79,13 +80,17 @@ export default function WorkflowChart() {
               tickFormatter={(value) => `${value}`}
               allowDecimals={false}
               domain={[0, (dataMax: number) => Math.max(10, Math.ceil((dataMax * 1.2) / 5) * 5)]} // Dynamic Y-axis
+              className="font-body"
             />
              <Tooltip
                 contentStyle={{
                     backgroundColor: 'hsl(var(--background))',
                     borderColor: 'hsl(var(--border))',
+                    fontFamily: 'inherit'
                 }}
                 cursor={{ fill: 'hsla(var(--primary) / 0.1)' }}
+                itemStyle={{ fontFamily: 'inherit' }}
+                labelStyle={{ fontFamily: 'inherit', fontWeight: 'bold' }}
              />
             <Bar
               dataKey="total"
@@ -96,7 +101,7 @@ export default function WorkflowChart() {
                 const color = departmentColors[entry.fullName] || 'hsl(var(--chart-4))';
                 return <Cell key={`cell-${index}`} fill={color} />;
               })}
-              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={25} fontWeight="bold" />
+              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={25} fontWeight="bold" className="font-body" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

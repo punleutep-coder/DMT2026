@@ -89,6 +89,7 @@ export default function LoginForm() {
                     role: 'User',
                     permissions: {},
                     departmentPermissions: [],
+                    labelPermissions: [],
                 };
                 
                 await set(ref(db, 'users/' + newUser.uid), userProfile);
@@ -128,7 +129,7 @@ export default function LoginForm() {
             <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full">
               <Workflow className="w-8 h-8 text-[#000066]" />
             </div>
-            <h1 className="text-3xl font-bold text-[#000066]" style={{fontFamily: "'Khmer Rotanak Traiy B', serif", fontSize: '22px'}}>{t('docuFlowLogin')}</h1>
+            <h1 className="text-[22px] font-bold text-[#000066] font-rotanak">{t('docuFlowLogin')}</h1>
             <p className="text-muted-foreground">{t('pleaseSignIn')}</p>
           </div>
           <Form {...form}>

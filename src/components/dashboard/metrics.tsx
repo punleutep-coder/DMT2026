@@ -1,4 +1,3 @@
-
 'use client'
 import { useAppContext } from '@/hooks/use-app-context'
 import { Card, CardContent } from '@/components/ui/card'
@@ -56,29 +55,27 @@ const MetricCard = ({
       )}
       onClick={handleClick}
     >
-      <CardContent className="p-1.5 sm:p-4 flex flex-col h-full justify-between">
-        <div className="flex items-start justify-between mb-1 sm:mb-3">
+      <CardContent className="p-1 sm:p-2 flex flex-col h-full justify-between">
+        <div className="flex items-start justify-between mb-0.5 sm:mb-2">
           <div className="space-y-0 sm:space-y-1 overflow-hidden">
             <p 
-              className="text-[9px] sm:text-sm font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-[1.1] sm:leading-normal truncate sm:whitespace-normal"
-              style={{ fontFamily: "'Khmer OS Battambang', serif" }}
+              className="text-[9px] sm:text-sm font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-[1.1] sm:leading-normal truncate sm:whitespace-normal font-body"
               title={title}
             >
               {title}
             </p>
-            <h3 className={cn("text-xs sm:text-3xl font-black tabular-nums", colors.text)}>
+            <h3 className={cn("text-xs sm:text-3xl font-black tabular-nums font-body", colors.text)}>
               {value}
             </h3>
           </div>
           <div className={cn(
-            "p-0.5 sm:p-2.5 rounded-md sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            "p-0.5 sm:p-2 rounded-md sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
             colors.bg
           )}>
             <Icon className={cn("h-3 w-3 sm:h-6 sm:w-6", colors.text)} />
           </div>
         </div>
         
-        {/* Decorative Progress Bar */}
         <div className="w-full h-0.5 sm:h-1.5 bg-black/5 rounded-full overflow-hidden mt-auto">
           <div 
             className={cn("h-full transition-all duration-1000 ease-in-out", colors.accent)} 
@@ -87,7 +84,6 @@ const MetricCard = ({
         </div>
       </CardContent>
       
-      {/* Background Glow */}
       <div className={cn(
         "absolute -bottom-12 -right-12 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-full",
         colors.accent
@@ -161,7 +157,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-1 sm:gap-3 grid-cols-4">
+      <div className="grid gap-0.5 sm:gap-1 grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}
