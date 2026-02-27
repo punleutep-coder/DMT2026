@@ -1,4 +1,3 @@
-
 'use client'
 import { useAppContext } from '@/hooks/use-app-context'
 import { Card, CardContent } from '@/components/ui/card'
@@ -51,7 +50,7 @@ const MetricCard = ({
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group border border-gray-600 transition-all duration-500",
+        "dashboard-metric-box relative overflow-hidden group border border-gray-600 transition-all duration-500 rounded-xl",
         isActive && "active"
       )}
       onClick={handleClick}
@@ -65,19 +64,18 @@ const MetricCard = ({
             >
               {title}
             </p>
-            <h3 className={cn("text-base sm:text-4xl font-black tabular-nums", colors.text)}>
+            <h3 className={cn("text-base sm:text-4xl font-black tabular-nums font-body", colors.text)}>
               {value}
             </h3>
           </div>
           <div className={cn(
-            "p-1 sm:p-2.5 rounded-md sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            "p-1 sm:p-2.5 rounded-lg sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner shrink-0",
             colors.bg
           )}>
             <Icon className={cn("h-4 w-4 sm:h-7 sm:w-7", colors.text)} />
           </div>
         </div>
         
-        {/* Decorative Progress Bar */}
         <div className="w-full h-0.5 sm:h-1.5 bg-black/5 rounded-full overflow-hidden mt-auto">
           <div 
             className={cn("h-full transition-all duration-1000 ease-in-out", colors.accent)} 
@@ -86,7 +84,6 @@ const MetricCard = ({
         </div>
       </CardContent>
       
-      {/* Background Glow */}
       <div className={cn(
         "absolute -bottom-12 -right-12 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-full",
         colors.accent
@@ -160,7 +157,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-1 sm:gap-3 grid-cols-4">
+      <div className="grid gap-1.5 sm:gap-3 grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}

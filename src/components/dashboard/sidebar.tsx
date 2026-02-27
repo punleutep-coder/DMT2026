@@ -1,4 +1,3 @@
-
 'use client'
 import {
   Sidebar,
@@ -14,14 +13,10 @@ import {
   Users,
   LogOut,
   Workflow,
-  FileCog,
-  FileJson,
   FileText,
-  Combine,
-  Columns,
+  History,
   BarChart3,
   Languages,
-  History,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
@@ -47,7 +42,7 @@ const LanguageSwitcher = () => {
                             key={lang.code}
                             variant={language === lang.code ? 'secondary' : 'ghost'}
                             size="sm"
-                            className="justify-start"
+                            className="justify-start font-body"
                             onClick={() => dispatch({ type: 'SET_LANGUAGE', payload: lang.code })}
                         >
                             {lang.name}
@@ -80,7 +75,7 @@ export default function DashboardSidebar() {
       <SidebarHeader className="shadow-md">
         <div className="flex items-center gap-2">
           <Workflow className="size-8 text-[#000066]" />
-          <h2 className="font-bold text-[#000066] font-rotanak" style={{ fontSize: '16px', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>ប្រព័ន្ធគ្រប់គ្រងឯកសារ</h2>
+          <h2 className="text-base font-bold text-[#000066] font-rotanak [text-shadow:2px_2px_4px_rgba(0,0,0,0.2)]">ប្រព័ន្ធគ្រប់គ្រងឯកសារ</h2>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -127,7 +122,7 @@ export default function DashboardSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="flex items-center justify-between p-2">
-          <div className="text-center text-muted-foreground text-sm">
+          <div className="text-center text-muted-foreground text-sm font-body">
               {t('loggedInAs')}:{' '}
               <strong className="text-destructive">{currentUser.username}</strong>
             </div>

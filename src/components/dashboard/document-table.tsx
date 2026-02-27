@@ -1,4 +1,3 @@
-
 'use client'
 
 import {
@@ -58,9 +57,9 @@ const EmptyState = () => {
             <TableCell colSpan={9} className="h-48 text-center">
                 <div className="flex flex-col items-center justify-center gap-4">
                     <SearchX className="h-16 w-16 text-muted-foreground/50" />
-                    <h3 className="text-xl font-semibold text-foreground">{t('noDocumentsFound')}</h3>
-                    <p className="text-muted-foreground">{t('filterDidNotMatch')}</p>
-                    <Button variant="outline" onClick={handleClearFilter}>{t('clearAllFilters')}</Button>
+                    <h3 className="text-xl font-semibold text-foreground font-body">{t('noDocumentsFound')}</h3>
+                    <p className="text-muted-foreground font-body">{t('filterDidNotMatch')}</p>
+                    <Button variant="outline" onClick={handleClearFilter} className="font-body">{t('clearAllFilters')}</Button>
                 </div>
             </TableCell>
         </TableRow>
@@ -161,7 +160,7 @@ export default function DocumentTable() {
                             aria-label="Select all documents on this page"
                           />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
+                      <DropdownMenuContent align="start" className="font-body">
                         <DropdownMenuItem onSelect={() => handleSelectAllOnPage(true)}>Select all on this page ({paginatedDocs.length})</DropdownMenuItem>
                         <DropdownMenuItem onSelect={handleSelectAllFiltered}>Select all matching filter ({filteredDocs.length})</DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -169,7 +168,7 @@ export default function DocumentTable() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <span style={{fontFamily: "'Khmer OS Battambang', serif", color: '#000099'}}>{col.name}</span>
+                    <span className="font-body text-[#000099] whitespace-nowrap">{col.name}</span>
                   )}
                    {col.key === 'documentType' && (
                     <DropdownMenu>
@@ -178,7 +177,7 @@ export default function DocumentTable() {
                             <ListFilter className="h-4 w-4"/>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
+                      <DropdownMenuContent align="start" className="font-body">
                         <DropdownMenuCheckboxItem
                             checked={state.filter.documentType === 'All'}
                             onCheckedChange={() => handleDocumentTypeFilterChange('All')}
@@ -204,7 +203,7 @@ export default function DocumentTable() {
                             <ListFilter className="h-4 w-4"/>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
+                      <DropdownMenuContent align="start" className="font-body">
                         <DropdownMenuCheckboxItem
                             checked={state.filter.assignedDepartment === 'All'}
                             onCheckedChange={() => handleAssignedDeptFilterChange('All')}
@@ -230,7 +229,7 @@ export default function DocumentTable() {
                           <ListFilter className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
+                      <DropdownMenuContent align="start" className="font-body">
                         <DropdownMenuCheckboxItem
                           checked={state.filter.label === 'All'}
                           onCheckedChange={() => handleLabelFilterChange('All')}
@@ -256,7 +255,7 @@ export default function DocumentTable() {
                           <ListFilter className={cn("h-4 w-4", (state.filter.lastUpdateStart || state.filter.lastUpdateEnd) ? "text-blue-600" : "text-muted-foreground")} />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="end">
+                      <PopoverContent className="w-auto p-0 font-body" align="end">
                         <div className="p-4 bg-muted/20 border-b">
                             <h4 className="font-medium text-sm">Filter by Last Update</h4>
                         </div>
@@ -306,7 +305,7 @@ export default function DocumentTable() {
         )}
       </TableBody>
     </Table>
-    <div className="flex items-center justify-between p-4 border-t">
+    <div className="flex items-center justify-between p-4 border-t font-body">
         <div className="text-sm text-muted-foreground">
           {t('xOfYRowSelected', { selected: state.selectedDocIds.length, total: filteredDocs.length })}
         </div>
@@ -320,7 +319,7 @@ export default function DocumentTable() {
                     <SelectTrigger className="h-8 w-[70px]">
                         <SelectValue placeholder={pagination.rowsPerPage} />
                     </SelectTrigger>
-                    <SelectContent side="top">
+                    <SelectContent side="top" className="font-body">
                         {[10, 30, 50, 100].map((pageSize) => (
                             <SelectItem key={pageSize} value={`${pageSize}`}>
                             {pageSize}

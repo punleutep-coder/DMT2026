@@ -175,7 +175,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
             )}
 
             <div className="grid grid-cols-12 gap-3 sm:gap-6">
-              {/* Department History Column - Always 5/12 grid */}
+              {/* Department History Column - Locked split layout */}
               <div className="col-span-5 space-y-4">
                 <h3 className="text-sm sm:text-lg font-bold text-[#000099] flex items-center gap-2 px-1">
                   <Clock className="h-4 w-4 shrink-0" />
@@ -235,7 +235,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                 </div>
               </div>
 
-              {/* Status Change Log Column - Always 7/12 grid */}
+              {/* Status Change Log Column - Locked split layout */}
               <div className="col-span-7 space-y-4">
                 <h3 className="text-sm sm:text-lg font-bold text-[#000099] flex items-center gap-2 px-1">
                   <History className="h-4 w-4 shrink-0" />
