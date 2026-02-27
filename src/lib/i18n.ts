@@ -416,13 +416,13 @@ const translations = {
       docLink10: "ឯកសារទី១០",
       editDetails: "កែសម្រួលព័ត៌មានលម្អិត",
       splitDocument: "បំបែកឯកសារ",
-      delay: "ពន្យាពេល",
+      delay: "Delay",
       releaseNow: "ចេញផ្សាយឥឡូវនេះ",
       addNote: "បន្ថែមចំណាំ",
-      moveBack: "ផ្លាស់ទីទៅក្រោយ",
-      advance: "ទៅមុខ",
-      complete: "បញ្ចប់",
-      reopen: "បើកឡើងវិញ",
+      moveBack: "Move Back",
+      advance: "Advance",
+      complete: "Complete",
+      reopen: "Re-open",
       deleteDocument: "លុបឯកសារ",
 
       // Modals
