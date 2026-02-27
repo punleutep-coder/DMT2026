@@ -50,7 +50,7 @@ const MetricCard = ({
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group border border-gray-300 transition-all duration-500",
+        "dashboard-metric-box relative overflow-hidden group border border-gray-300 transition-all duration-500 rounded-none",
         isActive && "active"
       )}
       onClick={handleClick}
@@ -157,7 +157,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-0.5 sm:gap-1 grid-cols-4">
+      <div className="grid gap-[1px] grid-cols-4 bg-gray-300 rounded-lg overflow-hidden border border-gray-300">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}
