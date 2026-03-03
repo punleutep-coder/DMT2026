@@ -24,6 +24,8 @@ const translations = {
     clear: "Clear",
     user: "User",
     unsuccess: "Unsuccess",
+    startTime: "Start Time",
+    endTime: "End Time",
 
     // Sidebar
     dashboard: "Dashboard",
@@ -88,7 +90,7 @@ const translations = {
     totalDocuments: "Total Documents",
     inProgress: "In Progress",
     delayed: "Delayed",
-    releaseDateReached: "Release Date Reached",
+    releaseDateReached: "ដល់ពេលកំណត់",
     completed: "Completed",
     completedSuccess: "Completed (Success)",
     completedUnsuccess: "Completed (Unsuccess)",
@@ -253,9 +255,9 @@ const translations = {
     canEditCurrentNote: 'Edit Current Note',
     canMoveDocumentAdvance: 'Move Document (Advance)',
     canMoveDocumentBack: 'Move Document (Back)',
+    canCompleteDocument: 'Complete Document',
     canDelayDocument: 'Delay Document',
     canReleaseDocument: 'Release Document from Delay',
-    canCompleteDocument: 'Complete Document',
     canDeleteDocument: 'Delete Document',
     canOpenDocumentLink1: 'Open Document (Link 1)',
     canOpenDocumentLink2: 'Open Document (Link 2)',
@@ -318,6 +320,8 @@ const translations = {
       clear: "សម្អាត",
       user: "អ្នកប្រើប្រាស់",
       unsuccess: "មិនជោគជ័យ",
+      startTime: "ម៉ោងចាប់ផ្តើម",
+      endTime: "ម៉ោងបញ្ចប់",
 
       // Sidebar
       dashboard: "ផ្ទាំងគ្រប់គ្រង",

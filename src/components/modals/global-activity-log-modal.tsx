@@ -1,9 +1,9 @@
-
 'use client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
@@ -27,6 +27,8 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState('All')
   const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({ from: undefined, to: undefined })
+  const [fromTime, setFromTime] = useState('00:00')
+  const [toTime, setToTime] = useState('23:59')
 
   const filteredLogs = useMemo(() => {
     let tempLogs = logs;
@@ -36,9 +38,17 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
     }
     
     if (dateRange.from && dateRange.to) {
+        const combinedFrom = new Date(dateRange.from);
+        const [fH, fM] = fromTime.split(':').map(Number);
+        combinedFrom.setHours(fH || 0, fM || 0, 0, 0);
+
+        const combinedTo = new Date(dateRange.to);
+        const [tH, tM] = toTime.split(':').map(Number);
+        combinedTo.setHours(tH || 23, tM || 59, 59, 999);
+
         tempLogs = tempLogs.filter(log => {
             const logDate = new Date(log.timestamp);
-            return logDate >= dateRange.from! && logDate <= dateRange.to!;
+            return logDate >= combinedFrom && logDate <= combinedTo;
         });
     }
 
@@ -53,7 +63,7 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
     }
       
     return tempLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-  }, [logs, searchTerm, selectedUser, dateRange])
+  }, [logs, searchTerm, selectedUser, dateRange, fromTime, toTime])
 
   const handleSetDateRange = (period: 'today' | 'week' | 'month') => {
       const now = new Date();
@@ -69,12 +79,16 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
           to = endOfMonth(now);
       }
       setDateRange({ from, to });
+      setFromTime('00:00');
+      setToTime('23:59');
   }
   
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedUser('All');
     setDateRange({ from: undefined, to: undefined });
+    setFromTime('00:00');
+    setToTime('23:59');
   }
 
   return (
@@ -93,9 +107,10 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
                     placeholder="Search by Doc ID, Status, Reason..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-11"
                 />
                 <Select value={selectedUser} onValueChange={setSelectedUser}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                         <SelectValue placeholder="Select a user" />
                     </SelectTrigger>
                     <SelectContent>
@@ -106,36 +121,50 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
                     </SelectContent>
                 </Select>
             </div>
+            <div className="flex flex-wrap items-center gap-6">
+                <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-muted-foreground">{t('startTime')}</Label>
+                    <div className="flex items-center gap-2">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn("w-[200px] justify-start text-left font-normal h-11", !dateRange.from && "text-muted-foreground")}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateRange.from ? format(dateRange.from, "PPP") : <span>Pick start date</span>}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={dateRange.from} onSelect={(d) => setDateRange(prev => ({...prev, from: d}))} initialFocus />
+                            </PopoverContent>
+                        </Popover>
+                        <Input type="time" value={fromTime} onChange={e => setFromTime(e.target.value)} className="w-32 h-11" />
+                    </div>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-muted-foreground">{t('endTime')}</Label>
+                    <div className="flex items-center gap-2">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn("w-[200px] justify-start text-left font-normal h-11", !dateRange.to && "text-muted-foreground")}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateRange.to ? format(dateRange.to, "PPP") : <span>Pick end date</span>}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={dateRange.to} onSelect={(d) => setDateRange(prev => ({...prev, to: d}))} initialFocus />
+                            </PopoverContent>
+                        </Popover>
+                        <Input type="time" value={toTime} onChange={e => setToTime(e.target.value)} className="w-32 h-11" />
+                    </div>
+                </div>
+            </div>
             <div className="flex flex-wrap items-center gap-2">
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        variant={"outline"}
-                        className={cn("w-[240px] justify-start text-left font-normal", !dateRange.from && "text-muted-foreground")}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateRange.from ? format(dateRange.from, "PPP") : <span>Pick start date</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={dateRange.from} onSelect={(d) => setDateRange(prev => ({...prev, from: d}))} initialFocus />
-                    </PopoverContent>
-                </Popover>
-                <span className="text-muted-foreground">to</span>
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        variant={"outline"}
-                        className={cn("w-[240px] justify-start text-left font-normal", !dateRange.to && "text-muted-foreground")}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateRange.to ? format(dateRange.to, "PPP") : <span>Pick end date</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={dateRange.to} onSelect={(d) => setDateRange(prev => ({...prev, to: d}))} initialFocus />
-                    </PopoverContent>
-                </Popover>
                 <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('today')}>Today</Button>
                 <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('week')}>This Week</Button>
                 <Button size="sm" variant="secondary" onClick={() => handleSetDateRange('month')}>This Month</Button>
