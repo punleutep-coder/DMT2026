@@ -57,9 +57,9 @@ const MetricCard = ({
     >
       <CardContent className="p-3 sm:p-4 flex flex-col h-full justify-between">
         <div className="flex items-start justify-between mb-2 sm:mb-3">
-          <div className="space-y-1 sm:space-y-1 overflow-hidden">
+          <div className="space-y-1 overflow-hidden">
             <p 
-              className="text-xs sm:text-lg font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-tight sm:leading-normal truncate sm:whitespace-normal font-body"
+              className="text-[10px] sm:text-lg font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-tight sm:leading-normal truncate sm:whitespace-normal font-body"
               title={title}
             >
               {title}

@@ -30,7 +30,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '../ui/button'
-import { ListFilter, SearchX, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react'
+import { ListFilter, SearchX, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
@@ -305,18 +305,18 @@ export default function DocumentTable() {
         )}
       </TableBody>
     </Table>
-    <div className="flex items-center justify-between p-4 border-t font-body">
-        <div className="text-sm text-muted-foreground">
+    <div className="flex flex-col sm:flex-row items-center justify-between p-4 gap-4 border-t font-body">
+        <div className="text-sm text-muted-foreground text-center sm:text-left">
           {t('xOfYRowSelected', { selected: state.selectedDocIds.length, total: filteredDocs.length })}
         </div>
-        <div className="flex items-center space-x-6 lg:space-x-8">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-8">
             <div className="flex items-center space-x-2">
-                <p className="text-sm font-medium">{t('rowsPerPage')}</p>
+                <p className="text-sm font-medium whitespace-nowrap">{t('rowsPerPage')}</p>
                 <Select
                     value={`${pagination.rowsPerPage}`}
                     onValueChange={handleRowsPerPageChange}
                 >
-                    <SelectTrigger className="h-8 w-[70px]">
+                    <SelectTrigger className="h-9 w-[70px]">
                         <SelectValue placeholder={pagination.rowsPerPage} />
                     </SelectTrigger>
                     <SelectContent side="top" className="font-body">
@@ -328,13 +328,13 @@ export default function DocumentTable() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+            <div className="flex w-[100px] items-center justify-center text-sm font-medium whitespace-nowrap">
                 {t('pageXOfY', { current: pagination.currentPage, total: totalPages })}
             </div>
             <div className="flex items-center space-x-2">
                 <Button
                     variant="outline"
-                    className="h-8 w-8 p-0"
+                    className="h-9 w-9 p-0"
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
                     disabled={pagination.currentPage === 1}
                 >
@@ -343,7 +343,7 @@ export default function DocumentTable() {
                 </Button>
                 <Button
                     variant="outline"
-                    className="h-8 w-8 p-0"
+                    className="h-9 w-9 p-0"
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
                     disabled={pagination.currentPage === totalPages}
                 >
