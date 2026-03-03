@@ -69,7 +69,7 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
+          className={cn("w-full justify-between h-11 text-base sm:text-sm", !value && "text-muted-foreground", className)}
         >
           {value
             ? options.find((option) => option.value === value)?.label
@@ -83,6 +83,7 @@ export function Combobox({
             placeholder={searchPlaceholder} 
             value={searchQuery}
             onValueChange={setSearchQuery}
+            className="text-base sm:text-sm"
           />
           <CommandList>
             <CommandGroup>
@@ -91,6 +92,7 @@ export function Combobox({
                   key={option.value}
                   value={option.label} // Compare with label for filtering
                   onSelect={() => handleSelect(option.value)}
+                  className="text-base sm:text-sm"
                 >
                   <Check
                     className={cn(
@@ -105,14 +107,14 @@ export function Combobox({
             {onCreate && searchQuery && !filteredOptions.some(opt => opt.label.toLowerCase() === searchQuery.toLowerCase()) && (
               <>
                 <CommandEmpty>
-                    <button onClick={handleCreate} className="w-full text-left p-2 hover:bg-accent rounded-sm text-sm">
+                    <button onClick={handleCreate} className="w-full text-left p-2 hover:bg-accent rounded-sm text-base sm:text-sm">
                       <PlusCircle className="mr-2 h-4 w-4 inline-block" />Create "{searchQuery}"
                     </button>
                 </CommandEmpty>
               </>
             )}
             {filteredOptions.length === 0 && !searchQuery && (
-                 <CommandEmpty>{notFoundText}</CommandEmpty>
+                 <CommandEmpty className="text-base sm:text-sm">{notFoundText}</CommandEmpty>
             )}
           </CommandList>
         </Command>
