@@ -166,7 +166,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       )}
       {columnVisibility.documentId && (
         <TableCell className="text-base sm:text-lg">
-            <div className="text-foreground font-bold">{doc.id}</div>
+            <div className="text-foreground">{doc.id}</div>
             {doc.secondaryId && <div className="text-sm text-muted-foreground">Sec: {doc.secondaryId}</div>}
             {doc.tertiaryId && <div className="text-sm text-muted-foreground">Ter: {doc.tertiaryId}</div>}
             <div className="flex flex-wrap gap-1 mt-2">
