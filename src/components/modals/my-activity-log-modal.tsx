@@ -96,7 +96,7 @@ export default function MyActivityLogModal({ isOpen, onClose }: MyActivityLogMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl glassmorphic-card">
+      <DialogContent className="w-[80vw] lg:max-w-2xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>{t('myActivityLog')}</DialogTitle>
           <DialogDescription>

@@ -231,7 +231,7 @@ export default function ReportingModal({ isOpen, onClose }: ReportingModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] glassmorphic-card flex flex-col">
+      <DialogContent className="w-[80vw] lg:max-w-4xl h-[90vh] glassmorphic-card flex flex-col">
         <DialogHeader>
           <DialogTitle>{t('documentReports')}</DialogTitle>
           <DialogDescription>

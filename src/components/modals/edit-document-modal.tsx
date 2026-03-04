@@ -296,7 +296,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:max-w-[600px] glassmorphic-card p-4 sm:p-6 overflow-hidden">
+      <DialogContent className="w-[80vw] lg:max-w-[600px] glassmorphic-card p-4 sm:p-6 overflow-hidden">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-2xl font-bold font-rotanak text-[#000066]">
             {t('editDocument')}: <span className="text-destructive">{docToUpdate.id}</span>

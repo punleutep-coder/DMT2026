@@ -1,4 +1,3 @@
-
 'use client'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -384,7 +383,7 @@ export default function UserManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl glassmorphic-card">
+      <DialogContent className="w-[80vw] lg:max-w-4xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>{t('userManagement')}</DialogTitle>
           <DialogDescription>

@@ -1,4 +1,3 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -240,7 +239,7 @@ export default function CombineDocumentsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl glassmorphic-card">
+      <DialogContent className="w-[80vw] lg:max-w-2xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>Combine Documents</DialogTitle>
           <DialogDescription>

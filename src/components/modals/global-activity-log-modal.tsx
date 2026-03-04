@@ -93,7 +93,7 @@ export default function GlobalActivityLogModal({ isOpen, onClose }: GlobalActivi
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col glassmorphic-card">
+      <DialogContent className="w-[80vw] lg:max-w-4xl h-[90vh] flex flex-col glassmorphic-card">
         <DialogHeader>
           <DialogTitle>Global Activity Log</DialogTitle>
           <DialogDescription>

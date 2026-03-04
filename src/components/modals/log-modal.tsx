@@ -68,7 +68,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-4xl p-0 gap-0 overflow-hidden"
+        className="w-[80vw] lg:max-w-4xl p-0 gap-0 overflow-hidden"
         style={{ background: '#EEDCB4', border: '1px solid rgba(255, 255, 255, 0.3)' }}
         >
         <DialogHeader className="p-4 sm:p-6 pb-3 border-b bg-white/20 backdrop-blur-md">

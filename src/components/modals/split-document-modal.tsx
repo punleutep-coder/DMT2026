@@ -111,7 +111,7 @@ export default function SplitDocumentModal({ isOpen, onClose, docId, firestoreId
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl glassmorphic-card">
+      <DialogContent className="w-[80vw] lg:max-w-3xl glassmorphic-card">
         <DialogHeader>
           <DialogTitle>Split Document</DialogTitle>
           <DialogDescription>Splitting document: {docToSplit.id} - {docToSplit.name}</DialogDescription>
