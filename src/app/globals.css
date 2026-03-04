@@ -49,6 +49,7 @@
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    font-size: 110%; /* Global font scale increase */
   }
 
   body {
@@ -65,7 +66,6 @@
     @apply font-headline;
   }
 
-  /* Force interactive elements to inherit font families for cross-device consistency */
   input, button, textarea, select, optgroup, option {
     font-family: inherit;
     font-size: inherit;
@@ -78,7 +78,6 @@
   .glassmorphic-card {
     background-color: #F6EDCE;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    /* Realistic Multi-layered Shadow */
     box-shadow: 
       0 1.1px 2.2px rgba(0, 0, 0, 0.02),
       0 2.7px 5.3px rgba(0, 0, 0, 0.028),
@@ -121,7 +120,6 @@
 
 .dashboard-metric-box {
   @apply cursor-pointer transition-all duration-500 ease-out border border-white/50 bg-white/40 backdrop-blur-md;
-  /* Soft High-elevation shadow */
   box-shadow: 
     0 2px 4px rgba(0,0,0,0.02), 
     0 4px 8px rgba(0,0,0,0.02), 
@@ -143,7 +141,6 @@
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
 }
 
-/* From Uiverse.io by andrew-manzyk */
  .loader {
   --color-one: #ffbf48;
   --color-two: #be4a1d;
@@ -151,7 +148,7 @@
   --color-four: #bf4a1d80;
   --color-five: #ffbf4740;
   --time-animation: 2s;
-  --size: 0.5; /* You can change the size */
+  --size: 0.5;
   position: relative;
   border-radius: 50%;
   transform: scale(var(--size));

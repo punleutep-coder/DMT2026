@@ -165,121 +165,114 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         </TableCell>
       )}
       {columnVisibility.documentId && (
-        <TableCell>
-            <div className="text-foreground">{doc.id}</div>
-            {doc.secondaryId && <div className="text-xs text-muted-foreground">Sec: {doc.secondaryId}</div>}
-            {doc.tertiaryId && <div className="text-xs text-muted-foreground">Ter: {doc.tertiaryId}</div>}
-            {doc.quaternaryId && <div className="text-xs text-muted-foreground">Qua: {doc.quaternaryId}</div>}
-            {doc.quinaryId && <div className="text-xs text-muted-foreground">Qui: {doc.quinaryId}</div>}
-            {doc.senaryId && <div className="text-xs text-muted-foreground">Sen: {doc.senaryId}</div>}
-            {doc.septenaryId && <div className="text-xs text-muted-foreground">Sep: {doc.septenaryId}</div>}
-            {doc.octonaryId && <div className="text-xs text-muted-foreground">Oct: {doc.octonaryId}</div>}
-            {doc.nonaryId && <div className="text-xs text-muted-foreground">Non: {doc.nonaryId}</div>}
-            {doc.denaryId && <div className="text-xs text-muted-foreground">Den: {doc.denaryId}</div>}
+        <TableCell className="text-base sm:text-lg">
+            <div className="text-foreground font-bold">{doc.id}</div>
+            {doc.secondaryId && <div className="text-sm text-muted-foreground">Sec: {doc.secondaryId}</div>}
+            {doc.tertiaryId && <div className="text-sm text-muted-foreground">Ter: {doc.tertiaryId}</div>}
             <div className="flex flex-wrap gap-1 mt-2">
-                {Array.isArray(doc.tags) && doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs whitespace-nowrap">{tag}</Badge>)}
+                {Array.isArray(doc.tags) && doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-sm whitespace-nowrap">{tag}</Badge>)}
             </div>
         </TableCell>
       )}
       {columnVisibility.assignedDepartment && (
-        <TableCell className="text-foreground">{doc.assignedDepartment || 'N/A'}</TableCell>
+        <TableCell className="text-foreground text-base sm:text-lg">{doc.assignedDepartment || 'N/A'}</TableCell>
       )}
-      {columnVisibility.name && <TableCell className="text-foreground min-w-[500px]">
+      {columnVisibility.name && <TableCell className="text-foreground min-w-[500px] text-base sm:text-xl">
         <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-                {isCombined && <Combine className="h-20 w-20 text-blue-500" title="Combined Document" />}
-                {isSplit && <Split className="h-20 w-20 text-purple-500" title="Split Document" />}
+            <div className="flex items-center gap-3">
+                {isCombined && <Combine className="h-12 w-12 text-blue-500 shrink-0" title="Combined Document" />}
+                {isSplit && <Split className="h-12 w-12 text-purple-500 shrink-0" title="Split Document" />}
                 <span className="font-medium whitespace-normal break-words leading-relaxed">{doc.name}</span>
             </div>
         </div>
       </TableCell>}
       {columnVisibility.documentType && (
-        <TableCell className="text-foreground">{doc.documentType || 'N/A'}</TableCell>
+        <TableCell className="text-foreground text-base sm:text-lg">{doc.documentType || 'N/A'}</TableCell>
       )}
       {columnVisibility.label && (
-        <TableCell className="text-foreground">{doc.label || 'N/A'}</TableCell>
+        <TableCell className="text-foreground text-base sm:text-lg">{doc.label || 'N/A'}</TableCell>
       )}
       {columnVisibility.currentStatus && (
         <TableCell>
-          <Badge variant={getStatusBadgeVariant(doc.status, doc.isDelayed, doc.releaseDateReached)}>
+          <Badge className="text-base sm:text-lg px-3 py-1" variant={getStatusBadgeVariant(doc.status, doc.isDelayed, doc.releaseDateReached)}>
             {getStatusText(doc)}
           </Badge>
         </TableCell>
       )}
       {columnVisibility.lastUpdate && (
-        <TableCell className="text-foreground">{format(new Date(doc.lastUpdate), 'dd.MM.yyyy')}</TableCell>
+        <TableCell className="text-foreground text-base sm:text-lg">{format(new Date(doc.lastUpdate), 'dd.MM.yyyy')}</TableCell>
       )}
       {columnVisibility.actions && (
         <TableCell>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
+                    <Button variant="ghost" className="h-10 w-10 p-0">
                         <span className="sr-only">Open menu</span>
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-6 w-6" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="min-w-[200px]">
                     {hasPermission(currentUser, 'canViewLog') && (
-                        <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)} className="text-blue-600 font-semibold">
-                            <FileText className="mr-2 h-4 w-4" />{t('viewLog')}
+                        <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)} className="text-blue-600 font-semibold text-lg py-3">
+                            <FileText className="mr-3 h-5 w-5" />{t('viewLog')}
                         </DropdownMenuItem>
                     )}
                     
                     {!isTerminal && canEditDetails && (
-                        <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)} className="text-green-800">
-                            <Pencil className="mr-2 h-4 w-4" />{t('editDetails')}
+                        <DropdownMenuItem onClick={() => handleAction('editDocument', doc.id, doc.firestoreId)} className="text-green-800 text-lg py-3">
+                            <Pencil className="mr-3 h-5 w-5" />{t('editDetails')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canSplitDocument') && (
-                        <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)}>
-                            <Split className="mr-2 h-4 w-4" />{t('splitDocument')}
+                        <DropdownMenuItem onClick={() => handleAction('splitDocument', doc.id, doc.firestoreId)} className="text-lg py-3">
+                            <Split className="mr-3 h-5 w-5" />{t('splitDocument')}
                         </DropdownMenuItem>
                     )}
                     
                     {!isTerminal && hasPermission(currentUser, 'canDelayDocument') && !doc.isDelayed && (
-                        <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id, doc.firestoreId)}>
-                            <Clock className="mr-2 h-4 w-4" />{t('delay')}
+                        <DropdownMenuItem onClick={() => handleAction('delayDocument', doc.id, doc.firestoreId)} className="text-lg py-3">
+                            <Clock className="mr-3 h-5 w-5" />{t('delay')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canReleaseDocument') && doc.isDelayed && (
-                        <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id, doc.firestoreId)}>
-                            <Play className="mr-2 h-4 w-4 text-yellow-400" />{t('releaseNow')}
+                        <DropdownMenuItem onClick={() => handleAction('releaseDocument', doc.id, doc.firestoreId)} className="text-lg py-3">
+                            <Play className="mr-3 h-5 w-5 text-yellow-400" />{t('releaseNow')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canEditCurrentNote') && (
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('addNote', doc.id, doc.firestoreId)}>
-                            <FilePlus className="mr-2 h-4 w-4" />{t('addNote')}
+                        <DropdownMenuItem className="text-destructive text-lg py-3" onClick={() => handleAction('addNote', doc.id, doc.firestoreId)}>
+                            <FilePlus className="mr-3 h-5 w-5" />{t('addNote')}
                         </DropdownMenuItem>
                     )}
                     
                     {(hasPermission(currentUser, 'canMoveDocumentAdvance') || hasPermission(currentUser, 'canMoveDocumentBack') || hasPermission(currentUser, 'canCompleteDocument')) && !isTerminal && <DropdownMenuSeparator />}
                     
                     {!isTerminal && hasPermission(currentUser, 'canMoveDocumentBack') && Array.isArray(doc.history) && doc.history.length > 1 && (
-                        <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
-                            <Undo2 className="mr-2 h-4 w-4" />{t('moveBack')}
+                        <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)} className="text-lg py-3">
+                            <Undo2 className="mr-3 h-5 w-5" />{t('moveBack')}
                         </DropdownMenuItem>
                     )}
 
                     {!isTerminal && hasPermission(currentUser, 'canMoveDocumentAdvance') && (
-                        <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)}>
-                            <Redo2 className="mr-2 h-4 w-4" />{t('advance')}
+                        <DropdownMenuItem onClick={() => handleAction('advanceDocument', doc.id, doc.firestoreId)} className="text-lg py-3">
+                            <Redo2 className="mr-3 h-5 w-5" />{t('advance')}
                         </DropdownMenuItem>
                     )}
                     
                     {!isTerminal && hasPermission(currentUser, 'canCompleteDocument') && (
-                         <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)}>
-                            <CheckCircle2 className="mr-2 h-4 w-4 text-teal-400" />{t('complete')}
+                         <DropdownMenuItem onClick={() => handleAction('completeDocument', doc.id, doc.firestoreId)} className="text-lg py-3">
+                            <CheckCircle2 className="mr-3 h-5 w-5 text-teal-400" />{t('complete')}
                         </DropdownMenuItem>
                     )}
 
                     {isTerminal && hasPermission(currentUser, 'canMoveDocumentBack') && (
                         <>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)}>
-                                <Undo2 className="mr-2 h-4 w-4"/>{t('reopen')}
+                            <DropdownMenuItem onClick={() => handleAction('back', doc.id, doc.firestoreId)} className="text-lg py-3">
+                                <Undo2 className="mr-3 h-5 w-5"/>{t('reopen')}
                             </DropdownMenuItem>
                         </>
                     )}
@@ -287,8 +280,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     {hasPermission(currentUser, 'canDeleteDocument') && !isCombinedOrSplit && (
                         <>
                            <DropdownMenuSeparator />
-                           <DropdownMenuItem className="text-destructive" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}>
-                                <Trash2 className="mr-2 h-4 w-4" />{t('deleteDocument')}
+                           <DropdownMenuItem className="text-destructive text-lg py-3" onClick={() => handleAction('deleteDocument', doc.id, doc.firestoreId)}>
+                                <Trash2 className="mr-3 h-5 w-5" />{t('deleteDocument')}
                            </DropdownMenuItem>
                         </>
                     )}
