@@ -184,12 +184,12 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       {columnVisibility.assignedDepartment && (
         <TableCell className="text-foreground">{doc.assignedDepartment || 'N/A'}</TableCell>
       )}
-      {columnVisibility.name && <TableCell className="text-foreground">
+      {columnVisibility.name && <TableCell className="text-foreground min-w-[500px]">
         <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
                 {isCombined && <Combine className="h-20 w-20 text-blue-500" title="Combined Document" />}
                 {isSplit && <Split className="h-20 w-20 text-purple-500" title="Split Document" />}
-                <span className="font-medium">{doc.name}</span>
+                <span className="font-medium whitespace-normal break-words leading-relaxed">{doc.name}</span>
             </div>
         </div>
       </TableCell>}

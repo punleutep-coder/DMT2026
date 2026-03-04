@@ -149,7 +149,13 @@ export default function DocumentTable() {
         <TableRow>
           {columns.map(col => (
             columnVisibility[col.key] && (
-              <TableHead key={col.key} className={col.key === 'actions' ? 'text-right' : ''}>
+              <TableHead 
+                key={col.key} 
+                className={cn(
+                  col.key === 'actions' ? 'text-right' : '',
+                  col.key === 'name' ? 'min-w-[500px]' : ''
+                )}
+              >
                 <div className="flex items-center gap-2">
                   {col.key === 'select' ? (
                      <DropdownMenu>
