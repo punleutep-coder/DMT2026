@@ -59,12 +59,12 @@ const MetricCard = ({
         <div className="flex items-start justify-between mb-2 sm:mb-3">
           <div className="space-y-1 overflow-hidden">
             <p 
-              className="text-[10px] sm:text-lg font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-tight sm:leading-normal truncate sm:whitespace-normal font-body"
+              className="text-[15px] sm:text-xl font-bold uppercase tracking-tight sm:tracking-wide text-[#000099] leading-tight sm:leading-normal truncate sm:whitespace-normal font-body"
               title={title}
             >
               {title}
             </p>
-            <h3 className={cn("text-2xl sm:text-4xl font-black tabular-nums font-body", colors.text)}>
+            <h3 className={cn("text-3xl sm:text-5xl font-black tabular-nums font-body", colors.text)}>
               {value}
             </h3>
           </div>
@@ -72,7 +72,7 @@ const MetricCard = ({
             "p-1.5 sm:p-2.5 rounded-lg sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner shrink-0",
             colors.bg
           )}>
-            <Icon className={cn("h-5 w-5 sm:h-7 sm:w-7", colors.text)} />
+            <Icon className={cn("h-6 w-6 sm:h-8 sm:w-8", colors.text)} />
           </div>
         </div>
         
