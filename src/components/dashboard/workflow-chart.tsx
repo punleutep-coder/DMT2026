@@ -63,18 +63,18 @@ export default function WorkflowChart() {
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="name"
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
+              stroke="#000000"
+              fontSize={16}
               tickLine={false}
               axisLine={false}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={100}
               className="font-body"
             />
             <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
+              stroke="#000000"
+              fontSize={16}
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${value}`}
