@@ -49,7 +49,7 @@
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    font-size: 110%; /* Global font scale increase */
+    font-size: 100%;
   }
 
   body {
@@ -60,6 +60,8 @@
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-width: 1280px; /* Force desktop width constraint */
+    overflow-x: auto;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -85,7 +87,7 @@
       0 8.9px 17.9px rgba(0, 0, 0, 0.042),
       0 16.7px 33.4px rgba(0, 0, 0, 0.05),
       0 40px 80px rgba(0, 0, 0, 0.07);
-    @apply rounded-xl p-4 sm:p-6;
+    @apply rounded-xl p-6;
   }
 }
 

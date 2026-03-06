@@ -31,11 +31,10 @@ export default function SearchAndFilter() {
     setPeriodDepartment(state.filter.periodDepartment);
   }, [state.filter]);
 
-  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       dispatch({ type: 'SET_FILTER', payload: { search: searchTerm } })
-    }, 300); // 300ms delay
+    }, 300);
 
     return () => {
       clearTimeout(handler);
@@ -45,7 +44,6 @@ export default function SearchAndFilter() {
 
   const handleDateFilter = () => {
     if (dateFrom && dateTo) {
-      // Construct date strings at midnight UTC to avoid timezone shifts
       const start = new Date(`${dateFrom}T00:00:00Z`);
       const end = new Date(`${dateTo}T23:59:59.999Z`);
       dispatch({ type: 'SET_FILTER', payload: { startDate: start, endDate: end } })
@@ -75,7 +73,7 @@ export default function SearchAndFilter() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      <div className="grid grid-cols-4 gap-4 items-end">
          <div className='space-y-2'>
           <Label htmlFor="date-from">{t('historyFrom')}</Label>
           <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full shadow-md h-11" />
@@ -91,12 +89,12 @@ export default function SearchAndFilter() {
       </div>
       
       <div className="p-4 bg-muted/20 rounded-lg border border-dashed border-border/60">
-        <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3">
+        <div className="flex items-center gap-3">
             <Label className="whitespace-nowrap">{t('docsExceeding')}</Label>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-full sm:w-20 bg-card shadow-md h-11" />
+            <div className="flex items-center gap-2">
+                <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-card shadow-md h-11" />
                 <Select value={periodUnit} onValueChange={v => setPeriodUnit(v as 'days' | 'hours' | 'minutes')}>
-                    <SelectTrigger className="w-full sm:w-[120px] bg-card shadow-md h-11">
+                    <SelectTrigger className="w-[120px] bg-card shadow-md h-11">
                         <SelectValue placeholder="Unit" />
                     </SelectTrigger>
                     <SelectContent>
@@ -108,7 +106,7 @@ export default function SearchAndFilter() {
             </div>
             <Label>{t('in')}</Label>
             <Select value={periodDepartment} onValueChange={setPeriodDepartment}>
-                <SelectTrigger className="w-full sm:w-[180px] bg-card shadow-md h-11">
+                <SelectTrigger className="w-[180px] bg-card shadow-md h-11">
                     <SelectValue placeholder="Department" />
                 </SelectTrigger>
                 <SelectContent>
@@ -118,9 +116,9 @@ export default function SearchAndFilter() {
                     ))}
                 </SelectContent>
             </Select>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Button onClick={handleCalculatePeriod} className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white shadow-md h-11 px-6">{t('calculate')}</Button>
-                <Button variant="outline" onClick={clearPeriodFilter} className="flex-1 sm:flex-none shadow-md h-11 px-6">{t('clear')}</Button>
+            <div className="flex items-center gap-2">
+                <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md h-11 px-6">{t('calculate')}</Button>
+                <Button variant="outline" onClick={clearPeriodFilter} className="shadow-md h-11 px-6">{t('clear')}</Button>
             </div>
         </div>
       </div>
@@ -138,7 +136,7 @@ export default function SearchAndFilter() {
           />
           {isFiltered && (
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <span className="text-xs sm:text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 {filteredDocs.length} {t('results')}
               </span>
             </div>

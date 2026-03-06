@@ -311,11 +311,11 @@ export default function DocumentTable() {
         )}
       </TableBody>
     </Table>
-    <div className="flex flex-col sm:flex-row items-center justify-between p-4 gap-4 border-t font-body">
-        <div className="text-sm text-muted-foreground text-center sm:text-left">
+    <div className="flex items-center justify-between p-4 gap-4 border-t font-body">
+        <div className="text-sm text-muted-foreground">
           {t('xOfYRowSelected', { selected: state.selectedDocIds.length, total: filteredDocs.length })}
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-8">
+        <div className="flex items-center justify-center gap-8">
             <div className="flex items-center space-x-2">
                 <p className="text-sm font-medium whitespace-nowrap">{t('rowsPerPage')}</p>
                 <Select
