@@ -117,22 +117,22 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] glassmorphic-card">
+      <DialogContent className="sm:max-w-[700px] glassmorphic-card p-8">
         <DialogHeader>
-          <DialogTitle>Move Document: {doc.id}</DialogTitle>
-          <DialogDescription>Current department: {doc.status}</DialogDescription>
+          <DialogTitle className="text-2xl font-bold">{t('advance')}: {doc.id}</DialogTitle>
+          <DialogDescription className="text-lg">Current department: {doc.status}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="nextDepartment"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Next Department</FormLabel>
+                  <FormLabel className="text-lg">Next Department</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-14">
                         <SelectValue placeholder="Select next department" />
                       </SelectTrigger>
                     </FormControl>
@@ -151,7 +151,7 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
               name="receiver"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>{t('receiverName')}</FormLabel>
+                  <FormLabel className="text-lg">{t('receiverName')}</FormLabel>
                   <Combobox
                     options={receiverOptions}
                     value={field.value}
@@ -160,16 +160,17 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
                     searchPlaceholder={t('searchReceiver')}
                     notFoundText={t('noReceiverFound')}
                     onCreate={currentUser?.role === 'Admin' ? handleCreateReceiver : undefined}
+                    className="h-14"
                   />
                   <FormMessage />
                 </FormItem>
               )}
             />
-             <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel>Note</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )} />
+             <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel className="text-lg">Note</FormLabel><FormControl><Textarea {...field} className="min-h-[100px] text-lg" /></FormControl><FormMessage /></FormItem> )} />
 
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button type="submit">Move Document</Button>
+            <DialogFooter className="pt-4 gap-4">
+              <Button type="button" variant="ghost" className="h-14 flex-1 text-lg" onClick={onClose}>Cancel</Button>
+              <Button type="submit" className="h-14 flex-1 text-lg">Move Document</Button>
             </DialogFooter>
           </form>
         </Form>
