@@ -246,14 +246,26 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         name="name" 
                         render={({ field }) => ( 
                         <FormItem>
-                            <FormLabel className="text-[#1D41D5] text-3xl">{t('docName')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-3xl block">{t('docName')}</FormLabel>
                             <FormControl><Input {...field} className="h-24 text-3xl" /></FormControl>
                             <FormMessage />
                         </FormItem> 
                         )} 
                     />
                     }
-                    {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel className="text-[#1D41D5] text-3xl">{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} className="h-24 text-3xl" /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentId') && (
+                      <FormField 
+                        control={form.control} 
+                        name="id" 
+                        render={({ field }) => ( 
+                          <FormItem>
+                            <FormLabel className="text-[#1D41D5] text-3xl block">{t('docIdPrimary')}</FormLabel>
+                            <FormControl><Input {...field} className="h-24 text-3xl" /></FormControl>
+                            <FormMessage />
+                          </FormItem> 
+                        )} 
+                      />
+                    )}
                 </div>
                 
                 <Accordion type="single" collapsible className="w-full border-2 rounded-xl px-10 bg-white/30">
@@ -284,7 +296,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                               name={extraId.name as any} 
                               render={({ field }) => ( 
                                 <FormItem>
-                                  <FormLabel className="text-2xl">{t(extraId.name as any)}</FormLabel>
+                                  <FormLabel className="text-2xl block">{t(extraId.name as any)}</FormLabel>
                                   <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
                                   <FormMessage />
                                 </FormItem> 
@@ -304,7 +316,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                           name="documentType"
                           render={({ field }) => (
                             <FormItem className="flex flex-col">
-                              <FormLabel className="text-[#1D41D5] text-3xl">{t('documentType')}</FormLabel>
+                              <FormLabel className="text-[#1D41D5] text-3xl block">{t('documentType')}</FormLabel>
                               <Combobox
                                 options={documentTypeOptions}
                                 value={field.value}
@@ -325,7 +337,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         name="assignedDepartment"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-3xl">{t('assignedDepartment')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-3xl block">{t('assignedDepartment')}</FormLabel>
                             <Combobox
                               options={assignedDepartmentOptions}
                               value={field.value || ''}
@@ -347,7 +359,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                             name="label"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                <FormLabel className="text-[#1D41D5] text-3xl">{t('label')}</FormLabel>
+                                <FormLabel className="text-[#1D41D5] text-3xl block">{t('label')}</FormLabel>
                                 <Combobox
                                     options={labelOptions}
                                     value={field.value || ''}
@@ -368,7 +380,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                       name="initialReceiver"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel className="text-[#1D41D5] text-3xl">{t('initialReceiver')}</FormLabel>
+                          <FormLabel className="text-[#1D41D5] text-3xl block">{t('initialReceiver')}</FormLabel>
                           <Combobox
                             options={receiverOptions}
                             value={field.value}
@@ -405,7 +417,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                               name={linkKey} 
                               render={({ field }) => ( 
                                 <FormItem>
-                                  <FormLabel className={num === 1 ? 'text-[#1D41D5] text-2xl' : 'text-2xl'}>{t(`docLink${num}` as any)}</FormLabel>
+                                  <FormLabel className={num === 1 ? 'text-[#1D41D5] text-2xl block' : 'text-2xl block'}>{t(`docLink${num}` as any)}</FormLabel>
                                   <FormControl><Input type="url" placeholder="https://://" {...field} className="h-20 text-2xl" /></FormControl>
                                   <FormMessage />
                                 </FormItem> 
@@ -419,17 +431,17 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                 </Accordion>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel className="text-3xl">{t('keywords')}</FormLabel><FormControl><Input placeholder={t('keywordsPlaceholder')} {...field} className="h-24 text-3xl" /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel className="text-3xl block">{t('keywords')}</FormLabel><FormControl><Input placeholder={t('keywordsPlaceholder')} {...field} className="h-24 text-3xl" /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[#1D41D5] text-3xl">{t('tagsLabel')}</FormLabel>
+                        <FormLabel className="text-[#1D41D5] text-3xl block">{t('tagsLabel')}</FormLabel>
                         <FormControl><Input {...field} className="h-24 text-3xl" /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )} />}
                 </div>
                 
-                {hasPermission(currentUser, 'canEditInitialNote') && <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel className="text-3xl">{t('initialNote')}</FormLabel><FormControl><Textarea {...field} className="min-h-[200px] text-3xl" /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditInitialNote') && <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel className="text-3xl block">{t('initialNote')}</FormLabel><FormControl><Textarea {...field} className="min-h-[200px] text-3xl" /></FormControl><FormMessage /></FormItem> )} />}
               </div>
             </ScrollArea>
             <DialogFooter className="pt-10 gap-6">
