@@ -117,10 +117,10 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] glassmorphic-card p-8">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[700px] glassmorphic-card p-8">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{t('advance')}: {doc.id}</DialogTitle>
-          <DialogDescription className="text-lg">Current department: {doc.status}</DialogDescription>
+          <DialogTitle className="text-3xl font-bold">{t('advance')}: {doc.id}</DialogTitle>
+          <DialogDescription className="text-xl">Current department: {doc.status}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -129,16 +129,16 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
               name="nextDepartment"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Next Department</FormLabel>
+                  <FormLabel className="text-xl">Next Department</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-14">
+                      <SelectTrigger className="h-14 text-xl">
                         <SelectValue placeholder="Select next department" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {availableNextDepts.map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        <SelectItem key={dept} value={dept} className="text-lg">{dept}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -151,7 +151,7 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
               name="receiver"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="text-lg">{t('receiverName')}</FormLabel>
+                  <FormLabel className="text-xl">{t('receiverName')}</FormLabel>
                   <Combobox
                     options={receiverOptions}
                     value={field.value}
@@ -160,17 +160,17 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
                     searchPlaceholder={t('searchReceiver')}
                     notFoundText={t('noReceiverFound')}
                     onCreate={currentUser?.role === 'Admin' ? handleCreateReceiver : undefined}
-                    className="h-14"
+                    className="h-14 text-xl"
                   />
                   <FormMessage />
                 </FormItem>
               )}
             />
-             <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel className="text-lg">Note</FormLabel><FormControl><Textarea {...field} className="min-h-[100px] text-lg" /></FormControl><FormMessage /></FormItem> )} />
+             <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel className="text-xl">Note</FormLabel><FormControl><Textarea {...field} className="min-h-[100px] text-xl" /></FormControl><FormMessage /></FormItem> )} />
 
             <DialogFooter className="pt-4 gap-4">
-              <Button type="button" variant="ghost" className="h-14 flex-1 text-lg" onClick={onClose}>Cancel</Button>
-              <Button type="submit" className="h-14 flex-1 text-lg">Move Document</Button>
+              <Button type="button" variant="ghost" className="h-14 flex-1 text-xl" onClick={onClose}>Cancel</Button>
+              <Button type="submit" className="h-14 flex-1 text-xl">Move Document</Button>
             </DialogFooter>
           </form>
         </Form>
