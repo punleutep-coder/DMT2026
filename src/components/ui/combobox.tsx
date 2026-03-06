@@ -69,12 +69,12 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between h-11 text-base sm:text-sm", !value && "text-muted-foreground", className)}
+          className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
         >
           {value
             ? options.find((option) => option.value === value)?.label
             : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-6 w-6 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
@@ -83,20 +83,20 @@ export function Combobox({
             placeholder={searchPlaceholder} 
             value={searchQuery}
             onValueChange={setSearchQuery}
-            className="text-base sm:text-sm"
+            className="text-2xl h-16"
           />
-          <CommandList>
+          <CommandList className="max-h-[400px]">
             <CommandGroup>
               {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // Compare with label for filtering
+                  value={option.label}
                   onSelect={() => handleSelect(option.value)}
-                  className="text-base sm:text-sm"
+                  className="text-2xl py-4"
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-2 h-5 w-5",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
@@ -107,14 +107,14 @@ export function Combobox({
             {onCreate && searchQuery && !filteredOptions.some(opt => opt.label.toLowerCase() === searchQuery.toLowerCase()) && (
               <>
                 <CommandEmpty>
-                    <button onClick={handleCreate} className="w-full text-left p-2 hover:bg-accent rounded-sm text-base sm:text-sm">
-                      <PlusCircle className="mr-2 h-4 w-4 inline-block" />Create "{searchQuery}"
+                    <button onClick={handleCreate} className="w-full text-left p-4 hover:bg-accent rounded-sm text-2xl">
+                      <PlusCircle className="mr-2 h-6 w-6 inline-block" />Create "{searchQuery}"
                     </button>
                 </CommandEmpty>
               </>
             )}
             {filteredOptions.length === 0 && !searchQuery && (
-                 <CommandEmpty className="text-base sm:text-sm">{notFoundText}</CommandEmpty>
+                 <CommandEmpty className="text-2xl py-6">{notFoundText}</CommandEmpty>
             )}
           </CommandList>
         </Command>
