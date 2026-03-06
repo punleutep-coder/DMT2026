@@ -184,7 +184,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     const value = doc[extra.key as keyof Document];
                     if (!value || typeof value !== 'string') return null;
                     return (
-                        <div key={extra.key} className="flex items-center gap-1.5 text-[13px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit">
+                        <div key={extra.key} className="flex items-center gap-1.5 text-[13px] text-black bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit">
                             <span className="font-black text-[9px] uppercase tracking-tighter opacity-60">{extra.label}</span>
                             <span className="font-medium">{value}</span>
                         </div>
