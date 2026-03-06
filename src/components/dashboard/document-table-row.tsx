@@ -153,6 +153,18 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   ];
   const canEditDetails = editPermissions.some(p => hasPermission(currentUser, p as any));
 
+  const extraIds = [
+    { key: 'secondaryId', label: 'Sec' },
+    { key: 'tertiaryId', label: 'Ter' },
+    { key: 'quaternaryId', label: 'Qua' },
+    { key: 'quinaryId', label: 'Qui' },
+    { key: 'senaryId', label: 'Sen' },
+    { key: 'septenaryId', label: 'Sep' },
+    { key: 'octonaryId', label: 'Oct' },
+    { key: 'nonaryId', label: 'Non' },
+    { key: 'denaryId', label: 'Den' },
+  ];
+
   return (
     <TableRow
       data-state={isSelected && 'selected'}
@@ -168,18 +180,16 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         <TableCell className="text-base sm:text-lg">
             <div className="font-bold text-[#0000CC] mb-1.5">{doc.id}</div>
             <div className="flex flex-col gap-1">
-                {doc.secondaryId && (
-                  <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit">
-                    <span className="font-black text-[9px] uppercase tracking-tighter opacity-60">Sec</span>
-                    <span className="font-medium">{doc.secondaryId}</span>
-                  </div>
-                )}
-                {doc.tertiaryId && (
-                  <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit">
-                    <span className="font-black text-[9px] uppercase tracking-tighter opacity-60">Ter</span>
-                    <span className="font-medium">{doc.tertiaryId}</span>
-                  </div>
-                )}
+                {extraIds.map((extra) => {
+                    const value = doc[extra.key as keyof Document];
+                    if (!value || typeof value !== 'string') return null;
+                    return (
+                        <div key={extra.key} className="flex items-center gap-1.5 text-[13px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit">
+                            <span className="font-black text-[9px] uppercase tracking-tighter opacity-60">{extra.label}</span>
+                            <span className="font-medium">{value}</span>
+                        </div>
+                    );
+                })}
             </div>
             <div className="flex flex-wrap gap-1 mt-2.5">
                 {Array.isArray(doc.tags) && doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-[11px] font-bold px-2 py-0 whitespace-nowrap">{tag}</Badge>)}
