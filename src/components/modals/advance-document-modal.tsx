@@ -65,7 +65,7 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
         if (matchingUser) {
           return hasDepartmentPermission(matchingUser, selectedNextDept);
         }
-        return true; // Keep unregistered receivers
+        return true;
       })
       .sort()
       .map(r => ({ value: r, label: r }));
@@ -117,28 +117,28 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[700px] glassmorphic-card p-8">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[700px] glassmorphic-card p-10">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-bold">{t('advance')}: {doc.id}</DialogTitle>
-          <DialogDescription className="text-xl">Current department: {doc.status}</DialogDescription>
+          <DialogTitle className="text-5xl font-bold">{t('advance')}: {doc.id}</DialogTitle>
+          <DialogDescription className="text-2xl mt-2">Current department: {doc.status}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 mt-6">
             <FormField
               control={form.control}
               name="nextDepartment"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xl">Next Department</FormLabel>
+                  <FormLabel className="text-3xl">Next Department</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-14 text-xl">
+                      <SelectTrigger className="h-24 text-3xl">
                         <SelectValue placeholder="Select next department" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {availableNextDepts.map(dept => (
-                        <SelectItem key={dept} value={dept} className="text-lg">{dept}</SelectItem>
+                        <SelectItem key={dept} value={dept} className="text-2xl">{dept}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -151,7 +151,7 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
               name="receiver"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="text-xl">{t('receiverName')}</FormLabel>
+                  <FormLabel className="text-3xl">{t('receiverName')}</FormLabel>
                   <Combobox
                     options={receiverOptions}
                     value={field.value}
@@ -160,17 +160,17 @@ export default function AdvanceDocumentModal({ isOpen, onClose, docId, firestore
                     searchPlaceholder={t('searchReceiver')}
                     notFoundText={t('noReceiverFound')}
                     onCreate={currentUser?.role === 'Admin' ? handleCreateReceiver : undefined}
-                    className="h-14 text-xl"
+                    className="h-24 text-3xl"
                   />
                   <FormMessage />
                 </FormItem>
               )}
             />
-             <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel className="text-xl">Note</FormLabel><FormControl><Textarea {...field} className="min-h-[100px] text-xl" /></FormControl><FormMessage /></FormItem> )} />
+             <FormField control={form.control} name="note" render={({ field }) => ( <FormItem><FormLabel className="text-3xl">Note</FormLabel><FormControl><Textarea {...field} className="min-h-[150px] text-3xl" /></FormControl><FormMessage /></FormItem> )} />
 
-            <DialogFooter className="pt-4 gap-4">
-              <Button type="button" variant="ghost" className="h-14 flex-1 text-xl" onClick={onClose}>Cancel</Button>
-              <Button type="submit" className="h-14 flex-1 text-xl">Move Document</Button>
+            <DialogFooter className="pt-10 gap-6">
+              <Button type="button" variant="ghost" className="h-24 flex-1 text-3xl" onClick={onClose}>Cancel</Button>
+              <Button type="submit" className="h-24 flex-1 text-3xl">Move Document</Button>
             </DialogFooter>
           </form>
         </Form>

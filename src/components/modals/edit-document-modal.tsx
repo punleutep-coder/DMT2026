@@ -298,29 +298,29 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-[95vw] lg:max-w-[1000px] glassmorphic-card p-4 sm:p-8 overflow-hidden">
         <DialogHeader className="mb-6">
-          <DialogTitle className="text-3xl font-bold font-rotanak text-[#000066]">
+          <DialogTitle className="text-5xl font-bold font-rotanak text-[#000066]">
             {t('editDocument')}: <span className="text-destructive">{docToUpdate.id}</span>
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ScrollArea className="h-[75vh] pr-6 -mr-6">
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel className="text-[#1D41D5] text-xl">{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} className="h-14 text-xl" /></FormControl><FormMessage /></FormItem> )} />}
-                    {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel className="text-[#1D41D5] text-xl">{t('docName')}</FormLabel><FormControl><Input {...field} className="h-14 text-xl" /></FormControl><FormMessage /></FormItem> )} />}
+              <div className="space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {hasPermission(currentUser, 'canEditDocumentId') && <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel className="text-[#1D41D5] text-3xl">{t('docIdPrimary')}</FormLabel><FormControl><Input {...field} className="h-24 text-3xl" /></FormControl><FormMessage /></FormItem> )} />}
+                    {hasPermission(currentUser, 'canEditDocumentName') && <FormField control={form.control} name="name" render={({ field }) => ( <FormItem><FormLabel className="text-[#1D41D5] text-3xl">{t('docName')}</FormLabel><FormControl><Input {...field} className="h-24 text-3xl" /></FormControl><FormMessage /></FormItem> )} />}
                 </div>
                 
-                <Accordion type="single" collapsible className="w-full border rounded-xl px-6 bg-white/30">
+                <Accordion type="single" collapsible className="w-full border-2 rounded-xl px-10 bg-white/30">
                   <AccordionItem value="extra-ids" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-4">
-                      <div className="flex items-center gap-3">
-                        <Fingerprint className="h-6 w-6 text-emerald-600" />
-                        <span className="font-bold text-xl text-emerald-600">{t('documentExtraIds')}</span>
+                    <AccordionTrigger className="hover:no-underline py-8">
+                      <div className="flex items-center gap-5">
+                        <Fingerprint className="h-10 w-10 text-emerald-600" />
+                        <span className="font-bold text-3xl text-emerald-600">{t('documentExtraIds')}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <AccordionContent className="pt-4 pb-10">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {[
                           { name: 'secondaryId', perm: 'canEditSecondaryId' },
                           { name: 'tertiaryId', perm: 'canEditTertiaryId' },
@@ -339,8 +339,8 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                               name={extraId.name as any} 
                               render={({ field }) => ( 
                                 <FormItem>
-                                  <FormLabel className="text-lg">{t(extraId.name as any)}</FormLabel>
-                                  <FormControl><Input {...field} className="h-12 text-lg" /></FormControl>
+                                  <FormLabel className="text-2xl">{t(extraId.name as any)}</FormLabel>
+                                  <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
                                   <FormMessage />
                                 </FormItem> 
                               )} 
@@ -352,14 +352,14 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                   </AccordionItem>
                 </Accordion>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {hasPermission(currentUser, 'canEditDocumentType') && (
                     <FormField
                         control={form.control}
                         name="documentType"
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl">{t('documentType')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-3xl">{t('documentType')}</FormLabel>
                             <Combobox
                             options={documentTypeOptions}
                             value={field.value || ''}
@@ -367,7 +367,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                             placeholder={t('selectDocType')}
                             searchPlaceholder={t('searchDocType')}
                             notFoundText={t('noDocTypeFound')}
-                            className="h-14 text-xl"
+                            className="h-24 text-3xl"
                             />
                             <FormMessage />
                         </FormItem>
@@ -380,7 +380,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                             name="label"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                <FormLabel className="text-[#1D41D5] text-xl">{t('label')}</FormLabel>
+                                <FormLabel className="text-[#1D41D5] text-3xl">{t('label')}</FormLabel>
                                 <Combobox
                                     options={labelOptions}
                                     value={field.value || ''}
@@ -389,7 +389,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                                     searchPlaceholder={t('searchLabel')}
                                     notFoundText={t('noLabelFound')}
                                     onCreate={currentUser?.role === 'Admin' ? handleCreateLabel : undefined}
-                                    className="h-14 text-xl"
+                                    className="h-24 text-3xl"
                                 />
                                 <FormMessage />
                                 </FormItem>
@@ -402,7 +402,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                         name="assignedDepartment"
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl">{t('assignedDepartment')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-3xl">{t('assignedDepartment')}</FormLabel>
                             <Combobox
                             options={assignedDepartmentOptions}
                             value={field.value || ''}
@@ -411,7 +411,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                             searchPlaceholder={t('searchAssignedDept')}
                             notFoundText={t('noAssignedDeptFound')}
                             onCreate={currentUser?.role === 'Admin' ? handleCreateAssignedDepartment : undefined}
-                            className="h-14 text-xl"
+                            className="h-24 text-3xl"
                             />
                             <FormMessage />
                         </FormItem>
@@ -420,16 +420,16 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                     )}
                 </div>
                 
-                <Accordion type="single" collapsible className="w-full border rounded-xl px-6 bg-white/30">
+                <Accordion type="single" collapsible className="w-full border-2 rounded-xl px-10 bg-white/30">
                   <AccordionItem value="links" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-4">
-                      <div className="flex items-center gap-3">
-                        <LinkIcon className="h-6 w-6 text-blue-600" />
-                        <span className="font-bold text-xl text-blue-600">{t('documentLinks')}</span>
+                    <AccordionTrigger className="hover:no-underline py-8">
+                      <div className="flex items-center gap-5">
+                        <LinkIcon className="h-10 w-10 text-blue-600" />
+                        <span className="font-bold text-3xl text-blue-600">{t('documentLinks')}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <AccordionContent className="pt-4 pb-10">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                           const linkKey = `documentLink${num}` as keyof EditDocumentFormValues;
                           const editPerm = `canEditDocumentLink${num}` as any;
@@ -440,8 +440,8 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                               name={linkKey} 
                               render={({ field }) => ( 
                                 <FormItem>
-                                  <FormLabel className={num === 1 ? 'text-[#1D41D5] text-lg' : 'text-lg'}>{t(`docLink${num}` as any)}</FormLabel>
-                                  <FormControl><Input type="url" placeholder="https://://" {...field} className="h-12 text-lg" /></FormControl>
+                                  <FormLabel className={num === 1 ? 'text-[#1D41D5] text-2xl' : 'text-2xl'}>{t(`docLink${num}` as any)}</FormLabel>
+                                  <FormControl><Input type="url" placeholder="https://://" {...field} className="h-20 text-2xl" /></FormControl>
                                   <FormMessage />
                                 </FormItem> 
                               )} 
@@ -453,16 +453,16 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                   </AccordionItem>
                 </Accordion>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {hasPermission(currentUser, 'canEditKeywords') && (
                     <FormField
                         control={form.control}
                         name="keywords"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-xl">{t('keywords')}</FormLabel>
+                            <FormLabel className="text-3xl">{t('keywords')}</FormLabel>
                             <FormControl>
-                            <Input placeholder={t('keywordsPlaceholder')} {...field} className="h-14 text-xl" />
+                            <Input placeholder={t('keywordsPlaceholder')} {...field} className="h-24 text-3xl" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -472,17 +472,17 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
                     {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[#1D41D5] text-xl">{t('tagsLabel')}</FormLabel>
-                        <FormControl><Input {...field} className="h-14 text-xl" /></FormControl>
+                        <FormLabel className="text-[#1D41D5] text-3xl">{t('tagsLabel')}</FormLabel>
+                        <FormControl><Input {...field} className="h-24 text-3xl" /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )} />}
                 </div>
               </div>
             </ScrollArea>
-            <DialogFooter className="pt-8 gap-4">
-              <Button type="button" variant="ghost" className="flex-1 h-14 text-xl" onClick={onClose}>{t('cancel')}</Button>
-              <Button type="submit" className="flex-1 h-14 text-xl">{t('saveChanges')}</Button>
+            <DialogFooter className="pt-10 gap-6">
+              <Button type="button" variant="ghost" className="flex-1 h-24 text-3xl" onClick={onClose}>{t('cancel')}</Button>
+              <Button type="submit" className="flex-1 h-24 text-3xl">{t('saveChanges')}</Button>
             </DialogFooter>
           </form>
         </Form>
