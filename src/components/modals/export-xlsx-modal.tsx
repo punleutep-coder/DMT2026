@@ -1,4 +1,3 @@
-
 'use client'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -73,7 +72,7 @@ export default function ExportXLSXModal({ isOpen, onClose }: ExportXLSXModalProp
         } else if (key === 'tags' && Array.isArray(value)) {
             value = value.join(', ');
         } else if (key === 'documentLink' && Array.isArray(value)) {
-            value = value.join(', ');
+            value = value.filter(Boolean).join(', ');
         } else if (key === 'history' && Array.isArray(value)) {
             value = value.map(h => 
                 `[${h.department}] ${format(new Date(h.start), 'yy-MM-dd HH:mm')} by ${h.receiver}${h.note ? `: ${h.note}` : ''}`

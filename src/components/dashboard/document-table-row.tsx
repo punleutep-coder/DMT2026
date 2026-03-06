@@ -154,16 +154,19 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
   const canEditDetails = editPermissions.some(p => hasPermission(currentUser, p as any));
 
   const extraIds = [
-    { key: 'secondaryId', label: 'Sec' },
-    { key: 'tertiaryId', label: 'Ter' },
-    { key: 'quaternaryId', label: 'Qua' },
-    { key: 'quinaryId', label: 'Qui' },
-    { key: 'senaryId', label: 'Sen' },
-    { key: 'septenaryId', label: 'Sep' },
-    { key: 'octonaryId', label: 'Oct' },
-    { key: 'nonaryId', label: 'Non' },
-    { key: 'denaryId', label: 'Den' },
+    { key: 'secondaryId', label: 'Sec', linkIdx: 1, perm: 'canOpenDocumentLink2' },
+    { key: 'tertiaryId', label: 'Ter', linkIdx: 2, perm: 'canOpenDocumentLink3' },
+    { key: 'quaternaryId', label: 'Qua', linkIdx: 3, perm: 'canOpenDocumentLink4' },
+    { key: 'quinaryId', label: 'Qui', linkIdx: 4, perm: 'canOpenDocumentLink5' },
+    { key: 'senaryId', label: 'Sen', linkIdx: 5, perm: 'canOpenDocumentLink6' },
+    { key: 'septenaryId', label: 'Sep', linkIdx: 6, perm: 'canOpenDocumentLink7' },
+    { key: 'octonaryId', label: 'Oct', linkIdx: 7, perm: 'canOpenDocumentLink8' },
+    { key: 'nonaryId', label: 'Non', linkIdx: 8, perm: 'canOpenDocumentLink9' },
+    { key: 'denaryId', label: 'Den', linkIdx: 9, perm: 'canOpenDocumentLink10' },
   ];
+
+  const primaryLink = Array.isArray(doc.documentLink) ? doc.documentLink[0] : null;
+  const canOpenPrimary = hasPermission(currentUser, 'canOpenDocumentLink1');
 
   return (
     <TableRow
@@ -178,17 +181,37 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       )}
       {columnVisibility.documentId && (
         <TableCell className="text-base sm:text-lg">
-            <div className="font-bold text-[#0000CC] mb-1.5">{doc.id}</div>
+            {primaryLink && canOpenPrimary ? (
+                <a href={primaryLink} target="_blank" rel="noopener noreferrer" className="block w-fit group">
+                    <div className="font-bold text-[#0000CC] mb-1.5 group-hover:underline underline-offset-2">{doc.id}</div>
+                </a>
+            ) : (
+                <div className="font-bold text-[#0000CC] mb-1.5">{doc.id}</div>
+            )}
+            
             <div className="flex flex-col gap-1">
                 {extraIds.map((extra) => {
                     const value = doc[extra.key as keyof Document];
                     if (!value || typeof value !== 'string') return null;
-                    return (
-                        <div key={extra.key} className="flex items-center gap-1.5 text-[13px] text-black bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit">
+                    
+                    const link = Array.isArray(doc.documentLink) ? doc.documentLink[extra.linkIdx] : null;
+                    const canOpen = hasPermission(currentUser, extra.perm as any);
+
+                    const content = (
+                        <div key={extra.key} className="flex items-center gap-1.5 text-[13px] text-black bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit transition-colors hover:bg-muted/60">
                             <span className="font-black text-[9px] uppercase tracking-tighter opacity-60">{extra.label}</span>
                             <span className="font-medium">{value}</span>
                         </div>
                     );
+
+                    if (link && canOpen) {
+                        return (
+                            <a key={extra.key} href={link} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                                {content}
+                            </a>
+                        );
+                    }
+                    return content;
                 })}
             </div>
             <div className="flex flex-wrap gap-1 mt-2.5">

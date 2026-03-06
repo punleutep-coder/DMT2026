@@ -189,10 +189,10 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
         nonaryId: values.nonaryId || null,
         denaryId: values.denaryId || null,
         documentLink: [
-            values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
-            values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
-            values.documentLink9, values.documentLink10
-        ].filter(Boolean) as string[],
+            values.documentLink1 || '', values.documentLink2 || '', values.documentLink3 || '', values.documentLink4 || '',
+            values.documentLink5 || '', values.documentLink6 || '', values.documentLink7 || '', values.documentLink8 || '',
+            values.documentLink9 || '', values.documentLink10 || ''
+        ],
         history: [{ department: initialDepartment, start: now, end: null, receiver: values.initialReceiver, note: values.initialNote || '' }],
         tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
         isDelayed: false,

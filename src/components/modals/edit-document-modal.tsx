@@ -158,10 +158,10 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
             nonaryId: values.nonaryId || null,
             denaryId: values.denaryId || null,
             documentLink: [
-                values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
-                values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
-                values.documentLink9, values.documentLink10
-            ].filter(Boolean) as string[],
+                values.documentLink1 || '', values.documentLink2 || '', values.documentLink3 || '', values.documentLink4 || '',
+                values.documentLink5 || '', values.documentLink6 || '', values.documentLink7 || '', values.documentLink8 || '',
+                values.documentLink9 || '', values.documentLink10 || ''
+            ],
             keywords: values.keywords || '',
             tags: values.docTags?.split(',').map(t => t.trim()).filter(Boolean) || [],
             lastUpdate: new Date().toISOString(),
@@ -258,14 +258,14 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         }
         
         const newLinks = [
-            values.documentLink1, values.documentLink2, values.documentLink3, values.documentLink4,
-            values.documentLink5, values.documentLink6, values.documentLink7, values.documentLink8,
-            values.documentLink9, values.documentLink10
-        ].filter(Boolean) as string[];
+            values.documentLink1 || '', values.documentLink2 || '', values.documentLink3 || '', values.documentLink4 || '',
+            values.documentLink5 || '', values.documentLink6 || '', values.documentLink7 || '', values.documentLink8 || '',
+            values.documentLink9 || '', values.documentLink10 || ''
+        ];
         const oldLinks = docToUpdate.documentLink || [];
         if (JSON.stringify(newLinks) !== JSON.stringify(oldLinks)) {
             updatedFields.documentLink = newLinks;
-            compareAndPush('Document Links', oldLinks.join(', '), newLinks.join(', '));
+            compareAndPush('Document Links', oldLinks.filter(Boolean).join(', '), newLinks.filter(Boolean).join(', '));
         }
         
         if (changes.length > 0) {
