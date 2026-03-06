@@ -198,8 +198,8 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     const canOpen = hasPermission(currentUser, extra.perm as any);
 
                     const content = (
-                        <div key={extra.key} className="flex items-center gap-1.5 text-[13px] text-black bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit transition-colors hover:bg-muted/60">
-                            <span className="font-black text-[9px] uppercase tracking-tighter opacity-60">{extra.label}</span>
+                        <div key={extra.key} className="flex items-center gap-1.5 text-[18px] text-black bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit transition-colors hover:bg-muted/60">
+                            <span className="font-black text-[12px] uppercase tracking-tighter opacity-60">{extra.label}</span>
                             <span className="font-medium">{value}</span>
                         </div>
                     );
