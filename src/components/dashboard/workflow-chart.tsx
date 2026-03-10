@@ -19,7 +19,7 @@ import { hasDepartmentPermission } from '@/lib/permissions'
 
 export default function WorkflowChart() {
   const { state, dispatch, filteredDocs } = useAppContext()
-  const { departments, filter, departmentColors, currentUser } = state
+  const { departments, filter, departmentColors, currentUser, lastViewedDepartments } = state
   const t = useTranslation();
 
   const chartData = useMemo(() => {
@@ -30,15 +30,21 @@ export default function WorkflowChart() {
     const accessibleDepartments = departments.filter(dept => hasDepartmentPermission(currentUser, dept));
 
     const now = new Date().getTime();
-    const recentThreshold = now - (2 * 60 * 60 * 1000); // Documents moved in within the last 2 hours are marked "New"
+    const recentThreshold = now - (2 * 60 * 60 * 1000); // Documents moved in within the last 2 hours are potentially "New"
 
     const counts = accessibleDepartments.map(dept => {
       const docsInDept = activeDocs.filter(doc => doc.status === dept);
       
+      const lastViewedTime = lastViewedDepartments[dept] ? new Date(lastViewedDepartments[dept]).getTime() : 0;
+
       const hasRecentArrival = docsInDept.some(doc => {
         if (!doc.history || doc.history.length === 0) return false;
         const lastEntry = doc.history[doc.history.length - 1];
-        return lastEntry && !lastEntry.end && new Date(lastEntry.start).getTime() > recentThreshold;
+        if (!lastEntry || lastEntry.end) return false;
+        
+        const arrivalTime = new Date(lastEntry.start).getTime();
+        // It's "New" if it arrived within 2 hours AND after the user last clicked/viewed this department bar
+        return arrivalTime > recentThreshold && arrivalTime > lastViewedTime;
       });
 
       return {
@@ -51,11 +57,15 @@ export default function WorkflowChart() {
 
     return counts;
 
-  }, [filteredDocs, departments, currentUser])
+  }, [filteredDocs, departments, currentUser, lastViewedDepartments])
 
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const departmentName = data.activePayload[0].payload.fullName
+      
+      // Mark department as viewed to clear the "NEW" sign
+      dispatch({ type: 'MARK_DEPARTMENT_VIEWED', payload: departmentName });
+
       // Preserve the 'Exceeding Period' filter if it's active
       const newMainFilter = filter.mainFilter === 'Exceeding Period' ? 'Exceeding Period' : 'All';
       dispatch({ type: 'SET_FILTER', payload: { departmentSpecificFilter: departmentName, mainFilter: newMainFilter }})

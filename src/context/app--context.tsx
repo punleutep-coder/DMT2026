@@ -43,11 +43,13 @@ type Action =
   | { type: 'SET_RECEIVERS'; payload: string[] }
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], departmentColors: { [key: string]: string }, documentTypes: string[], assignedDepartments: string[], labels: string[], receivers: string[], columnVisibility: {[key:string]: boolean} } }
-  | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' };
+  | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' }
+  | { type: 'MARK_DEPARTMENT_VIEWED'; payload: string };
 
 const getInitialState = (): AppState => {
     const savedFilter = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_filterSettings') : null;
     const savedLanguage = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_language') : 'km';
+    const savedViewed = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_viewedDepts') : null;
     
     let filter = savedFilter ? JSON.parse(savedFilter) : {
         mainFilter: 'All',
@@ -93,6 +95,7 @@ const getInitialState = (): AppState => {
         dialog: { isOpen: false, title: '', message: '' },
         modal: { type: null },
         language: (savedLanguage === 'en' || savedLanguage === 'km') ? savedLanguage : 'km',
+        lastViewedDepartments: savedViewed ? JSON.parse(savedViewed) : {},
     }
 }
 
@@ -301,6 +304,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
             localStorage.setItem('docuFlow_language', action.payload);
         }
         return { ...state, language: action.payload };
+    case 'MARK_DEPARTMENT_VIEWED': {
+        const newViewed = { ...state.lastViewedDepartments, [action.payload]: new Date().toISOString() };
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('docuFlow_viewedDepts', JSON.stringify(newViewed));
+        }
+        return { ...state, lastViewedDepartments: newViewed };
+    }
     default:
       return state
   }

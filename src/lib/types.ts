@@ -103,6 +103,7 @@ export interface AppState {
   dialog: DialogState;
   modal: ModalState;
   language: 'en' | 'km';
+  lastViewedDepartments: { [key: string]: string }; // Tracks when each department was last "viewed" by clicking the bar
 }
 
 export interface DialogState {
