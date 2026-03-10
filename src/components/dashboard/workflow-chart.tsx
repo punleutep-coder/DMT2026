@@ -1,3 +1,4 @@
+
 'use client'
 import {
   Bar,
@@ -28,11 +29,25 @@ export default function WorkflowChart() {
     // Filter departments based on user permissions
     const accessibleDepartments = departments.filter(dept => hasDepartmentPermission(currentUser, dept));
 
-    const counts = accessibleDepartments.map(dept => ({
-      name: dept.replace('Department ', ''),
-      fullName: dept,
-      total: activeDocs.filter(doc => doc.status === dept).length,
-    }));
+    const now = new Date().getTime();
+    const recentThreshold = now - (2 * 60 * 60 * 1000); // Documents moved in within the last 2 hours are marked "New"
+
+    const counts = accessibleDepartments.map(dept => {
+      const docsInDept = activeDocs.filter(doc => doc.status === dept);
+      
+      const hasRecentArrival = docsInDept.some(doc => {
+        if (!doc.history || doc.history.length === 0) return false;
+        const lastEntry = doc.history[doc.history.length - 1];
+        return lastEntry && !lastEntry.end && new Date(lastEntry.start).getTime() > recentThreshold;
+      });
+
+      return {
+        name: dept.replace('Department ', ''),
+        fullName: dept,
+        total: docsInDept.length,
+        isNew: hasRecentArrival && docsInDept.length > 0
+      };
+    });
 
     return counts;
 
@@ -54,7 +69,7 @@ export default function WorkflowChart() {
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 20, right: 20, bottom: 60, left: 0 }}>
+          <BarChart data={chartData} onClick={handleBarClick} margin={{ top: 50, right: 20, bottom: 60, left: 0 }}>
              <defs>
               <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
                 <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="rgba(0,0,0,0.2)" />
@@ -101,7 +116,38 @@ export default function WorkflowChart() {
                 const color = departmentColors[entry.fullName] || 'hsl(var(--chart-4))';
                 return <Cell key={`cell-${index}`} fill={color} />;
               })}
-              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={25} fontWeight="bold" className="font-body" />
+              <LabelList dataKey="total" position="top" fill="hsl(var(--foreground))" fontSize={25} fontWeight="bold" className="font-body" offset={10} />
+              <LabelList 
+                dataKey="isNew" 
+                content={(props: any) => {
+                  const { x, y, width, value } = props;
+                  if (!value) return null;
+                  return (
+                    <g className="animate-pulse">
+                      <rect 
+                        x={x + width / 2 - 25} 
+                        y={y - 55} 
+                        width={50} 
+                        height={24} 
+                        rx={12} 
+                        fill="#ef4444" 
+                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                      />
+                      <text 
+                        x={x + width / 2} 
+                        y={y - 39} 
+                        fill="#ffffff" 
+                        fontSize={11} 
+                        fontWeight="900" 
+                        textAnchor="middle"
+                        style={{ pointerEvents: 'none', letterSpacing: '0.5px' }}
+                      >
+                        NEW
+                      </text>
+                    </g>
+                  );
+                }}
+              />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
