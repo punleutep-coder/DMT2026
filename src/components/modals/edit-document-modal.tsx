@@ -296,7 +296,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[95vw] lg:max-w-[1000px] glassmorphic-card p-4 sm:p-8 overflow-hidden">
+      <DialogContent className="w-[80vw] max-w-[80vw] h-[80vh] glassmorphic-card p-4 sm:p-8 overflow-hidden">
         <DialogHeader className="mb-6">
           <DialogTitle className="text-[25px] font-bold font-rotanak text-[#000066]">
             {t('editDocument')}: <span className="text-destructive">{docToUpdate.id}</span>
@@ -304,7 +304,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <ScrollArea className="h-[75vh] pr-6 -mr-6">
+            <ScrollArea className="h-[55vh] pr-6 -mr-6">
               <div className="space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {hasPermission(currentUser, 'canEditDocumentId') && (
