@@ -7,6 +7,11 @@ import { Toaster } from '@/components/ui/toaster'
 export const metadata: Metadata = {
   title: 'DocuFlow',
   description: 'Document Workflow Dashboard',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({
@@ -22,6 +27,7 @@ export default function RootLayout({
             __html: `self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;`,
           }}
         />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
