@@ -233,7 +233,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-[95vw] lg:max-w-[1000px] glassmorphic-card p-4 sm:p-8 overflow-hidden">
         <DialogHeader className="mb-6">
-          <DialogTitle className="text-5xl font-bold font-rotanak text-[#000066]">{t('addNewDocument')}</DialogTitle>
+          <DialogTitle className="text-[25px] font-bold font-rotanak text-[#000066]">{t('addNewDocument')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
