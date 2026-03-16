@@ -187,7 +187,7 @@ export default function LogModal({ isOpen, onClose, docId, firestoreId }: LogMod
                       <div className="absolute -left-1 sm:-left-1.5 top-5 w-1 h-6 bg-[#0000E2] rounded-full" />
                       <h4 className="font-bold text-[#0000E2] text-sm sm:text-base mb-2 flex items-center justify-between gap-1">
                         <span className="truncate">{entry.department}</span>
-                        {entry.end ? <Badge variant="secondary" className="text-[12px] sm:text-sm font-normal px-2 py-0 shrink-0">Completed</Badge> : <Badge className="text-[12px] sm:text-sm bg-green-500 text-white animate-pulse px-2 py-0 shrink-0">Current</Badge>}
+                        {!entry.end && <Badge className="text-[12px] sm:text-sm bg-green-500 text-white animate-pulse px-2 py-0 shrink-0">Current</Badge>}
                       </h4>
                       <div className="grid grid-cols-1 gap-y-1.5 text-[13px] sm:text-base">
                          <div className="flex items-start gap-1.5 sm:gap-2">
