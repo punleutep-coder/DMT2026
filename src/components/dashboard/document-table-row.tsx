@@ -180,16 +180,18 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         </TableCell>
       )}
       {columnVisibility.documentId && (
-        <TableCell className="text-base sm:text-lg">
+        <TableCell>
             {primaryLink && canOpenPrimary ? (
-                <a href={primaryLink} target="_blank" rel="noopener noreferrer" className="block w-fit group">
-                    <div className="font-bold text-[#0000CC] mb-1.5 group-hover:underline underline-offset-2">{doc.id}</div>
+                <a href={primaryLink} target="_blank" rel="noopener noreferrer" className="block w-fit group mb-2.5">
+                    <div className="font-black text-blue-700 text-lg sm:text-xl tracking-tight group-hover:text-blue-600 transition-colors">
+                        {doc.id}
+                    </div>
                 </a>
             ) : (
-                <div className="font-bold text-[#0000CC] mb-1.5">{doc.id}</div>
+                <div className="font-black text-blue-700 text-lg sm:text-xl tracking-tight mb-2.5">{doc.id}</div>
             )}
             
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
                 {extraIds.map((extra) => {
                     const value = doc[extra.key as keyof Document];
                     if (!value || typeof value !== 'string') return null;
@@ -198,11 +200,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     const canOpen = hasPermission(currentUser, extra.perm as any);
 
                     const content = (
-                        <div key={extra.key} className="flex items-center gap-2 text-[16px] bg-blue-600/10 px-2 py-1 rounded border border-blue-600/20 w-fit transition-all hover:bg-blue-600/20 hover:border-blue-600/40 group/item">
-                            <span className="font-bold text-[10px] uppercase tracking-wider text-blue-700 bg-blue-600/10 px-1.5 py-0.5 rounded border border-blue-600/10">
+                        <div key={extra.key} className="flex items-center gap-2 text-[14px] bg-blue-500/10 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-blue-200/50 w-fit transition-all hover:bg-blue-500/20 hover:border-blue-300/60 hover:scale-[1.02] active:scale-95 group/item shadow-sm">
+                            <span className="font-black text-[9px] uppercase tracking-widest text-blue-600/80 bg-white/60 px-1.5 py-0.5 rounded-[4px] border border-blue-100/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]">
                                 {extra.label}
                             </span>
-                            <span className="font-bold text-blue-900 group-hover/item:text-blue-700">{value}</span>
+                            <span className="font-bold text-blue-800 group-hover/item:text-blue-600 tracking-tight tabular-nums">{value}</span>
                         </div>
                     );
 
@@ -216,13 +218,17 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     return content;
                 })}
             </div>
-            <div className="flex flex-wrap gap-1 mt-2.5">
-                {Array.isArray(doc.tags) && doc.tags.map(tag => <Badge key={tag} variant="secondary" className="text-[11px] font-bold px-2 py-0 whitespace-nowrap">{tag}</Badge>)}
+            <div className="flex flex-wrap gap-1.5 mt-3.5">
+                {Array.isArray(doc.tags) && doc.tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="text-[10px] font-black uppercase tracking-tight px-2 py-0.5 bg-white/40 border-slate-200 text-slate-600">
+                        {tag}
+                    </Badge>
+                ))}
             </div>
         </TableCell>
       )}
       {columnVisibility.assignedDepartment && (
-        <TableCell className="text-foreground text-base sm:text-lg">{doc.assignedDepartment || 'N/A'}</TableCell>
+        <TableCell className="text-foreground text-base sm:text-lg font-medium">{doc.assignedDepartment || 'N/A'}</TableCell>
       )}
       {columnVisibility.name && <TableCell className="text-foreground min-w-[500px] text-base sm:text-xl">
         <div className="flex flex-col gap-2">
@@ -241,24 +247,24 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
       )}
       {columnVisibility.currentStatus && (
         <TableCell>
-          <Badge className="text-base sm:text-lg px-3 py-1" variant={getStatusBadgeVariant(doc.status, doc.isDelayed, doc.releaseDateReached)}>
+          <Badge className="text-base sm:text-lg px-3 py-1 font-bold shadow-sm" variant={getStatusBadgeVariant(doc.status, doc.isDelayed, doc.releaseDateReached)}>
             {getStatusText(doc)}
           </Badge>
         </TableCell>
       )}
       {columnVisibility.lastUpdate && (
-        <TableCell className="text-foreground text-base sm:text-lg">{format(new Date(doc.lastUpdate), 'dd.MM.yyyy')}</TableCell>
+        <TableCell className="text-foreground text-base sm:text-lg font-medium tabular-nums">{format(new Date(doc.lastUpdate), 'dd.MM.yyyy')}</TableCell>
       )}
       {columnVisibility.actions && (
         <TableCell>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-10 w-10 p-0">
+                    <Button variant="ghost" className="h-10 w-10 p-0 hover:bg-white/40">
                         <span className="sr-only">Open menu</span>
                         <MoreVertical className="h-6 w-6" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[200px]">
+                <DropdownMenuContent align="end" className="min-w-[200px] backdrop-blur-md bg-white/80">
                     {hasPermission(currentUser, 'canViewLog') && (
                         <DropdownMenuItem onClick={() => handleAction('viewLog', doc.id, doc.firestoreId)} className="text-blue-600 font-semibold text-lg py-3">
                             <FileText className="mr-3 h-5 w-5" />{t('viewLog')}
