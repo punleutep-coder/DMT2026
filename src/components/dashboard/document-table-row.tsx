@@ -189,7 +189,7 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                 <div className="font-bold text-[#0000CC] mb-1.5">{doc.id}</div>
             )}
             
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
                 {extraIds.map((extra) => {
                     const value = doc[extra.key as keyof Document];
                     if (!value || typeof value !== 'string') return null;
@@ -198,9 +198,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
                     const canOpen = hasPermission(currentUser, extra.perm as any);
 
                     const content = (
-                        <div key={extra.key} className="flex items-center gap-1.5 text-[18px] text-black bg-muted/40 px-2 py-0.5 rounded border border-border/40 w-fit transition-colors hover:bg-muted/60">
-                            <span className="font-black text-[12px] uppercase tracking-tighter opacity-60">{extra.label}</span>
-                            <span className="font-medium">{value}</span>
+                        <div key={extra.key} className="flex items-center gap-2 text-[16px] bg-blue-600/10 px-2 py-1 rounded border border-blue-600/20 w-fit transition-all hover:bg-blue-600/20 hover:border-blue-600/40 group/item">
+                            <span className="font-bold text-[10px] uppercase tracking-wider text-blue-700 bg-blue-600/10 px-1.5 py-0.5 rounded border border-blue-600/10">
+                                {extra.label}
+                            </span>
+                            <span className="font-bold text-blue-900 group-hover/item:text-blue-700">{value}</span>
                         </div>
                     );
 
