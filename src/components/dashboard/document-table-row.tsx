@@ -183,12 +183,12 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
         <TableCell>
             {primaryLink && canOpenPrimary ? (
                 <a href={primaryLink} target="_blank" rel="noopener noreferrer" className="block w-fit group mb-2.5">
-                    <div className="font-black text-blue-700 text-lg sm:text-xl tracking-tight group-hover:text-blue-600 transition-colors">
+                    <div className="font-black text-blue-700 text-base sm:text-lg tracking-tight group-hover:text-blue-600 transition-colors">
                         {doc.id}
                     </div>
                 </a>
             ) : (
-                <div className="font-black text-blue-700 text-lg sm:text-xl tracking-tight mb-2.5">{doc.id}</div>
+                <div className="font-black text-blue-700 text-base sm:text-lg tracking-tight mb-2.5">{doc.id}</div>
             )}
             
             <div className="flex flex-col gap-2">
