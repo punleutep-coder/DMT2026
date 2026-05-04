@@ -1,4 +1,3 @@
-
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -154,31 +153,31 @@ export default function BulkEditDetailsModal({ isOpen, onClose }: BulkEditDetail
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[80vw] max-w-[80vw] h-[80vh] glassmorphic-card p-4 sm:p-8 overflow-hidden">
-        <DialogHeader className="mb-6">
-          <DialogTitle className="text-[20px] font-bold font-rotanak text-[#000066]">{t('bulkEdit')}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-lg:w-screen max-lg:h-screen max-lg:max-w-none max-lg:max-h-none max-lg:top-0 max-lg:left-0 max-lg:translate-x-0 max-lg:translate-y-0 max-lg:rounded-none lg:w-[80vw] lg:max-w-6xl lg:h-[80vh] glassmorphic-card p-4 sm:p-8 flex flex-col gap-0 overflow-hidden">
+        <DialogHeader className="mb-4 flex-none">
+          <DialogTitle className="text-sm font-bold font-rotanak text-[#000066]">{t('bulkEdit')}</DialogTitle>
+          <DialogDescription className="text-sm">
             {t('bulkEditDesc', { count: selectedDocIds.length })}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <ScrollArea className="h-[55vh] pr-6 -mr-6">
-              <div className="space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <ScrollArea className="flex-1 pr-6 -mr-6">
+              <div className="space-y-6 pb-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                         control={form.control}
                         name="documentType"
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl block">{t('documentType')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-sm block">{t('documentType')}</FormLabel>
                             <Combobox
                             options={documentTypeOptions}
                             value={field.value || ''}
                             onChange={field.onChange}
                             placeholder={t('selectDocType')}
                             searchPlaceholder={t('searchDocType')}
-                            className="h-14 text-xl"
+                            className="h-10 text-sm"
                             />
                             <FormMessage />
                         </FormItem>
@@ -189,14 +188,14 @@ export default function BulkEditDetailsModal({ isOpen, onClose }: BulkEditDetail
                         name="label"
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl block">{t('label')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-sm block">{t('label')}</FormLabel>
                             <Combobox
                                 options={labelOptions}
                                 value={field.value || ''}
                                 onChange={field.onChange}
                                 placeholder={t('selectLabel')}
                                 searchPlaceholder={t('searchLabel')}
-                                className="h-14 text-xl"
+                                className="h-10 text-sm"
                             />
                             <FormMessage />
                             </FormItem>
@@ -207,14 +206,14 @@ export default function BulkEditDetailsModal({ isOpen, onClose }: BulkEditDetail
                         name="assignedDepartment"
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl block">{t('assignedDepartment')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-sm block">{t('assignedDepartment')}</FormLabel>
                             <Combobox
                             options={assignedDepartmentOptions}
                             value={field.value || ''}
                             onChange={field.onChange}
                             placeholder={t('selectAssignedDept')}
                             searchPlaceholder={t('searchAssignedDept')}
-                            className="h-14 text-xl"
+                            className="h-10 text-sm"
                             />
                             <FormMessage />
                         </FormItem>
@@ -225,9 +224,9 @@ export default function BulkEditDetailsModal({ isOpen, onClose }: BulkEditDetail
                         name="keywords"
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel className="text-[#1D41D5] text-xl block">{t('keywords')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-sm block">{t('keywords')}</FormLabel>
                             <FormControl>
-                            <Input placeholder={t('keywordsPlaceholder')} {...field} className="h-14 text-xl" />
+                            <Input placeholder={t('keywordsPlaceholder')} {...field} className="h-10 text-sm" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -235,16 +234,16 @@ export default function BulkEditDetailsModal({ isOpen, onClose }: BulkEditDetail
                     />
                 </div>
 
-                <Accordion type="single" collapsible className="w-full border-2 rounded-xl px-10 bg-white/30">
+                <Accordion type="single" collapsible className="w-full border rounded-lg px-4 bg-white/30">
                   <AccordionItem value="links" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-8">
-                      <div className="flex items-center gap-5">
-                        <LinkIcon className="h-8 w-8 text-blue-600" />
-                        <span className="font-bold text-xl text-blue-600">{t('documentLinks')}</span>
+                    <AccordionTrigger className="hover:no-underline py-4">
+                      <div className="flex items-center gap-3">
+                        <LinkIcon className="h-5 w-5 text-blue-600" />
+                        <span className="font-bold text-sm text-blue-600">{t('documentLinks')}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-10">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <AccordionContent className="pt-2 pb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                           const linkKey = `documentLink${num}` as keyof BulkEditFormValues;
                           return (
@@ -254,8 +253,8 @@ export default function BulkEditDetailsModal({ isOpen, onClose }: BulkEditDetail
                               name={linkKey} 
                               render={({ field }) => ( 
                                 <FormItem>
-                                  <FormLabel className="text-lg block">{t(`docLink${num}` as any)}</FormLabel>
-                                  <FormControl><Input type="url" placeholder="https://://" {...field} className="h-12 text-lg" /></FormControl>
+                                  <FormLabel className="text-sm block">{t(`docLink${num}` as any)}</FormLabel>
+                                  <FormControl><Input type="url" placeholder="https://://" {...field} className="h-10 text-sm" /></FormControl>
                                   <FormMessage />
                                 </FormItem> 
                               )} 
@@ -269,16 +268,16 @@ export default function BulkEditDetailsModal({ isOpen, onClose }: BulkEditDetail
 
                 <FormField control={form.control} name="docTags" render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[#1D41D5] text-xl block">{t('tagsLabel')}</FormLabel>
-                        <FormControl><Input {...field} className="h-14 text-xl" /></FormControl>
+                        <FormLabel className="text-[#1D41D5] text-sm block">{t('tagsLabel')}</FormLabel>
+                        <FormControl><Input {...field} className="h-10 text-sm" /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
               </div>
             </ScrollArea>
-            <DialogFooter className="pt-10 gap-6">
-              <Button type="button" variant="ghost" className="flex-1 h-14 text-xl" onClick={onClose}>{t('cancel')}</Button>
-              <Button type="submit" className="flex-1 h-14 text-xl">{t('saveChanges')}</Button>
+            <DialogFooter className="pt-4 flex-none gap-4">
+              <Button type="button" variant="ghost" className="flex-1 h-10 text-sm" onClick={onClose}>{t('cancel')}</Button>
+              <Button type="submit" className="flex-1 h-10 text-sm">{t('saveChanges')}</Button>
             </DialogFooter>
           </form>
         </Form>
