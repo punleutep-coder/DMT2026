@@ -141,6 +141,8 @@ export type ModalType =
   | 'completeDocument'
   | 'exportXLSX'
   | 'bulkAdvance'
+  | 'bulkEditDetails'
+  | 'bulkComplete'
   | null;
 
 export interface ModalState {

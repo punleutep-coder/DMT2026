@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,8 @@ import {
   Redo2,
   Tags,
   Users2,
+  PencilLine,
+  CheckCircle,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
@@ -177,6 +180,16 @@ export default function DocumentManagement() {
           <Button onClick={() => openModal('bulkAdvance')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-lg font-body h-9">
             <Redo2 className="w-4 h-4" /> {t('bulkAdvance')}
           </Button>
+        )}
+        {hasPermission(currentUser, 'canEditDocumentName') && (
+            <Button onClick={() => openModal('bulkEditDetails')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg font-body h-9">
+                <PencilLine className="w-4 h-4" /> {t('bulkEdit')}
+            </Button>
+        )}
+        {hasPermission(currentUser, 'canCompleteDocument') && (
+            <Button onClick={() => openModal('bulkComplete')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg font-body h-9">
+                <CheckCircle className="w-4 h-4" /> {t('bulkComplete')}
+            </Button>
         )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
           <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} size="sm" className="bg-blue-800 hover:bg-blue-800/90 text-white shadow-lg font-body h-9">

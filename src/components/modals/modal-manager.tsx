@@ -21,6 +21,8 @@ import ManageAssignedDepartmentsModal from "./manage-assigned-departments-modal"
 import GlobalActivityLogModal from "./global-activity-log-modal"
 import ExportXLSXModal from "./export-xlsx-modal"
 import BulkAdvanceModal from "./bulk-advance-modal"
+import BulkEditDetailsModal from "./bulk-edit-details-modal"
+import BulkCompleteModal from "./bulk-complete-modal"
 import ManageLabelsModal from "./manage-labels-modal"
 import ManageReceiversModal from "./manage-receivers-modal"
 
@@ -79,6 +81,10 @@ export default function ModalManager() {
             return <ExportXLSXModal isOpen={true} onClose={handleClose} />
         case 'bulkAdvance':
             return <BulkAdvanceModal isOpen={true} onClose={handleClose} />
+        case 'bulkEditDetails':
+            return <BulkEditDetailsModal isOpen={true} onClose={handleClose} />
+        case 'bulkComplete':
+            return <BulkCompleteModal isOpen={true} onClose={handleClose} />
         default:
             return null;
     }

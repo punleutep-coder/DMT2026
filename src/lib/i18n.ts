@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useAppContext } from "@/hooks/use-app-context";
@@ -57,6 +58,10 @@ const translations = {
     areYouSureDelete: "Are you sure you want to delete {count} selected documents? This will also remove all associated logs. This action cannot be undone.",
     documentsDeleted: "{count} documents have been deleted.",
     bulkAdvance: "Bulk Advance",
+    bulkEdit: "Bulk Edit Details",
+    bulkEditDesc: "Update fields for {count} selected documents. Only filled fields will be changed.",
+    bulkComplete: "Bulk Complete",
+    bulkCompleteDesc: "Mark {count} selected documents as completed.",
 
     // Document Table
     documentId: "Document ID",
@@ -353,6 +358,10 @@ const translations = {
       areYouSureDelete: "តើអ្នកប្រាកដទេថាចង់លុបឯកសារដែលបានជ្រើសរើស {count} នេះ? វានឹងលុបកំណត់ហេតុដែលពាក់ព័ន្ធទាំងអស់ផងដែរ។ សកម្មភាពនេះមិនអាចមិនធ្វើវិញបានទេ។",
       documentsDeleted: "ឯកសារ {count} ត្រូវបានលុប។",
       bulkAdvance: "បញ្ជូនឯកសារច្រើន",
+      bulkEdit: "កែសម្រួលព័ត៌មានច្រើន",
+      bulkEditDesc: "ធ្វើបច្ចុប្បន្នភាពវាលសម្រាប់ {count} ឯកសារដែលបានជ្រើសរើស។ មានតែវាលដែលបានបំពេញប៉ុណ្ណោះដែលនឹងត្រូវបានផ្លាស់ប្តូរ។",
+      bulkComplete: "បញ្ចប់ឯកសារច្រើន",
+      bulkCompleteDesc: "សម្គាល់ {count} ឯកសារដែលបានជ្រើសរើសថាបានបញ្ចប់។",
 
       // Document Table
       documentId: "លេខសម្គាល់ឯកសារ",
