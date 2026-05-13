@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -306,20 +307,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
             <ScrollArea className="flex-1 pr-10 -mr-10">
               <div className="space-y-12 pb-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {hasPermission(currentUser, 'canEditDocumentId') && (
-                      <FormField 
-                        control={form.control} 
-                        name="id" 
-                        render={({ field }) => ( 
-                          <FormItem>
-                            <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('docIdPrimary')}</FormLabel>
-                            <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
-                            <FormMessage />
-                          </FormItem> 
-                        )} 
-                      />
-                    )}
+                <div className="space-y-12">
                     {hasPermission(currentUser, 'canEditDocumentName') && (
                       <FormField 
                         control={form.control} 
@@ -327,12 +315,27 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                         render={({ field }) => ( 
                           <FormItem>
                             <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('docName')}</FormLabel>
-                            <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
+                            <FormControl><Textarea {...field} className="min-h-[200px] text-2xl py-4" /></FormControl>
                             <FormMessage />
                           </FormItem> 
                         )} 
                       />
                     )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        {hasPermission(currentUser, 'canEditDocumentId') && (
+                          <FormField 
+                            control={form.control} 
+                            name="id" 
+                            render={({ field }) => ( 
+                              <FormItem>
+                                <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('docIdPrimary')}</FormLabel>
+                                <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
+                                <FormMessage />
+                              </FormItem> 
+                            )} 
+                          />
+                        )}
+                    </div>
                 </div>
                 
                 <Accordion type="single" collapsible className="w-full border-2 rounded-2xl px-10 bg-white/30">
@@ -376,7 +379,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                   </AccordionItem>
                 </Accordion>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                     {hasPermission(currentUser, 'canEditDocumentType') && (
                     <FormField
                         control={form.control}
