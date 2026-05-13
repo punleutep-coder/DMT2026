@@ -264,23 +264,23 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-lg:w-screen max-lg:h-screen max-lg:max-w-none max-lg:max-h-none max-lg:top-0 max-lg:left-0 max-lg:translate-x-0 max-lg:translate-y-0 max-lg:rounded-none lg:w-[80vw] lg:max-w-6xl lg:h-[90vh] glassmorphic-card p-4 sm:p-10 flex flex-col gap-0 overflow-hidden">
-        <DialogHeader className="mb-8 flex-none">
-          <DialogTitle className="text-3xl font-bold font-rotanak text-[#000066]">{t('addNewDocument')}</DialogTitle>
+      <DialogContent className="max-lg:w-screen max-lg:h-screen max-lg:max-w-none max-lg:max-h-none max-lg:top-0 max-lg:left-0 max-lg:translate-x-0 max-lg:translate-y-0 max-lg:rounded-none lg:w-[90vw] lg:max-w-7xl lg:h-[95vh] glassmorphic-card p-6 sm:p-12 flex flex-col gap-0 overflow-hidden">
+        <DialogHeader className="mb-10 flex-none">
+          <DialogTitle className="text-5xl font-bold font-rotanak text-[#000066]">{t('addNewDocument')}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-            <ScrollArea className="flex-1 pr-6 -mr-6">
-              <div className="space-y-10 pb-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <ScrollArea className="flex-1 pr-10 -mr-10">
+              <div className="space-y-12 pb-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {hasPermission(currentUser, 'canEditDocumentName') && 
                     <FormField 
                         control={form.control} 
                         name="name" 
                         render={({ field }) => ( 
                         <FormItem>
-                            <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('docName')}</FormLabel>
-                            <FormControl><Input {...field} className="h-14 text-xl" /></FormControl>
+                            <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('docName')}</FormLabel>
+                            <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
                             <FormMessage />
                         </FormItem> 
                         )} 
@@ -292,8 +292,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         name="id" 
                         render={({ field }) => ( 
                           <FormItem>
-                            <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('docIdPrimary')}</FormLabel>
-                            <FormControl><Input {...field} className="h-14 text-xl" /></FormControl>
+                            <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('docIdPrimary')}</FormLabel>
+                            <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
                             <FormMessage />
                           </FormItem> 
                         )} 
@@ -301,16 +301,16 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                     )}
                 </div>
                 
-                <Accordion type="single" collapsible className="w-full border rounded-xl px-6 bg-white/30">
+                <Accordion type="single" collapsible className="w-full border-2 rounded-2xl px-10 bg-white/30">
                   <AccordionItem value="extra-ids" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-6">
-                      <div className="flex items-center gap-4">
-                        <Fingerprint className="h-7 w-7 text-emerald-600" />
-                        <span className="font-bold text-xl text-emerald-600">{t('documentExtraIds')}</span>
+                    <AccordionTrigger className="hover:no-underline py-10">
+                      <div className="flex items-center gap-6">
+                        <Fingerprint className="h-10 w-10 text-emerald-600" />
+                        <span className="font-bold text-3xl text-emerald-600">{t('documentExtraIds')}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-8">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <AccordionContent className="pt-4 pb-12">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {[
                           { name: 'secondaryId', perm: 'canEditSecondaryId' },
                           { name: 'tertiaryId', perm: 'canEditTertiaryId' },
@@ -329,8 +329,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                               name={extraId.name as any} 
                               render={({ field }) => ( 
                                 <FormItem>
-                                  <FormLabel className="text-lg font-semibold block mb-2">{t(extraId.name as any)}</FormLabel>
-                                  <FormControl><Input {...field} className="h-14 text-xl" /></FormControl>
+                                  <FormLabel className="text-xl font-semibold block mb-3">{t(extraId.name as any)}</FormLabel>
+                                  <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
                                   <FormMessage />
                                 </FormItem> 
                               )} 
@@ -342,14 +342,14 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                   </AccordionItem>
                 </Accordion>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {hasPermission(currentUser, 'canEditDocumentType') && (
                       <FormField
                           control={form.control}
                           name="documentType"
                           render={({ field }) => (
                             <FormItem className="flex flex-col">
-                              <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('documentType')}</FormLabel>
+                              <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('documentType')}</FormLabel>
                               <Combobox
                                 options={documentTypeOptions}
                                 value={field.value}
@@ -357,7 +357,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                                 placeholder={t('selectDocType')}
                                 searchPlaceholder={t('searchDocType')}
                                 notFoundText={t('noDocTypeFound')}
-                                className="h-14 text-xl"
+                                className="h-20 text-2xl"
                               />
                               <FormMessage />
                             </FormItem>
@@ -370,7 +370,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                         name="assignedDepartment"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('assignedDepartment')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('assignedDepartment')}</FormLabel>
                             <Combobox
                               options={assignedDepartmentOptions}
                               value={field.value || ''}
@@ -379,7 +379,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                               searchPlaceholder={t('searchAssignedDept')}
                               notFoundText={t('noAssignedDeptFound')}
                               onCreate={currentUser?.role === 'Admin' ? handleCreateAssignedDepartment : undefined}
-                              className="h-14 text-xl"
+                              className="h-20 text-2xl"
                             />
                             <FormMessage />
                           </FormItem>
@@ -392,7 +392,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                             name="label"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('label')}</FormLabel>
+                                <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('label')}</FormLabel>
                                 <Combobox
                                     options={labelOptions}
                                     value={field.value || ''}
@@ -401,7 +401,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                                     searchPlaceholder={t('searchLabel')}
                                     notFoundText={t('noLabelFound')}
                                     onCreate={currentUser?.role === 'Admin' ? handleCreateLabel : undefined}
-                                    className="h-14 text-xl"
+                                    className="h-20 text-2xl"
                                 />
                                 <FormMessage />
                                 </FormItem>
@@ -413,7 +413,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                       name="initialReceiver"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('initialReceiver')}</FormLabel>
+                          <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('initialReceiver')}</FormLabel>
                           <Combobox
                             options={receiverOptions}
                             value={field.value}
@@ -422,7 +422,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                             searchPlaceholder={t('searchReceiver')}
                             notFoundText={t('noReceiverFound')}
                             onCreate={currentUser?.role === 'Admin' ? handleCreateReceiver : undefined}
-                            className="h-14 text-xl"
+                            className="h-20 text-2xl"
                           />
                           <FormMessage />
                         </FormItem>
@@ -430,16 +430,16 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                     />
                 </div>
 
-                <Accordion type="single" collapsible className="w-full border rounded-xl px-6 bg-white/30">
+                <Accordion type="single" collapsible className="w-full border-2 rounded-2xl px-10 bg-white/30">
                   <AccordionItem value="links" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-6">
-                      <div className="flex items-center gap-4">
-                        <LinkIcon className="h-7 w-7 text-blue-600" />
-                        <span className="font-bold text-xl text-blue-600">{t('documentLinks')}</span>
+                    <AccordionTrigger className="hover:no-underline py-10">
+                      <div className="flex items-center gap-6">
+                        <LinkIcon className="h-10 w-10 text-blue-600" />
+                        <span className="font-bold text-3xl text-blue-600">{t('documentLinks')}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <AccordionContent className="pt-4 pb-12">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                           const linkKey = `documentLink${num}` as keyof AddDocumentFormValues;
                           const editPerm = `canEditDocumentLink${num}` as any;
@@ -450,8 +450,8 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                               name={linkKey} 
                               render={({ field }) => ( 
                                 <FormItem>
-                                  <FormLabel className={num === 1 ? 'text-[#1D41D5] text-lg font-bold block mb-2' : 'text-lg font-semibold block mb-2'}>{t(`docLink${num}` as any)}</FormLabel>
-                                  <FormControl><Input type="url" placeholder="https://://" {...field} className="h-14 text-xl" /></FormControl>
+                                  <FormLabel className={num === 1 ? 'text-[#1D41D5] text-xl font-bold block mb-3' : 'text-xl font-semibold block mb-3'}>{t(`docLink${num}` as any)}</FormLabel>
+                                  <FormControl><Input type="url" placeholder="https://://" {...field} className="h-20 text-2xl" /></FormControl>
                                   <FormMessage />
                                 </FormItem> 
                               )} 
@@ -463,26 +463,26 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                   </AccordionItem>
                 </Accordion>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel className="text-xl font-bold block mb-2">{t('keywords')}</FormLabel><FormControl><Input placeholder={t('keywordsPlaceholder')} {...field} className="h-14 text-xl" /></FormControl><FormMessage /></FormItem> )} />}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel className="text-2xl font-bold block mb-3">{t('keywords')}</FormLabel><FormControl><Input placeholder={t('keywordsPlaceholder')} {...field} className="h-20 text-2xl" /></FormControl><FormMessage /></FormItem> )} />}
                     {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('tagsLabel')}</FormLabel>
-                        <FormControl><Input {...field} className="h-14 text-xl" /></FormControl>
+                        <FormLabel className="text-[#1D41D5] text-2xl font-bold block mb-3">{t('tagsLabel')}</FormLabel>
+                        <FormControl><Input {...field} className="h-20 text-2xl" /></FormControl>
                         <FormMessage />
                     </FormItem>
                     )} />}
                 </div>
                 
-                {hasPermission(currentUser, 'canEditInitialNote') && <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel className="text-xl font-bold block mb-2">{t('initialNote')}</FormLabel><FormControl><Textarea {...field} className="min-h-[120px] text-xl" /></FormControl><FormMessage /></FormItem> )} />}
+                {hasPermission(currentUser, 'canEditInitialNote') && <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel className="text-2xl font-bold block mb-3">{t('initialNote')}</FormLabel><FormControl><Textarea {...field} className="min-h-[180px] text-2xl" /></FormControl><FormMessage /></FormItem> )} />}
               </div>
             </ScrollArea>
-            <DialogFooter className="pt-8 flex-none gap-6">
-              <Button type="button" variant="ghost" className="flex-1 h-16 text-xl font-bold" onClick={onClose}>{t('cancel')}</Button>
+            <DialogFooter className="pt-10 flex-none gap-8">
+              <Button type="button" variant="ghost" className="flex-1 h-24 text-3xl font-bold" onClick={onClose}>{t('cancel')}</Button>
               <Button 
                 type="submit" 
                 variant="secondary"
-                className="flex-1 h-16 text-xl font-bold" 
+                className="flex-1 h-24 text-3xl font-bold" 
                 onClick={() => setAddAnother(true)}
                 disabled={!state.isInitialized}
               >
@@ -490,7 +490,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
               </Button>
               <Button 
                 type="submit" 
-                className="flex-1 h-16 text-xl font-bold" 
+                className="flex-1 h-24 text-3xl font-bold" 
                 onClick={() => setAddAnother(false)}
                 disabled={!state.isInitialized}
               >
