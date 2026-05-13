@@ -74,7 +74,7 @@ export function Combobox({
           {value
             ? options.find((option) => option.value === value)?.label
             : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-6 w-6 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
@@ -83,20 +83,20 @@ export function Combobox({
             placeholder={searchPlaceholder} 
             value={searchQuery}
             onValueChange={setSearchQuery}
-            className="text-sm h-10"
+            className="text-2xl h-16"
           />
-          <CommandList className="max-h-[300px]">
+          <CommandList className="max-h-[400px]">
             <CommandGroup>
               {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.label}
                   onSelect={() => handleSelect(option.value)}
-                  className="text-sm py-2"
+                  className="text-xl py-4"
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-3 h-6 w-6",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
@@ -107,14 +107,14 @@ export function Combobox({
             {onCreate && searchQuery && !filteredOptions.some(opt => opt.label.toLowerCase() === searchQuery.toLowerCase()) && (
               <>
                 <CommandEmpty>
-                    <button onClick={handleCreate} className="w-full text-left p-3 hover:bg-accent rounded-sm text-sm">
-                      <PlusCircle className="mr-2 h-4 w-4 inline-block" />Create "{searchQuery}"
+                    <button onClick={handleCreate} className="w-full text-left p-5 hover:bg-accent rounded-sm text-xl font-bold text-blue-600">
+                      <PlusCircle className="mr-3 h-6 w-6 inline-block" />Create "{searchQuery}"
                     </button>
                 </CommandEmpty>
               </>
             )}
             {filteredOptions.length === 0 && !searchQuery && (
-                 <CommandEmpty className="text-sm py-4">{notFoundText}</CommandEmpty>
+                 <CommandEmpty className="text-xl py-8">{notFoundText}</CommandEmpty>
             )}
           </CommandList>
         </Command>
