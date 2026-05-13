@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useAppContext } from "@/hooks/use-app-context";
@@ -62,6 +61,7 @@ const translations = {
     bulkEditDesc: "Update fields for {count} selected documents. Only filled fields will be changed.",
     bulkComplete: "Bulk Complete",
     bulkCompleteDesc: "Mark {count} selected documents as completed.",
+    saveAndAddAnother: "Save & Add Another",
 
     // Document Table
     documentId: "Document ID",
@@ -263,7 +263,6 @@ const translations = {
     canCompleteDocument: 'Complete Document',
     canDelayDocument: 'Delay Document',
     canReleaseDocument: 'Release Document from Delay',
-    canDeleteDocument: 'Delete Document',
     canOpenDocumentLink1: 'Open Document (Link 1)',
     canOpenDocumentLink2: 'Open Document (Link 2)',
     canOpenDocumentLink3: 'Open Document (Link 3)',
@@ -303,6 +302,7 @@ const translations = {
     canEditInitialNote: 'Edit Initial Note',
     canManageAdmins: 'Can Manage Admins',
     canViewGlobalActivity: 'Can View Global Activity',
+    canDeleteDocument: 'Delete Document',
   },
   km: {
       // General
@@ -362,6 +362,7 @@ const translations = {
       bulkEditDesc: "ធ្វើបច្ចុប្បន្នភាពវាលសម្រាប់ {count} ឯកសារដែលបានជ្រើសរើស។ មានតែវាលដែលបានបំពេញប៉ុណ្ណោះដែលនឹងត្រូវបានផ្លាស់ប្តូរ។",
       bulkComplete: "បញ្ចប់ឯកសារច្រើន",
       bulkCompleteDesc: "សម្គាល់ {count} ឯកសារដែលបានជ្រើសរើសថាបានបញ្ចប់។",
+      saveAndAddAnother: "រក្សាទុក និងបន្ថែមថ្មីទៀត",
 
       // Document Table
       documentId: "លេខសម្គាល់ឯកសារ",
@@ -408,7 +409,7 @@ const translations = {
       filterByDate: "តម្រងតាមកាលបរិច្ឆេទ",
       docsExceeding: "ឯកសារលើសពី:",
       days: "ថ្ងៃ",
-      hours: "ម៉ោង",
+      hours: "hours",
       minutes: "នាទី",
       in: "ក្នុង",
       allDepartments: "នាយកដ្ឋានទាំងអស់",
@@ -502,7 +503,7 @@ const translations = {
       details: "ព័ត៌មានលម្អិត",
       documentReports: "របាយការណ៍ឯកសារ",
       documentReportsDesc: "បង្កើតរបាយការណ៍អំពីប្រភេទឯកសារ និងការចែកចាយតាមនាយកដ្ឋាន។",
-      totalDocs: "ឯកសារសរុប",
+      totalDocs: "សរុបឯកសារ",
       types: "ប្រភេទ",
       count: "ចំនួន",
       pleaseSelectDateRange: "សូមជ្រើសរើសចន្លោះកាលបរិច្ឆេទ ហើយបង្កើតរបាយការណ៍។",
@@ -559,10 +560,9 @@ const translations = {
       canEditCurrentNote: 'កែសម្រួលកំណត់ចំណាំបច្ចុប្បន្ន',
       canMoveDocumentAdvance: 'ផ្លាស់ទីឯកសារ (ទៅមុខ)',
       canMoveDocumentBack: 'ផ្លាស់ទីឯកសារ (ថយក្រោយ)',
+      canCompleteDocument: 'បញ្ចប់ឯកសារ',
       canDelayDocument: 'ពន្យាពេលឯកសារ',
       canReleaseDocument: 'ចេញផ្សាយឯកសារពីការពន្យាពេល',
-      canCompleteDocument: 'បញ្ចប់ឯកសារ',
-      canDeleteDocument: 'លុបឯកសារ',
       canOpenDocumentLink1: 'បើកឯកសារ (តំណទី 1)',
       canOpenDocumentLink2: 'បើកឯកសារ (តំណទី 2)',
       canOpenDocumentLink3: 'បើកឯកសារ (តំណទី 3)',
@@ -602,6 +602,7 @@ const translations = {
       canEditInitialNote: 'កែសម្រួលកំណត់ចំណាំដំបូង',
       canManageAdmins: 'អាចគ្រប់គ្រងអ្នកគ្រប់គ្រងបាន',
       canViewGlobalActivity: 'អាចមើលសកម្មភាពសកលបាន',
+      canDeleteDocument: 'លុបឯកសារ',
   }
 }
 

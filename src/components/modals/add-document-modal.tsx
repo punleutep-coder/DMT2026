@@ -67,6 +67,7 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
   const { currentUser, documentTypes, assignedDepartments, departments, labels, users, receivers } = state
   const { toast } = useToast()
   const t = useTranslation()
+  const [addAnother, setAddAnother] = useState(false)
 
   const form = useForm<AddDocumentFormValues>({
     resolver: zodResolver(formSchema),
@@ -205,8 +206,40 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
     dispatch({ type: 'ADD_DOCUMENT', payload: newDoc });
     dispatch({ type: 'ADD_LOG', payload: { docId: newDoc.id, oldStatus: 'New', newStatus: initialDepartment, user: state.currentUser!.username, timestamp: now } });
     
-    toast({ title: "Success", description: "Document added successfully." });
-    onClose();
+    toast({ title: t('success'), description: "Document added successfully." });
+    
+    if (addAnother) {
+        form.reset({
+            ...form.getValues(),
+            id: '',
+            name: '',
+            secondaryId: '',
+            tertiaryId: '',
+            quaternaryId: '',
+            quinaryId: '',
+            senaryId: '',
+            septenaryId: '',
+            octonaryId: '',
+            nonaryId: '',
+            denaryId: '',
+            documentLink1: '',
+            documentLink2: '',
+            documentLink3: '',
+            documentLink4: '',
+            documentLink5: '',
+            documentLink6: '',
+            documentLink7: '',
+            documentLink8: '',
+            documentLink9: '',
+            documentLink10: '',
+            keywords: '',
+            docTags: '',
+            initialNote: '',
+        });
+        setAddAnother(false);
+    } else {
+        onClose();
+    }
   }
 
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
@@ -444,9 +477,25 @@ export default function AddDocumentModal({ isOpen, onClose }: AddDocumentModalPr
                 {hasPermission(currentUser, 'canEditInitialNote') && <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel className="text-xl block">{t('initialNote')}</FormLabel><FormControl><Textarea {...field} className="min-h-[120px] text-xl" /></FormControl><FormMessage /></FormItem> )} />}
               </div>
             </ScrollArea>
-            <DialogFooter className="pt-10 gap-6">
+            <DialogFooter className="pt-10 gap-4 flex-wrap">
               <Button type="button" variant="ghost" className="flex-1 h-14 text-xl" onClick={onClose}>{t('cancel')}</Button>
-              <Button type="submit" className="flex-1 h-14 text-xl" disabled={!state.isInitialized}>{t('addDocument')}</Button>
+              <Button 
+                type="submit" 
+                variant="secondary"
+                className="flex-1 h-14 text-xl" 
+                onClick={() => setAddAnother(true)}
+                disabled={!state.isInitialized}
+              >
+                {t('saveAndAddAnother')}
+              </Button>
+              <Button 
+                type="submit" 
+                className="flex-1 h-14 text-xl" 
+                onClick={() => setAddAnother(false)}
+                disabled={!state.isInitialized}
+              >
+                {t('addDocument')}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
