@@ -44,11 +44,14 @@ type Action =
   | { type: 'SET_COLUMN_VISIBILITY'; payload: { [key: string]: boolean } }
   | { type: 'SET_DATA'; payload: { users: User[], documents: Document[], logs: Log[], departments: string[], departmentColors: { [key: string]: string }, documentTypes: string[], assignedDepartments: string[], labels: string[], receivers: string[], columnVisibility: {[key:string]: boolean} } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'km' }
-  | { type: 'MARK_DEPARTMENT_VIEWED'; payload: string };
+  | { type: 'SET_FONT_SIZE'; payload: 'sm' | 'md' | 'lg' }
+  | { type: 'MARK_DEPARTMENT_VIEWED'; payload: string }
+  | { type: 'SET_VIEW'; payload: AppState['currentView'] };
 
 const getInitialState = (): AppState => {
     const savedFilter = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_filterSettings') : null;
     const savedLanguage = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_language') : 'km';
+    const savedFontSize = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_fontSize') : 'md';
     const savedViewed = typeof window !== 'undefined' ? localStorage.getItem('docuFlow_viewedDepts') : null;
     
     let filter = savedFilter ? JSON.parse(savedFilter) : {
@@ -95,7 +98,9 @@ const getInitialState = (): AppState => {
         dialog: { isOpen: false, title: '', message: '' },
         modal: { type: null },
         language: (savedLanguage === 'en' || savedLanguage === 'km') ? savedLanguage : 'km',
+        fontSize: (savedFontSize === 'sm' || savedFontSize === 'md' || savedFontSize === 'lg') ? savedFontSize : 'md',
         lastViewedDepartments: savedViewed ? JSON.parse(savedViewed) : {},
+        currentView: 'dashboard',
     }
 }
 
@@ -304,6 +309,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
             localStorage.setItem('docuFlow_language', action.payload);
         }
         return { ...state, language: action.payload };
+    case 'SET_FONT_SIZE':
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('docuFlow_fontSize', action.payload);
+        }
+        return { ...state, fontSize: action.payload };
     case 'MARK_DEPARTMENT_VIEWED': {
         const newViewed = { ...state.lastViewedDepartments, [action.payload]: new Date().toISOString() };
         if (typeof window !== 'undefined') {
@@ -311,6 +321,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
         }
         return { ...state, lastViewedDepartments: newViewed };
     }
+    case 'SET_VIEW':
+        return { ...state, currentView: action.payload };
     default:
       return state
   }
@@ -341,6 +353,14 @@ export const AppContext = createContext<AppContextValue>({
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const root = document.documentElement;
+      root.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg');
+      root.classList.add(`font-size-${state.fontSize}`);
+    }
+  }, [state.fontSize]);
 
   useEffect(() => {
     let dbListener: Unsubscribe | null = null;

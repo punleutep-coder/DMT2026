@@ -122,26 +122,37 @@ export default function LoginForm() {
   }
 
   return (
-    <>
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="modal-content w-full max-w-sm p-8 space-y-6 glassmorphic-card">
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full">
-              <Workflow className="w-8 h-8 text-[#000066]" />
-            </div>
-            <h1 className="text-[22px] font-bold text-[#000066] font-rotanak">{t('docuFlowLogin')}</h1>
-            <p className="text-muted-foreground">{t('pleaseSignIn')}</p>
+    <div className="flex items-center justify-center min-h-screen p-4 overflow-hidden relative">
+      {/* Decorative background elements */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+
+      <div className="w-full max-w-md space-y-8 glassmorphic-card p-8 sm:p-12 border-none shadow-2xl relative z-10">
+        <div className="text-center space-y-6">
+          <div className="inline-flex items-center justify-center bg-primary p-4 rounded-3xl shadow-xl shadow-primary/20 transform hover:scale-110 transition-transform duration-500">
+            <Workflow className="w-10 h-10 text-white" />
           </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black text-primary font-headline tracking-tighter uppercase">{t('docuFlowLogin')}</h1>
+            <p className="text-muted-foreground font-body font-medium">{t('pleaseSignIn')}</p>
+          </div>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-primary/80 font-body">{t('email')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="user@example.com" {...field} className="shadow-inner shadow-md" />
+                      <Input 
+                        placeholder="user@example.com" 
+                        {...field} 
+                        className="h-12 bg-white/50 border-white/40 focus:bg-white transition-all font-body rounded-xl shadow-sm" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -152,51 +163,71 @@ export default function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('password')}</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-primary/80 font-body">{t('password')}</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="shadow-inner shadow-md" />
+                      <Input 
+                        type="password" 
+                        placeholder="••••••••" 
+                        {...field} 
+                        className="h-12 bg-white/50 border-white/40 focus:bg-white transition-all font-body rounded-xl shadow-sm"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-               <div className="flex items-center">
-                <FormField
-                  control={form.control}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="cursor-pointer">
-                          {t('rememberMe')}
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              {error && (
-                <Alert variant="destructive">
-                  <Terminal className="h-4 w-4" />
-                  <AlertTitle>{t('loginFailed')}</AlertTitle>
-                  <AlertDescription>
-                    {error}
-                  </AlertDescription>
-                </Alert>
-              )}
-              <Button type="submit" className="w-full" disabled={isLoggingIn}>
-                {isLoggingIn ? t('loggingIn') : t('login')}
-              </Button>
-            </form>
-          </Form>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-primary rounded-md"
+                      />
+                    </FormControl>
+                    <FormLabel className="text-sm font-bold text-muted-foreground cursor-pointer font-body uppercase tracking-tighter">
+                      {t('rememberMe')}
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {error && (
+              <Alert variant="destructive" className="rounded-2xl border-destructive/20 bg-destructive/5 animate-in fade-in slide-in-from-top-4 duration-300">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle className="font-bold font-body">{t('loginFailed')}</AlertTitle>
+                <AlertDescription className="text-xs font-body font-medium">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full h-14 bg-primary text-white hover:bg-primary/90 font-black text-lg uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 transition-all duration-300 transform active:scale-95" 
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {t('loggingIn')}
+                </div>
+              ) : t('login')}
+            </Button>
+          </form>
+        </Form>
+
+        <div className="pt-4 text-center">
+          <p className="text-[10px] text-muted-foreground font-body font-bold uppercase tracking-[0.2em]">Powered by Advanced Workflow Engine</p>
         </div>
       </div>
-    </>
+    </div>
   )
 }

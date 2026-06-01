@@ -20,10 +20,12 @@ import {
   Users2,
   PencilLine,
   CheckCircle,
+  FilePlus,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
+import type { AppState } from '@/lib/types'
 import { db } from '@/lib/firebase'
 import { ref, set } from 'firebase/database'
 import { sanitizeFirebaseKey } from '@/lib/utils'
@@ -35,8 +37,29 @@ export default function DocumentManagement() {
   const { toast } = useToast()
   const t = useTranslation();
 
-  const openModal = (type: any, docId?: string, firestoreId?: string) => {
-    dispatch({ type: 'SET_MODAL', payload: { type, docId, firestoreId } })
+  const openModal = (type: any) => {
+    const viewMap: {[key: string]: AppState['currentView']} = {
+      'addDocument': 'addDocument',
+      'addUser': 'userManagement',
+      'reporting': 'reporting',
+      'editDocument': 'editDocument',
+      'splitDocument': 'splitDocument',
+      'advanceDocument': 'advanceDocument',
+      'delayDocument': 'delayDocument',
+      'completeDocument': 'completeDocument',
+      'combineDocuments': 'combineDocuments',
+      'addNote': 'addNote',
+      'viewLog': 'viewLog',
+      'bulkAdvance': 'bulkAdvance',
+      'bulkComplete': 'bulkComplete',
+      'bulkEditDetails': 'bulkEditDetails'
+    };
+
+    if (viewMap[type]) {
+      dispatch({ type: 'SET_VIEW', payload: viewMap[type] });
+    } else {
+      dispatch({ type: 'SET_MODAL', payload: { type } })
+    }
   }
   
   const handleImportClick = () => {
@@ -85,6 +108,7 @@ export default function DocumentManagement() {
                        title: t('error'),
                        description: 'Failed to import data to Firebase.',
                        variant: 'destructive',
+                       action: <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
                      })
                   });
                 } catch (error) {
@@ -165,35 +189,40 @@ export default function DocumentManagement() {
   const isFiltered = state.filter.search || state.filter.startDate || state.filter.assignedDepartment !== 'All' || state.filter.mainFilter !== 'All' || state.filter.departmentSpecificFilter !== 'All';
 
   return (
-    <section className="glassmorphic-card space-y-6">
-      <div className="flex justify-between items-center gap-4">
+    <section className="glassmorphic-card space-y-6 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-[18px] font-bold text-foreground font-body">
+          <h2 className="text-xl sm:text-2xl font-black text-primary font-headline uppercase tracking-tight">
             {t('documentManagement')}
           </h2>
-          {isFiltered && <span className="text-base font-normal text-muted-foreground">({filteredDocs.length} {t('results')})</span>}
+          {isFiltered && <span className="text-sm font-medium text-muted-foreground hidden sm:inline">({filteredDocs.length} {t('results')})</span>}
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+        {hasPermission(currentUser, 'canAddDocument') && (
+          <Button onClick={() => openModal('addDocument')} size="sm" className="bg-[#000066] hover:bg-[#000099] text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+            <FilePlus className="w-3.5 h-3.5 mr-1.5" /> {t('addDocument')}
+          </Button>
+        )}
         {hasPermission(currentUser, 'canMoveDocumentAdvance') && (
-          <Button onClick={() => openModal('bulkAdvance')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-lg font-body h-9">
-            <Redo2 className="w-4 h-4" /> {t('bulkAdvance')}
+          <Button onClick={() => openModal('bulkAdvance')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-green-700 hover:bg-green-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+            <Redo2 className="w-3.5 h-3.5 mr-1.5" /> {t('bulkAdvance')}
           </Button>
         )}
         {hasPermission(currentUser, 'canEditDocumentName') && (
-            <Button onClick={() => openModal('bulkEditDetails')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg font-body h-9">
-                <PencilLine className="w-4 h-4" /> {t('bulkEdit')}
+            <Button onClick={() => openModal('bulkEditDetails')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-orange-700 hover:bg-orange-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <PencilLine className="w-3.5 h-3.5 mr-1.5" /> {t('bulkEdit')}
             </Button>
         )}
         {hasPermission(currentUser, 'canCompleteDocument') && (
-            <Button onClick={() => openModal('bulkComplete')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg font-body h-9">
-                <CheckCircle className="w-4 h-4" /> {t('bulkComplete')}
+            <Button onClick={() => openModal('bulkComplete')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('bulkComplete')}
             </Button>
         )}
         {hasPermission(currentUser, 'canCombineDocuments') && (
-          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} size="sm" className="bg-blue-800 hover:bg-blue-800/90 text-white shadow-lg font-body h-9">
-            <Combine className="w-4 h-4" /> {t('combineSelected')}
+          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} size="sm" className="bg-blue-900 hover:bg-blue-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+            <Combine className="w-3.5 h-3.5 mr-1.5" /> {t('combineSelected')}
           </Button>
         )}
         {hasPermission(currentUser, 'canDeleteDocument') && (
@@ -202,51 +231,51 @@ export default function DocumentManagement() {
             size="sm"
             onClick={handleDeleteSelected}
             disabled={state.selectedDocIds.length === 0}
-            className="shadow-lg font-body h-9"
+            className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs"
           >
-            <Trash2 className="w-4 h-4" /> {t('deleteSelected')}
+            <Trash2 className="w-3.5 h-3.5 mr-1.5" /> {t('deleteSelected')}
           </Button>
         )}
         
         {currentUser?.role === 'Admin' && (
           <>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageDepartments')} className="bg-indigo-800 hover:bg-indigo-800/90 text-white shadow-lg font-body h-9">
-                <Library className="w-4 h-4" /> {t('manageWorkflowDepts')}
+            <Button variant="secondary" size="sm" onClick={() => openModal('manageDepartments')} className="bg-indigo-900 hover:bg-indigo-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <Library className="w-3.5 h-3.5 mr-1.5" /> {t('manageWorkflowDepts')}
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-800 hover:bg-cyan-800/90 text-white shadow-lg font-body h-9">
-                <FileDigit className="w-4 h-4" /> {t('manageDocTypes')}
+            <Button variant="secondary" size="sm" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-900 hover:bg-cyan-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <FileDigit className="w-3.5 h-3.5 mr-1.5" /> {t('manageDocTypes')}
             </Button>
-             <Button variant="secondary" size="sm" onClick={() => openModal('manageLabels')} className="bg-rose-800 hover:bg-rose-800/90 text-white shadow-lg font-body h-9">
-                <Tags className="w-4 h-4" /> {t('manageLabels')}
+             <Button variant="secondary" size="sm" onClick={() => openModal('manageLabels')} className="bg-rose-900 hover:bg-rose-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <Tags className="w-3.5 h-3.5 mr-1.5" /> {t('manageLabels')}
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageReceivers')} className="bg-orange-800 hover:bg-orange-800/90 text-white shadow-lg font-body h-9">
-                <Users2 className="w-4 h-4" /> {t('manageReceivers')}
+            <Button variant="secondary" size="sm" onClick={() => openModal('manageReceivers')} className="bg-orange-800 hover:bg-orange-900 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <Users2 className="w-3.5 h-3.5 mr-1.5" /> {t('manageReceivers')}
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-800 hover:bg-teal-800/90 text-white shadow-lg font-body h-9">
-                <FileCog className="w-4 h-4" /> {t('manageAssignedDepts')}
+            <Button variant="secondary" size="sm" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-900 hover:bg-teal-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <FileCog className="w-3.5 h-3.5 mr-1.5" /> {t('manageAssignedDepts')}
             </Button>
           </>
         )}
         
         {hasPermission(currentUser, 'canManageColumns') && (
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageColumns')} className="bg-purple-800 hover:bg-purple-800/90 text-white shadow-lg font-body h-9">
-                <Columns className="w-4 h-4" /> {t('manageColumns')}
+            <Button variant="secondary" size="sm" onClick={() => openModal('manageColumns')} className="bg-purple-900 hover:bg-purple-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                <Columns className="w-3.5 h-3.5 mr-1.5" /> {t('manageColumns')}
             </Button>
         )}
          {hasPermission(currentUser, 'canExportData') && (
             <>
-              <Button variant="outline" size="sm" onClick={handleExport} className="shadow-lg font-body h-9">
-                  <Download className="w-4 h-4" /> {t('exportData')}
+              <Button variant="outline" size="sm" onClick={handleExport} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
+                  <Download className="w-3.5 h-3.5 mr-1.5" /> {t('exportData')}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => openModal('exportXLSX')} disabled={state.selectedDocIds.length === 0} className="shadow-lg font-body h-9">
-                <FileOutput className="w-4 h-4" /> Export (XLSX)
+              <Button variant="outline" size="sm" onClick={() => openModal('exportXLSX')} disabled={state.selectedDocIds.length === 0} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
+                <FileOutput className="w-3.5 h-3.5 mr-1.5" /> Export (XLSX)
               </Button>
             </>
         )}
          {currentUser?.role === 'Admin' && (
             <>
-                <Button variant="outline" size="sm" onClick={handleImportClick} className="shadow-lg font-body h-9">
-                    <Upload className="w-4 h-4" /> {t('importData')}
+                <Button variant="outline" size="sm" onClick={handleImportClick} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
+                    <Upload className="w-3.5 h-3.5 mr-1.5" /> {t('importData')}
                 </Button>
                 <input type="file" id="json-file-input" accept=".json" className="hidden" onChange={handleImportFile} />
             </>
@@ -255,7 +284,7 @@ export default function DocumentManagement() {
 
       <SearchAndFilter />
       
-      <div className="overflow-x-auto rounded-lg border-2 border-gray-400/50 dark:border-gray-600/50">
+      <div className="overflow-x-auto rounded-xl border border-gray-400/50 bg-white/20 backdrop-blur-sm">
         <DocumentTable />
       </div>
     </section>

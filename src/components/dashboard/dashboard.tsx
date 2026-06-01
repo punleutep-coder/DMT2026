@@ -16,13 +16,34 @@ import { Button } from '../ui/button'
 import { FilePlus } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
 
+import AddDocumentView from './add-document-view'
+import UserManagementView from './user-management-view'
+import ReportingView from './reporting-view'
+import EditDocumentView from './edit-document-view'
+import SplitDocumentView from './split-document-view'
+import AdvanceDocumentView from './advance-document-view'
+import DelayDocumentView from './delay-document-view'
+import CompleteDocumentView from './complete-document-view'
+import CombineDocumentsView from './combine-documents-view'
+import AddNoteView from './add-note-view'
+import LogView from './log-view'
+import GlobalActivityLogView from './global-activity-log-view'
+import MyActivityLogView from './my-activity-log-view'
+import BulkAdvanceView from './bulk-advance-view'
+import BulkCompleteView from './bulk-complete-view'
+import BulkEditView from './bulk-edit-view'
+
 export default function Dashboard() {
   const { state, dispatch } = useAppContext()
-  const { currentUser } = state
+  const { currentUser, currentView } = state
   const t = useTranslation();
 
   const openModal = (type: any) => {
-    dispatch({ type: 'SET_MODAL', payload: { type } })
+    if (type === 'addDocument') {
+      dispatch({ type: 'SET_VIEW', payload: 'addDocument' })
+    } else {
+      dispatch({ type: 'SET_MODAL', payload: { type } })
+    }
   }
 
   if (!state.isInitialized) {
@@ -37,21 +58,64 @@ export default function Dashboard() {
     )
   }
 
+  const renderContent = () => {
+    switch (currentView) {
+      case 'addDocument':
+        return <AddDocumentView />
+      case 'userManagement':
+        return <UserManagementView />
+      case 'reporting':
+        return <ReportingView />
+      case 'editDocument':
+        return <EditDocumentView />
+      case 'splitDocument':
+        return <SplitDocumentView />
+      case 'advanceDocument':
+        return <AdvanceDocumentView />
+      case 'delayDocument':
+        return <DelayDocumentView />
+      case 'completeDocument':
+        return <CompleteDocumentView />
+      case 'combineDocuments':
+        return <CombineDocumentsView />
+      case 'addNote':
+        return <AddNoteView />
+      case 'viewLog':
+        return <LogView />
+      case 'globalActivityLog':
+        return <GlobalActivityLogView />
+      case 'myActivityLog':
+        return <MyActivityLogView />
+      case 'bulkAdvance':
+        return <BulkAdvanceView />
+      case 'bulkComplete':
+        return <BulkCompleteView />
+      case 'bulkEditDetails':
+        return <BulkEditView />
+      default:
+        return (
+          <>
+            {hasPermission(currentUser, 'canViewMetrics') && <Metrics />}
+            {hasPermission(currentUser, 'canViewWorkflowChart') && (
+              <div className="glassmorphic-card">
+                <WorkflowChart />
+              </div>
+            )}
+            <DocumentManagement />
+          </>
+        )
+    }
+  }
+
   return (
     <SidebarProvider>
       <DashboardSidebar />
-      <div className="relative flex min-h-svh flex-1 flex-col bg-transparent">
+      <div className="relative flex min-h-svh flex-1 flex-col bg-transparent min-w-0 w-full overflow-x-hidden">
         <DashboardHeader />
         <main className="flex-1 space-y-6 p-4 sm:p-6 md:p-8">
-          {hasPermission(currentUser, 'canViewMetrics') && <Metrics />}
-          {hasPermission(currentUser, 'canViewWorkflowChart') && (
-            <div className="glassmorphic-card">
-              <WorkflowChart />
-            </div>
-          )}
-          <DocumentManagement />
+          {renderContent()}
         </main>
-        {hasPermission(currentUser, 'canAddDocument') && (
+        {currentView === 'dashboard' && hasPermission(currentUser, 'canAddDocument') && (
           <div
             onClick={() => openModal('addDocument')}
             className="fixed bottom-6 right-6 z-50 cursor-pointer"

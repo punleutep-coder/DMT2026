@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 220 14.3% 95.9%;
+    --background: 41 58% 92%;
     --foreground: 224 71.4% 4.1%;
-    --card: 220 14.3% 95.9%;
+    --card: 41 58% 95%;
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 156 72% 63%;
-    --primary-foreground: 224 71.4% 4.1%;
-    --secondary: 220 13% 91%;
+    --primary: 240 100% 20%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 41 58% 82%;
     --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 13% 91%;
+    --muted: 41 58% 85%;
     --muted-foreground: 220 8.9% 46.1%;
-    --accent: 190 78% 69%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --accent: 210 100% 20%;
+    --accent-foreground: 210 20% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 85%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 220 9% 70%;
+    --input: 220 9% 70%;
+    --ring: 240 100% 20%;
     --radius: 0.5rem;
     --chart-1: 220.9 39.3% 11%;
     --chart-2: 190 78% 69%;
@@ -31,11 +31,11 @@
     --chart-5: 280 65% 60%;
     --sidebar-background: 41 58% 82%;
     --sidebar-foreground: 224 71.4% 4.1%;
-    --sidebar-primary: 156 72% 63%;
+    --sidebar-primary: 240 100% 20%;
     --sidebar-primary-foreground: 210 20% 98%;
-    --sidebar-accent: 220 13% 91%;
+    --sidebar-accent: 41 58% 85%;
     --sidebar-accent-foreground: 220.9 39.3% 11%;
-    --sidebar-border: 220 13% 85%;
+    --sidebar-border: 41 20% 80%;
     --sidebar-ring: 224 71.4% 4.1%;
   }
 }
@@ -54,40 +54,58 @@
 
   body {
     @apply bg-background text-foreground font-body;
-    background: #F6EDCE;
+    background-color: #fefce8;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(41, 100%, 93%, 1) 0px, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(45, 100%, 95%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(38, 100%, 94%, 1) 0px, transparent 50%);
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    min-width: 1280px; /* Force desktop width constraint */
-    overflow-x: auto;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
+    font-weight: 400 !important;
+  }
+
+  strong, th, label, b, span, p, a, button {
+    font-weight: 400 !important;
   }
 
   input, button, textarea, select, optgroup, option {
     font-family: inherit;
     font-size: inherit;
-    font-weight: inherit;
+    font-weight: 400 !important;
     line-height: inherit;
   }
 }
 
 @layer components {
+  .main-container {
+    @apply mx-auto w-full px-4 sm:px-6 lg:px-8;
+    max-width: 1440px;
+  }
+
   .glassmorphic-card {
-    background-color: #F6EDCE;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(156, 163, 175, 0.6);
     box-shadow: 
-      0 1.1px 2.2px rgba(0, 0, 0, 0.02),
-      0 2.7px 5.3px rgba(0, 0, 0, 0.028),
-      0 5px 10px rgba(0, 0, 0, 0.035),
-      0 8.9px 17.9px rgba(0, 0, 0, 0.042),
-      0 16.7px 33.4px rgba(0, 0, 0, 0.05),
-      0 40px 80px rgba(0, 0, 0, 0.07);
-    @apply rounded-xl p-6;
+      0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+      0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    @apply rounded-2xl p-4 sm:p-6 transition-all duration-300;
+  }
+  
+  .glassmorphic-card:hover {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 
+      0 10px 15px -3px rgba(0, 0, 0, 0.08), 
+      0 4px 6px -2px rgba(0, 0, 0, 0.04);
   }
 }
 
@@ -285,4 +303,28 @@
   100% {
     filter: hue-rotate(0deg);
   }
+}
+
+/* Custom gray borders override to replace faint/white outlines */
+.border-white\/10,
+.border-white\/20,
+.border-white\/30,
+.border-white\/40,
+.border-white\/50,
+.border-white\/60,
+.border-white\/70,
+.border-white\/80,
+.border-white\/90 {
+  border-color: rgba(156, 163, 175, 0.5) !important;
+}
+
+/* Responsive font sizes mapped to root html elements */
+html.font-size-sm {
+  font-size: 87.5% !important; /* 14px */
+}
+html.font-size-md {
+  font-size: 100% !important; /* 16px */
+}
+html.font-size-lg {
+  font-size: 112.5% !important; /* 18px */
 }

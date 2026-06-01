@@ -7,13 +7,23 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    fontWeight: {
+      thin: '300',
+      hairline: '300',
+      light: '300',
+      normal: '400',
+      medium: '400',
+      semibold: '400',
+      bold: '400',
+      extrabold: '400',
+      black: '400',
+    },
     extend: {
       fontFamily: {
-        body: ['"Khmer OS Battambang"', '"PT Sans"', 'sans-serif'],
-        headline: ['"Khmer OS Battambang"', '"PT Sans"', 'sans-serif'],
-        moul: ['"Khmer Moul"', 'serif'],
-        rotanak: ['"Khmer Rotanak Traiy B"', 'serif'],
-        code: ['"Source Code Pro"', 'monospace'],
+        body: ['"Kantumruy Pro"', '"Outfit"', 'sans-serif'],
+        headline: ['"Outfit"', '"Kantumruy Pro"', 'sans-serif'],
+        moul: ['"Moul"', 'serif'],
+        code: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',

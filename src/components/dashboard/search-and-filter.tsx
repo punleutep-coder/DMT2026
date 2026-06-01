@@ -73,70 +73,70 @@ export default function SearchAndFilter() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-4 gap-4 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
          <div className='space-y-2'>
-          <Label htmlFor="date-from">{t('historyFrom')}</Label>
-          <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full shadow-md h-11" />
+          <Label htmlFor="date-from" className="font-bold text-xs uppercase tracking-widest text-muted-foreground">{t('historyFrom')}</Label>
+          <Input type="date" id="date-from" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full shadow-md h-11 bg-white/50 border-white/20 rounded-xl" />
         </div>
         <div className='space-y-2'>
-          <Label htmlFor="date-to">{t('historyTo')}</Label>
-          <Input type="date" id="date-to" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full shadow-md h-11" />
+          <Label htmlFor="date-to" className="font-bold text-xs uppercase tracking-widest text-muted-foreground">{t('historyTo')}</Label>
+          <Input type="date" id="date-to" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full shadow-md h-11 bg-white/50 border-white/20 rounded-xl" />
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleDateFilter} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white shadow-md h-11">{t('filterByDate')}</Button>
-          <Button variant="outline" onClick={clearDateFilter} className="flex-1 shadow-md h-11">{t('clear')}</Button>
+        <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-1">
+          <Button onClick={handleDateFilter} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white shadow-md h-11 rounded-xl font-bold">{t('filterByDate')}</Button>
+          <Button variant="outline" onClick={clearDateFilter} className="flex-1 shadow-md h-11 rounded-xl font-bold">{t('clear')}</Button>
         </div>
       </div>
       
-      <div className="p-4 bg-muted/20 rounded-lg border border-dashed border-border/60">
-        <div className="flex items-center gap-3">
-            <Label className="whitespace-nowrap">{t('docsExceeding')}</Label>
-            <div className="flex items-center gap-2">
-                <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-card shadow-md h-11" />
+      <div className="p-6 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/30 shadow-inner">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <Label className="whitespace-nowrap font-bold text-primary">{t('docsExceeding')}</Label>
+            <div className="flex flex-wrap items-center gap-2 flex-1 w-full">
+                <Input type="number" value={periodValue} onChange={e => setPeriodValue(Number(e.target.value))} min="1" className="w-20 bg-white/50 shadow-md h-11 rounded-xl font-bold text-center" />
                 <Select value={periodUnit} onValueChange={v => setPeriodUnit(v as 'days' | 'hours' | 'minutes')}>
-                    <SelectTrigger className="w-[120px] bg-card shadow-md h-11">
+                    <SelectTrigger className="flex-1 lg:w-[120px] bg-white/50 shadow-md h-11 rounded-xl font-bold">
                         <SelectValue placeholder="Unit" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="font-body">
                         <SelectItem value="days">{t('days')}</SelectItem>
                         <SelectItem value="hours">{t('hours')}</SelectItem>
                         <SelectItem value="minutes">{t('minutes')}</SelectItem>
                     </SelectContent>
                 </Select>
+                <Label className="font-bold text-primary px-2">{t('in')}</Label>
+                <Select value={periodDepartment} onValueChange={setPeriodDepartment}>
+                    <SelectTrigger className="flex-1 lg:w-[180px] bg-white/50 shadow-md h-11 rounded-xl font-bold">
+                        <SelectValue placeholder="Department" />
+                    </SelectTrigger>
+                    <SelectContent className="font-body">
+                        <SelectItem value="All">{t('allDepartments')}</SelectItem>
+                        {state.departments.map(dept => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
-            <Label>{t('in')}</Label>
-            <Select value={periodDepartment} onValueChange={setPeriodDepartment}>
-                <SelectTrigger className="w-[180px] bg-card shadow-md h-11">
-                    <SelectValue placeholder="Department" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="All">{t('allDepartments')}</SelectItem>
-                    {state.departments.map(dept => (
-                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
             <div className="flex items-center gap-2">
-                <Button onClick={handleCalculatePeriod} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md h-11 px-6">{t('calculate')}</Button>
-                <Button variant="outline" onClick={clearPeriodFilter} className="shadow-md h-11 px-6">{t('clear')}</Button>
+                <Button onClick={handleCalculatePeriod} className="flex-1 lg:flex-none bg-blue-600 hover:bg-blue-700 text-white shadow-md h-11 px-8 rounded-xl font-black uppercase tracking-widest transition-all active:scale-95">{t('calculate')}</Button>
+                <Button variant="outline" onClick={clearPeriodFilter} className="flex-1 lg:flex-none shadow-md h-11 px-8 rounded-xl font-bold transition-all active:scale-95">{t('clear')}</Button>
             </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             id="search-id"
             type="text"
-            placeholder={t('search')}
-            className="w-full pr-24 pl-10 shadow-md bg-[#EAEAEA] h-11"
+            placeholder={t('searchPlaceholder') || t('search')}
+            className="w-full pr-24 pl-12 shadow-inner bg-white/40 border-white/20 h-12 rounded-2xl focus:bg-white/80 transition-all font-body font-medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {isFiltered && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <span className="text-sm text-muted-foreground">
+            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-md">
                 {filteredDocs.length} {t('results')}
               </span>
             </div>

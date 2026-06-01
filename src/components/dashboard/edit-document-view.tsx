@@ -5,7 +5,6 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
@@ -13,7 +12,7 @@ import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
 import { useToast } from '@/hooks/use-toast'
 import { sanitizeFirebaseKey } from '@/lib/utils'
-import { Link as LinkIcon, Fingerprint } from 'lucide-react'
+import { Link as LinkIcon, Fingerprint, ChevronLeft, Save, X } from 'lucide-react'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
 import {
@@ -22,6 +21,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { cn } from '@/lib/utils'
 
 const formSchema = z.object({
   id: z.string().min(1, 'Document ID is required.'),
@@ -54,15 +54,9 @@ const formSchema = z.object({
 
 type EditDocumentFormValues = z.infer<typeof formSchema>;
 
-interface EditDocumentModalProps {
-  isOpen: boolean
-  onClose: () => void
-  docId: string
-  firestoreId: string
-}
-
-export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId }: EditDocumentModalProps) {
+export default function EditDocumentView() {
   const { state, dispatch } = useAppContext()
+  const docId = state.modal.docId
   const docToUpdate = state.documents.find(d => d.id === docId)
   const { currentUser, documentTypes, assignedDepartments, labels } = state
   const { toast } = useToast()
@@ -100,38 +94,45 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
     },
   })
 
-  if (!docToUpdate) return null
+  if (!docToUpdate) return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center glassmorphic-card rounded-3xl m-4">
+          <X className="h-16 w-16 text-destructive mb-4" />
+          <h2 className="text-2xl font-bold text-primary mb-2">Document Not Found</h2>
+          <p className="text-muted-foreground mb-6">The document you are trying to edit could not be located or has been deleted.</p>
+          <Button onClick={() => dispatch({ type: 'SET_VIEW', payload: 'dashboard' })}>Return to Dashboard</Button>
+      </div>
+  )
   
   const handleCreateAssignedDepartment = (deptName: string) => {
     if (currentUser?.role !== 'Admin') {
-      toast({ title: "Permission Denied", description: "Only Admins can create new assigned departments.", variant: "destructive" });
+      toast({ title: t('permissionDenied' as any), description: t('adminOnlyPermission' as any), variant: "destructive" });
       return;
     }
     if (assignedDepartments.some(d => d.toLowerCase() === deptName.toLowerCase())) {
-        toast({ title: "Duplicate Department", description: "This assigned department already exists.", variant: "destructive" });
+        toast({ title: t('duplicate' as any), description: t('itemAlreadyExists' as any), variant: "destructive" });
         return;
     }
     
     const newAssignedDepartments = [...assignedDepartments, deptName];
     dispatch({ type: 'SET_ASSIGNED_DEPARTMENTS', payload: newAssignedDepartments });
     form.setValue('assignedDepartment', deptName);
-    toast({ title: "Assigned Department Created", description: `"${deptName}" has been added.` });
+    toast({ title: t('created' as any), description: `${deptName}` });
   }
 
   const handleCreateLabel = (labelName: string) => {
     if (currentUser?.role !== 'Admin') {
-      toast({ title: "Permission Denied", description: "Only Admins can create new labels.", variant: "destructive" });
+      toast({ title: t('permissionDenied' as any), description: t('adminOnlyPermission' as any), variant: "destructive" });
       return;
     }
     if (labels.some(l => l.toLowerCase() === labelName.toLowerCase())) {
-        toast({ title: "Duplicate Label", description: "This label already exists.", variant: "destructive" });
+        toast({ title: t('duplicate' as any), description: t('itemAlreadyExists' as any), variant: "destructive" });
         return;
     }
     
     const newLabels = [...labels, labelName];
     dispatch({ type: 'SET_LABELS', payload: newLabels });
     form.setValue('label', labelName);
-    toast({ title: "Label Created", description: `"${labelName}" has been added.` });
+    toast({ title: t('created' as any), description: `${labelName}` });
   }
 
   const onSubmit = async (values: EditDocumentFormValues) => {
@@ -288,7 +289,7 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
         }
     }
     
-    onClose();
+    dispatch({ type: 'SET_VIEW', payload: 'dashboard' });
   }
 
   const documentTypeOptions = documentTypes.map(type => ({ value: type, label: type }));
@@ -296,118 +297,91 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
   const labelOptions = labels.map(label => ({ value: label, label: label }));
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-lg:w-screen max-lg:h-screen max-lg:max-w-none max-lg:max-h-none max-lg:top-0 max-lg:left-0 max-lg:translate-x-0 max-lg:translate-y-0 max-lg:rounded-none lg:w-[90vw] lg:max-w-7xl lg:h-[95vh] glassmorphic-card p-6 sm:p-10 flex flex-col gap-0 overflow-hidden">
-        <DialogHeader className="mb-8 flex-none">
-          <DialogTitle className="text-4xl font-bold font-rotanak text-[#000066]">
-            {t('editDocument')}: <span className="text-destructive">{docToUpdate.id}</span>
-          </DialogTitle>
-        </DialogHeader>
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-10 w-10 rounded-full bg-white/50 hover:bg-white shadow-sm border border-white/20"
+            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'dashboard' })}
+          >
+            <ChevronLeft className="h-5 w-5 text-[#000066]" />
+          </Button>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#000066]">{t('editDocument')}: <span className="text-destructive">{docToUpdate.id}</span></h2>
+        </div>
+      </div>
+
+      <div className="glassmorphic-card p-6 sm:p-10">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-            <ScrollArea className="flex-1 pr-10 -mr-10">
-              <div className="space-y-10 pb-16">
-                <div className="space-y-10">
-                    {hasPermission(currentUser, 'canEditDocumentName') && (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="space-y-8">
+              {/* Primary Details Section */}
+              <div className="grid grid-cols-1 gap-8">
+                {hasPermission(currentUser, 'canEditDocumentName') && (
+                  <FormField 
+                    control={form.control} 
+                    name="name" 
+                    render={({ field }) => ( 
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[#1D41D5] text-base sm:text-lg font-bold block mb-1.5">{t('docName')}</FormLabel>
+                        <FormControl>
+                            <Textarea 
+                                {...field} 
+                                className="min-h-[120px] sm:min-h-[150px] text-base sm:text-lg py-3 rounded-xl" 
+                                placeholder={t('docNamePlaceholder' as any)}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem> 
+                    )} 
+                  />
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                    {hasPermission(currentUser, 'canEditDocumentId') && (
                       <FormField 
                         control={form.control} 
-                        name="name" 
+                        name="id" 
                         render={({ field }) => ( 
                           <FormItem>
-                            <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('docName')}</FormLabel>
-                            <FormControl><Textarea {...field} className="min-h-[160px] text-xl py-3" /></FormControl>
+                            <FormLabel className="text-[#1D41D5] text-base sm:text-lg font-bold block mb-1.5">{t('docIdPrimary')}</FormLabel>
+                            <FormControl><Input {...field} className="h-12 sm:h-14 text-base sm:text-lg rounded-xl" /></FormControl>
                             <FormMessage />
                           </FormItem> 
                         )} 
                       />
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {hasPermission(currentUser, 'canEditDocumentId') && (
-                          <FormField 
-                            control={form.control} 
-                            name="id" 
-                            render={({ field }) => ( 
-                              <FormItem>
-                                <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('docIdPrimary')}</FormLabel>
-                                <FormControl><Input {...field} className="h-16 text-xl" /></FormControl>
-                                <FormMessage />
-                              </FormItem> 
-                            )} 
-                          />
-                        )}
-                    </div>
-                </div>
-                
-                <Accordion type="single" collapsible className="w-full border-2 rounded-2xl px-8 bg-white/30">
-                  <AccordionItem value="extra-ids" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-8">
-                      <div className="flex items-center gap-5">
-                        <Fingerprint className="h-8 w-8 text-emerald-600" />
-                        <span className="font-bold text-2xl text-emerald-600">{t('documentExtraIds')}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-3 pb-10">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {[
-                          { name: 'secondaryId', perm: 'canEditSecondaryId' },
-                          { name: 'tertiaryId', perm: 'canEditTertiaryId' },
-                          { name: 'quaternaryId', perm: 'canEditQuaternaryId' },
-                          { name: 'quinaryId', perm: 'canEditQuinaryId' },
-                          { name: 'senaryId', perm: 'canEditSenaryId' },
-                          { name: 'septenaryId', perm: 'canEditSeptenaryId' },
-                          { name: 'octonaryId', perm: 'canEditOctonaryId' },
-                          { name: 'nonaryId', perm: 'canEditNonaryId' },
-                          { name: 'denaryId', perm: 'canEditDenaryId' },
-                        ].map((extraId) => (
-                          hasPermission(currentUser, extraId.perm as any) && (
-                            <FormField 
-                              key={extraId.name}
-                              control={form.control} 
-                              name={extraId.name as any} 
-                              render={({ field }) => ( 
-                                <FormItem>
-                                  <FormLabel className="text-lg font-semibold block mb-2">{t(extraId.name as any)}</FormLabel>
-                                  <FormControl><Input {...field} className="h-16 text-xl" /></FormControl>
-                                  <FormMessage />
-                                </FormItem> 
-                              )} 
-                            />
-                          )
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {hasPermission(currentUser, 'canEditDocumentType') && (
                     <FormField
                         control={form.control}
                         name="documentType"
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('documentType')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-base sm:text-lg font-bold block mb-1.5">{t('documentType')}</FormLabel>
                             <Combobox
-                            options={documentTypeOptions}
-                            value={field.value || ''}
-                            onChange={field.onChange}
-                            placeholder={t('selectDocType')}
-                            searchPlaceholder={t('searchDocType')}
-                            notFoundText={t('noDocTypeFound')}
-                            className="h-16 text-xl"
+                                options={documentTypeOptions}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                placeholder={t('selectDocType')}
+                                searchPlaceholder={t('searchDocType')}
+                                notFoundText={t('noDocTypeFound')}
+                                className="h-12 sm:h-14 text-base sm:text-lg rounded-xl"
                             />
                             <FormMessage />
                         </FormItem>
                         )}
                     />
                     )}
+
                     {hasPermission(currentUser, 'canEditLabel') && (
                         <FormField
                             control={form.control}
                             name="label"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('label')}</FormLabel>
+                                <FormLabel className="text-[#1D41D5] text-base sm:text-lg font-bold block mb-1.5">{t('label')}</FormLabel>
                                 <Combobox
                                     options={labelOptions}
                                     value={field.value || ''}
@@ -416,103 +390,158 @@ export default function EditDocumentModal({ isOpen, onClose, docId, firestoreId 
                                     searchPlaceholder={t('searchLabel')}
                                     notFoundText={t('noLabelFound')}
                                     onCreate={currentUser?.role === 'Admin' ? handleCreateLabel : undefined}
-                                    className="h-16 text-xl"
+                                    className="h-12 sm:h-14 text-base sm:text-lg rounded-xl"
                                 />
                                 <FormMessage />
                                 </FormItem>
                             )}
                         />
                     )}
+
                     {hasPermission(currentUser, 'canEditAssignedDepartment') && (
                     <FormField
                         control={form.control}
                         name="assignedDepartment"
                         render={({ field }) => (
                         <FormItem className="flex flex-col">
-                            <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('assignedDepartment')}</FormLabel>
+                            <FormLabel className="text-[#1D41D5] text-base sm:text-lg font-bold block mb-1.5">{t('assignedDepartment')}</FormLabel>
                             <Combobox
-                            options={assignedDepartmentOptions}
-                            value={field.value || ''}
-                            onChange={field.onChange}
-                            placeholder={t('selectAssignedDept')}
-                            searchPlaceholder={t('searchAssignedDept')}
-                            onCreate={currentUser?.role === 'Admin' ? handleCreateAssignedDepartment : undefined}
-                            className="h-16 text-xl"
+                                options={assignedDepartmentOptions}
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                placeholder={t('selectAssignedDept')}
+                                searchPlaceholder={t('searchAssignedDept')}
+                                onCreate={currentUser?.role === 'Admin' ? handleCreateAssignedDepartment : undefined}
+                                className="h-12 sm:h-14 text-base sm:text-lg rounded-xl"
                             />
                             <FormMessage />
                         </FormItem>
                         )}
                     />
                     )}
-                </div>
-                
-                <Accordion type="single" collapsible className="w-full border-2 rounded-2xl px-8 bg-white/30">
-                  <AccordionItem value="links" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-8">
-                      <div className="flex items-center gap-5">
-                        <LinkIcon className="h-8 w-8 text-blue-600" />
-                        <span className="font-bold text-2xl text-blue-600">{t('documentLinks')}</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-3 pb-10">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
-                          const linkKey = `documentLink${num}` as keyof EditDocumentFormValues;
-                          const editPerm = `canEditDocumentLink${num}` as any;
-                          return hasPermission(currentUser, editPerm) && (
-                            <FormField 
-                              key={num}
-                              control={form.control} 
-                              name={linkKey} 
-                              render={({ field }) => ( 
-                                <FormItem>
-                                  <FormLabel className={num === 1 ? 'text-[#1D41D5] text-lg font-bold block mb-2' : 'text-lg font-semibold block mb-2'}>{t(`docLink${num}` as any)}</FormLabel>
-                                  <FormControl><Input type="url" placeholder="https://://" {...field} className="h-16 text-xl" /></FormControl>
-                                  <FormMessage />
-                                </FormItem> 
-                              )} 
-                            />
-                          );
-                        })}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {hasPermission(currentUser, 'canEditKeywords') && (
-                    <FormField
-                        control={form.control}
-                        name="keywords"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-xl font-bold block mb-2">{t('keywords')}</FormLabel>
-                            <FormControl>
-                            <Input placeholder={t('keywordsPlaceholder')} {...field} className="h-16 text-xl" />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    )}
-
-                    {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-[#1D41D5] text-xl font-bold block mb-2">{t('tagsLabel')}</FormLabel>
-                        <FormControl><Input {...field} className="h-16 text-xl" /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )} />}
                 </div>
               </div>
-            </ScrollArea>
-            <DialogFooter className="pt-8 flex-none gap-6">
-              <Button type="button" variant="ghost" className="flex-1 h-20 text-2xl font-bold" onClick={onClose}>{t('cancel')}</Button>
-              <Button type="submit" className="flex-1 h-20 text-2xl font-bold">{t('saveChanges')}</Button>
-            </DialogFooter>
+              
+              {/* Extra IDs Section */}
+              <Accordion type="single" collapsible className="w-full border rounded-2xl px-6 sm:px-8 bg-white/30">
+                <AccordionItem value="extra-ids" className="border-b-0">
+                  <AccordionTrigger className="hover:no-underline py-6 sm:py-8">
+                    <div className="flex items-center gap-4">
+                      <Fingerprint className="h-6 w-6 text-emerald-600" />
+                      <span className="font-bold text-xl text-emerald-600 uppercase tracking-tight">{t('documentExtraIds')}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-8 sm:pb-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                      {[
+                        { name: 'secondaryId', perm: 'canEditSecondaryId' },
+                        { name: 'tertiaryId', perm: 'canEditTertiaryId' },
+                        { name: 'quaternaryId', perm: 'canEditQuaternaryId' },
+                        { name: 'quinaryId', perm: 'canEditQuinaryId' },
+                        { name: 'senaryId', perm: 'canEditSenaryId' },
+                        { name: 'septenaryId', perm: 'canEditSeptenaryId' },
+                        { name: 'octonaryId', perm: 'canEditOctonaryId' },
+                        { name: 'nonaryId', perm: 'canEditNonaryId' },
+                        { name: 'denaryId', perm: 'canEditDenaryId' },
+                      ].map((extraId) => (
+                        hasPermission(currentUser, extraId.perm as any) && (
+                          <FormField 
+                            key={extraId.name}
+                            control={form.control} 
+                            name={extraId.name as any} 
+                            render={({ field }) => ( 
+                              <FormItem>
+                                <FormLabel className="text-base font-semibold block mb-1.5">{t(extraId.name as any)}</FormLabel>
+                                <FormControl><Input {...field} className="h-12 text-base rounded-xl" /></FormControl>
+                                <FormMessage />
+                              </FormItem> 
+                            )} 
+                          />
+                        )
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              {/* Document Links Section */}
+              <Accordion type="single" collapsible className="w-full border rounded-2xl px-6 sm:px-8 bg-white/30">
+                <AccordionItem value="links" className="border-b-0">
+                  <AccordionTrigger className="hover:no-underline py-6 sm:py-8">
+                    <div className="flex items-center gap-4">
+                      <LinkIcon className="h-6 w-6 text-blue-600" />
+                      <span className="font-bold text-xl text-blue-600 uppercase tracking-tight">{t('documentLinks')}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-8 sm:pb-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                        const linkKey = `documentLink${num}` as keyof EditDocumentFormValues;
+                        const editPerm = `canEditDocumentLink${num}` as any;
+                        return hasPermission(currentUser, editPerm) && (
+                          <FormField 
+                            key={num}
+                            control={form.control} 
+                            name={linkKey} 
+                            render={({ field }) => ( 
+                              <FormItem>
+                                <FormLabel className={num === 1 ? 'text-[#1D41D5] text-base font-bold block mb-1.5' : 'text-base font-semibold block mb-1.5'}>
+                                    {t(`docLink${num}` as any)}
+                                </FormLabel>
+                                <FormControl>
+                                    <Input type="url" placeholder="https://..." {...field} className="h-12 text-base rounded-xl" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem> 
+                            )} 
+                          />
+                        );
+                      })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              {/* Keywords and Tags Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {hasPermission(currentUser, 'canEditKeywords') && (
+                  <FormField
+                      control={form.control}
+                      name="keywords"
+                      render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold block mb-1.5">{t('keywords')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={t('keywordsPlaceholder')} {...field} className="h-12 text-base rounded-xl" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  )}
+
+                  {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[#1D41D5] text-base font-semibold block mb-1.5">{t('tagsLabel')}</FormLabel>
+                    <FormControl><Input placeholder="tag1, tag2, ..." {...field} className="h-12 text-base rounded-xl" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                  )} />}
+              </div>
+            </div>
+
+            <div className="pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-end gap-4 mt-auto">
+              <Button type="button" variant="outline" className="h-12 px-8 text-base font-bold shadow-sm" onClick={() => dispatch({ type: 'SET_VIEW', payload: 'dashboard' })}>{t('cancel')}</Button>
+              <Button 
+                type="submit" 
+                className="h-12 px-10 text-base font-bold bg-[#000066] hover:bg-[#000099] text-white shadow-lg transition-all active:scale-95"
+              >
+                {t('saveChanges')}
+              </Button>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }

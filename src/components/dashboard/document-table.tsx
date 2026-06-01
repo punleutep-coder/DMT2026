@@ -153,10 +153,11 @@ export default function DocumentTable() {
                 key={col.key} 
                 className={cn(
                   col.key === 'actions' ? 'text-right' : '',
-                  col.key === 'name' ? 'min-w-[500px]' : ''
+                  col.key === 'name' ? 'min-w-[400px] lg:min-w-[500px]' : '',
+                  "py-2 sm:py-3 h-auto"
                 )}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {col.key === 'select' ? (
                      <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -164,9 +165,10 @@ export default function DocumentTable() {
                             checked={areAllOnPageSelected}
                             onCheckedChange={() => handleSelectAllOnPage(!areAllOnPageSelected)}
                             aria-label="Select all documents on this page"
+                            className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                           />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="font-body">
+                      <DropdownMenuContent align="start" className="font-body text-xs sm:text-sm">
                         <DropdownMenuItem onSelect={() => handleSelectAllOnPage(true)}>Select all on this page ({paginatedDocs.length})</DropdownMenuItem>
                         <DropdownMenuItem onSelect={handleSelectAllFiltered}>Select all matching filter ({filteredDocs.length})</DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -174,16 +176,16 @@ export default function DocumentTable() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <span className="font-body text-[#000099] whitespace-nowrap">{col.name}</span>
+                    <span className="font-body text-[#000099] whitespace-nowrap text-[10px] sm:text-xs uppercase tracking-wider font-bold">{col.name}</span>
                   )}
                    {col.key === 'documentType' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <ListFilter className="h-4 w-4"/>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6">
+                            <ListFilter className="h-3 w-3 sm:h-4 sm:w-4"/>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="font-body">
+                      <DropdownMenuContent align="start" className="font-body text-xs sm:text-sm">
                         <DropdownMenuCheckboxItem
                             checked={state.filter.documentType === 'All'}
                             onCheckedChange={() => handleDocumentTypeFilterChange('All')}
@@ -192,11 +194,11 @@ export default function DocumentTable() {
                         </DropdownMenuCheckboxItem>
                         {documentTypes.map(type => (
                            <DropdownMenuCheckboxItem
-                                key={type}
-                                checked={state.filter.documentType === type}
-                                onCheckedChange={() => handleDocumentTypeFilterChange(type)}
+                                 key={type}
+                                 checked={state.filter.documentType === type}
+                                 onCheckedChange={() => handleDocumentTypeFilterChange(type)}
                             >
-                                {type}
+                                 {type}
                            </DropdownMenuCheckboxItem>
                         ))}
                       </DropdownMenuContent>
@@ -205,11 +207,11 @@ export default function DocumentTable() {
                   {col.key === 'assignedDepartment' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <ListFilter className="h-4 w-4"/>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6">
+                            <ListFilter className="h-3 w-3 sm:h-4 sm:w-4"/>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="font-body">
+                      <DropdownMenuContent align="start" className="font-body text-xs sm:text-sm">
                         <DropdownMenuCheckboxItem
                             checked={state.filter.assignedDepartment === 'All'}
                             onCheckedChange={() => handleAssignedDeptFilterChange('All')}
@@ -218,11 +220,11 @@ export default function DocumentTable() {
                         </DropdownMenuCheckboxItem>
                         {uniqueAssignedDepts.map(dept => (
                            <DropdownMenuCheckboxItem
-                                key={dept}
-                                checked={state.filter.assignedDepartment === dept}
-                                onCheckedChange={() => handleAssignedDeptFilterChange(dept)}
+                                 key={dept || 'null'}
+                                 checked={state.filter.assignedDepartment === dept}
+                                 onCheckedChange={() => handleAssignedDeptFilterChange(dept ?? '')}
                             >
-                                {dept}
+                                 {dept}
                            </DropdownMenuCheckboxItem>
                         ))}
                       </DropdownMenuContent>
@@ -231,11 +233,11 @@ export default function DocumentTable() {
                   {col.key === 'label' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          <ListFilter className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6">
+                          <ListFilter className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="font-body">
+                      <DropdownMenuContent align="start" className="font-body text-xs sm:text-sm">
                         <DropdownMenuCheckboxItem
                           checked={state.filter.label === 'All'}
                           onCheckedChange={() => handleLabelFilterChange('All')}
@@ -244,11 +246,11 @@ export default function DocumentTable() {
                         </DropdownMenuCheckboxItem>
                         {labels.map((label) => (
                           <DropdownMenuCheckboxItem
-                            key={label}
-                            checked={state.filter.label === label}
-                            onCheckedChange={() => handleLabelFilterChange(label)}
+                             key={label}
+                             checked={state.filter.label === label}
+                             onCheckedChange={() => handleLabelFilterChange(label)}
                           >
-                            {label}
+                             {label}
                           </DropdownMenuCheckboxItem>
                         ))}
                       </DropdownMenuContent>
@@ -257,13 +259,13 @@ export default function DocumentTable() {
                   {col.key === 'lastUpdate' && (
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          <ListFilter className={cn("h-4 w-4", (state.filter.lastUpdateStart || state.filter.lastUpdateEnd) ? "text-blue-600" : "text-muted-foreground")} />
+                        <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6">
+                          <ListFilter className={cn("h-3 w-3 sm:h-4 sm:w-4", (state.filter.lastUpdateStart || state.filter.lastUpdateEnd) ? "text-blue-600" : "text-muted-foreground")} />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 font-body" align="end">
-                        <div className="p-4 bg-muted/20 border-b">
-                            <h4 className="font-medium text-sm">Filter by Last Update</h4>
+                        <div className="p-3 sm:p-4 bg-muted/20 border-b">
+                            <h4 className="font-medium text-xs sm:text-sm">Filter by Last Update</h4>
                         </div>
                         <Calendar
                           initialFocus
@@ -282,11 +284,13 @@ export default function DocumentTable() {
                             });
                           }}
                           numberOfMonths={2}
+                          className="p-2 sm:p-3"
                         />
                         <div className="p-2 border-t flex justify-end gap-2">
                             <Button 
                                 variant="outline" 
                                 size="sm" 
+                                className="h-7 sm:h-8 text-xs"
                                 onClick={() => dispatch({ type: 'SET_FILTER', payload: { lastUpdateStart: null, lastUpdateEnd: null }})}
                             >
                                 {t('clear')}
@@ -311,11 +315,11 @@ export default function DocumentTable() {
         )}
       </TableBody>
     </Table>
-    <div className="flex items-center justify-between p-4 gap-4 border-t font-body">
+    <div className="flex flex-col sm:flex-row items-center justify-between p-4 gap-4 border-t font-body">
         <div className="text-sm text-muted-foreground">
           {t('xOfYRowSelected', { selected: state.selectedDocIds.length, total: filteredDocs.length })}
         </div>
-        <div className="flex items-center justify-center gap-8">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8">
             <div className="flex items-center space-x-2">
                 <p className="text-sm font-medium whitespace-nowrap">{t('rowsPerPage')}</p>
                 <Select

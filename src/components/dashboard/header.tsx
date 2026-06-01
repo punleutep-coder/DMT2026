@@ -10,13 +10,13 @@ export default function DashboardHeader() {
   const t = useTranslation();
 
   return (
-    <header className="sticky top-0 z-10 flex h-20 items-center gap-4 border-b border-border/20 bg-transparent px-4 backdrop-blur-sm sm:px-8 shadow-md">
-      <SidebarTrigger className="md:flex bg-transparent text-[#000066] hover:bg-primary/10 h-12 w-12">
-        <Menu className="h-8 w-8" />
+    <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center gap-4 border-b border-white/20 bg-white/40 px-4 backdrop-blur-xl sm:px-6 shadow-sm transition-all duration-300">
+      <SidebarTrigger className="md:flex bg-white/50 text-primary hover:bg-primary hover:text-white h-9 w-9 sm:h-11 sm:w-11 rounded-lg sm:rounded-xl shadow-inner transition-all duration-300">
+        <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
       </SidebarTrigger>
       
       <div className="text-left flex-1">
-        <h1 className="text-2xl sm:text-[28px] font-bold text-[#000066] font-moul [text-shadow:2px_2px_4px_rgba(0,0,0,0.2)]">
+        <h1 className="text-lg sm:text-2xl font-black text-primary font-headline tracking-tight uppercase">
           {t('overview')}
         </h1>
       </div>

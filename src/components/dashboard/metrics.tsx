@@ -50,33 +50,33 @@ const MetricCard = ({
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group border border-gray-600 transition-all duration-500 rounded-xl min-h-[140px]",
+        "dashboard-metric-box relative overflow-hidden group border border-gray-600 transition-all duration-500 rounded-xl min-h-[100px] sm:min-h-[120px] lg:min-h-[140px]",
         isActive && "active"
       )}
       onClick={handleClick}
     >
-      <CardContent className="p-5 flex flex-col h-full justify-between">
-        <div className="flex items-start justify-between mb-2">
+      <CardContent className="p-3 sm:p-5 flex flex-col h-full justify-between">
+        <div className="flex items-start justify-between mb-1 sm:mb-2">
           <div className="space-y-1 overflow-hidden flex-1">
             <p 
-              className="text-xl font-bold uppercase tracking-tight text-[#000099] leading-tight font-body"
+              className="text-xs sm:text-sm lg:text-base font-bold uppercase tracking-tight text-[#000099] leading-tight font-body opacity-80"
               title={title}
             >
               {title}
             </p>
-            <h3 className={cn("text-5xl font-black tabular-nums font-body", colors.text)}>
+            <h3 className={cn("text-2xl sm:text-3xl lg:text-5xl font-black tabular-nums font-body", colors.text)}>
               {value}
             </h3>
           </div>
           <div className={cn(
-            "p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner shrink-0",
+            "p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner shrink-0",
             colors.bg
           )}>
-            <Icon className={cn("h-10 w-10", colors.text)} />
+            <Icon className={cn("h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10", colors.text)} />
           </div>
         </div>
         
-        <div className="w-full h-1.5 bg-black/5 rounded-full overflow-hidden mt-auto">
+        <div className="w-full h-1 sm:h-1.5 bg-black/5 rounded-full overflow-hidden mt-auto">
           <div 
             className={cn("h-full transition-all duration-1000 ease-in-out", colors.accent)} 
             style={{ width: isActive ? '100%' : '30%' }}
@@ -157,7 +157,7 @@ export default function Metrics() {
 
   return (
     <section>
-      <div className="grid gap-4 grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {metricItems.map((item) => (
           <MetricCard
             key={item.title}

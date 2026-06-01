@@ -103,7 +103,9 @@ export interface AppState {
   dialog: DialogState;
   modal: ModalState;
   language: 'en' | 'km';
-  lastViewedDepartments: { [key: string]: string }; // Tracks when each department was last "viewed" by clicking the bar
+  fontSize: 'sm' | 'md' | 'lg';
+  lastViewedDepartments: { [key: string]: string };
+  currentView: 'dashboard' | 'addDocument' | 'editDocument' | 'reporting' | 'userManagement' | 'viewLog' | 'splitDocument' | 'advanceDocument' | 'completeDocument' | 'delayDocument' | 'combineDocuments' | 'addNote' | 'myActivityLog' | 'globalActivityLog' | 'bulkAdvance' | 'bulkComplete' | 'bulkEditDetails';
 }
 
 export interface DialogState {
