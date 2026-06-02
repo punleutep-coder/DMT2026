@@ -9,10 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
-import { Link as LinkIcon, Fingerprint, ArrowLeft } from 'lucide-react'
+import { Link as LinkIcon, Fingerprint, ArrowLeft, Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { Document } from '@/lib/types';
-import { sanitizeFirebaseKey } from '@/lib/utils'
+import { sanitizeFirebaseKey, cn } from '@/lib/utils'
 import { hasPermission, hasDepartmentPermission } from '@/lib/permissions'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
@@ -63,6 +63,9 @@ export default function AddDocumentView() {
   const { toast } = useToast()
   const t = useTranslation()
   const [addAnother, setAddAnother] = useState(false)
+  const [isSuggesting, setIsSuggesting] = useState(false)
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([])
+  const { suggestTagsAction } = require('@/app/actions/ai')
 
   const form = useForm<AddDocumentFormValues>({
     resolver: zodResolver(formSchema),
@@ -475,13 +478,102 @@ export default function AddDocumentView() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                   {hasPermission(currentUser, 'canEditKeywords') && <FormField control={form.control} name="keywords" render={({ field }) => ( <FormItem><FormLabel className="text-base sm:text-lg font-bold block mb-1.5">{t('keywords')}</FormLabel><FormControl><Input placeholder={t('keywordsPlaceholder')} {...field} className="h-12 sm:h-14 text-base sm:text-lg" /></FormControl><FormMessage /></FormItem> )} />}
-                  {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
-                  <FormItem>
-                      <FormLabel className="text-[#1D41D5] text-base sm:text-lg font-bold block mb-1.5">{t('tagsLabel')}</FormLabel>
-                      <FormControl><Input {...field} className="h-12 sm:h-14 text-base sm:text-lg" /></FormControl>
-                      <FormMessage />
-                  </FormItem>
-                  )} />}
+                  {hasPermission(currentUser, 'canEditTags') && (
+                    <FormField
+                      control={form.control}
+                      name="docTags"
+                      render={({ field }) => {
+                        const docName = form.watch('name');
+                        return (
+                          <FormItem className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-[#1D41D5] text-base sm:text-lg font-bold block mb-0">{t('tagsLabel')}</FormLabel>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={isSuggesting || !docName}
+                                onClick={async () => {
+                                  if (!docName) {
+                                    toast({ title: t('error'), description: "Please enter a document name first.", variant: "destructive" });
+                                    return;
+                                  }
+                                  setIsSuggesting(true);
+                                  try {
+                                    const suggested = await suggestTagsAction(docName);
+                                    if (suggested && suggested.length > 0) {
+                                      setSuggestedTags(suggested);
+                                      toast({ title: t('success'), description: `Suggested ${suggested.length} tags.` });
+                                    } else {
+                                      toast({ title: t('error'), description: "No tags could be suggested.", variant: "destructive" });
+                                    }
+                                  } catch (e) {
+                                    console.error(e);
+                                    toast({ title: t('error'), description: "Failed to suggest tags.", variant: "destructive" });
+                                  } finally {
+                                    setIsSuggesting(false);
+                                  }
+                                }}
+                                className="h-9 px-3 border-emerald-500/30 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/50 flex items-center gap-1.5 rounded-xl font-bold transition-all"
+                              >
+                                {isSuggesting ? (
+                                  <>
+                                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+                                    <span>{t('suggesting')}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    <span>{t('suggest')}</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                            <FormControl>
+                              <Input placeholder="tag1, tag2, ..." {...field} className="h-12 sm:h-14 text-base sm:text-lg rounded-xl" />
+                            </FormControl>
+                            
+                            {suggestedTags.length > 0 && (
+                              <div className="flex flex-col gap-1.5 pt-1">
+                                <span className="text-xs font-semibold text-muted-foreground">Suggested Tags (click to add):</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {suggestedTags.map((tag) => {
+                                    const currentTags = field.value ? field.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+                                    const isAlreadyAdded = currentTags.some(t => t.toLowerCase() === tag.toLowerCase());
+                                    return (
+                                      <Badge
+                                        key={tag}
+                                        variant="outline"
+                                        className={cn(
+                                          "cursor-pointer px-2.5 py-1 text-xs font-medium rounded-full transition-all border",
+                                          isAlreadyAdded 
+                                            ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100" 
+                                            : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+                                        )}
+                                        onClick={() => {
+                                          let newTags;
+                                          if (isAlreadyAdded) {
+                                            newTags = currentTags.filter(t => t.toLowerCase() !== tag.toLowerCase());
+                                          } else {
+                                            newTags = [...currentTags, tag];
+                                          }
+                                          field.onChange(newTags.join(', '));
+                                        }}
+                                      >
+                                        {tag}
+                                        {isAlreadyAdded && <span className="ml-1 text-[10px]">✓</span>}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  )}
               </div>
               
               {hasPermission(currentUser, 'canEditInitialNote') && <FormField control={form.control} name="initialNote" render={({ field }) => ( <FormItem><FormLabel className="text-base sm:text-lg font-bold block mb-1.5">{t('initialNote')}</FormLabel><FormControl><Textarea {...field} className="min-h-[120px] sm:min-h-[150px] text-base sm:text-lg" /></FormControl><FormMessage /></FormItem> )} />}

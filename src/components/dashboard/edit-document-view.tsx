@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -12,9 +13,11 @@ import type { Document } from '@/lib/types'
 import { hasPermission } from '@/lib/permissions'
 import { useToast } from '@/hooks/use-toast'
 import { sanitizeFirebaseKey } from '@/lib/utils'
-import { Link as LinkIcon, Fingerprint, ChevronLeft, Save, X } from 'lucide-react'
+import { Link as LinkIcon, Fingerprint, ChevronLeft, Save, X, Sparkles } from 'lucide-react'
 import { Combobox } from '../ui/combobox'
 import { useTranslation } from '@/lib/i18n'
+import { Badge } from '../ui/badge'
+import { suggestTagsAction } from '@/app/actions/ai'
 import {
   Accordion,
   AccordionContent,
@@ -61,6 +64,8 @@ export default function EditDocumentView() {
   const { currentUser, documentTypes, assignedDepartments, labels } = state
   const { toast } = useToast()
   const t = useTranslation()
+  const [isSuggesting, setIsSuggesting] = useState(false)
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([])
 
   const form = useForm<EditDocumentFormValues>({
     resolver: zodResolver(formSchema),
@@ -520,13 +525,102 @@ export default function EditDocumentView() {
                   />
                   )}
 
-                  {hasPermission(currentUser, 'canEditTags') && <FormField control={form.control} name="docTags" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[#1D41D5] text-base font-semibold block mb-1.5">{t('tagsLabel')}</FormLabel>
-                    <FormControl><Input placeholder="tag1, tag2, ..." {...field} className="h-12 text-base rounded-xl" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                  )} />}
+                  {hasPermission(currentUser, 'canEditTags') && (
+                    <FormField
+                      control={form.control}
+                      name="docTags"
+                      render={({ field }) => {
+                        const docName = form.watch('name');
+                        return (
+                          <FormItem className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-[#1D41D5] text-base font-semibold block mb-0">{t('tagsLabel')}</FormLabel>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={isSuggesting || !docName}
+                                onClick={async () => {
+                                  if (!docName) {
+                                    toast({ title: t('error'), description: "Please enter a document name first.", variant: "destructive" });
+                                    return;
+                                  }
+                                  setIsSuggesting(true);
+                                  try {
+                                    const suggested = await suggestTagsAction(docName);
+                                    if (suggested && suggested.length > 0) {
+                                      setSuggestedTags(suggested);
+                                      toast({ title: t('success'), description: `Suggested ${suggested.length} tags.` });
+                                    } else {
+                                      toast({ title: t('error'), description: "No tags could be suggested.", variant: "destructive" });
+                                    }
+                                  } catch (e) {
+                                    console.error(e);
+                                    toast({ title: t('error'), description: "Failed to suggest tags.", variant: "destructive" });
+                                  } finally {
+                                    setIsSuggesting(false);
+                                  }
+                                }}
+                                className="h-9 px-3 border-emerald-500/30 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/50 flex items-center gap-1.5 rounded-xl font-bold transition-all"
+                              >
+                                {isSuggesting ? (
+                                  <>
+                                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+                                    <span>{t('suggesting')}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    <span>{t('suggest')}</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                            <FormControl>
+                              <Input placeholder="tag1, tag2, ..." {...field} className="h-12 text-base rounded-xl" />
+                            </FormControl>
+                            
+                            {suggestedTags.length > 0 && (
+                              <div className="flex flex-col gap-1.5 pt-1">
+                                <span className="text-xs font-semibold text-muted-foreground">Suggested Tags (click to add):</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {suggestedTags.map((tag) => {
+                                    const currentTags = field.value ? field.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+                                    const isAlreadyAdded = currentTags.some(t => t.toLowerCase() === tag.toLowerCase());
+                                    return (
+                                      <Badge
+                                        key={tag}
+                                        variant="outline"
+                                        className={cn(
+                                          "cursor-pointer px-2.5 py-1 text-xs font-medium rounded-full transition-all border",
+                                          isAlreadyAdded 
+                                            ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100" 
+                                            : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+                                        )}
+                                        onClick={() => {
+                                          let newTags;
+                                          if (isAlreadyAdded) {
+                                            newTags = currentTags.filter(t => t.toLowerCase() !== tag.toLowerCase());
+                                          } else {
+                                            newTags = [...currentTags, tag];
+                                          }
+                                          field.onChange(newTags.join(', '));
+                                        }}
+                                      >
+                                        {tag}
+                                        {isAlreadyAdded && <span className="ml-1 text-[10px]">✓</span>}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  )}
               </div>
             </div>
 

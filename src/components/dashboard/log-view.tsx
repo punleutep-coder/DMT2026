@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppContext } from '@/hooks/use-app-context'
 import { format } from 'date-fns'
@@ -52,14 +53,13 @@ export default function LogView() {
     dispatch({ type: 'SET_MODAL', payload: { type: 'splitDocument', docId: sourceDoc.id, firestoreId: sourceDoc.firestoreId }});
   }
 
-  if (!document) return (
-    <div className="flex flex-col items-center justify-center h-full p-8 text-center glassmorphic-card rounded-3xl m-4">
-        <X className="h-16 w-16 text-destructive mb-4" />
-        <h2 className="text-2xl font-bold text-primary mb-2">Document Not Found</h2>
-        <p className="text-muted-foreground mb-6">The document history you are trying to view could not be located.</p>
-        <Button onClick={() => dispatch({ type: 'SET_VIEW', payload: 'dashboard' })}>Return to Dashboard</Button>
-    </div>
-  )
+  useEffect(() => {
+    if (!document) {
+      dispatch({ type: 'SET_VIEW', payload: 'dashboard' })
+    }
+  }, [document, dispatch])
+
+  if (!document) return null
 
   return (
     <div className="flex flex-col h-full bg-background/50 backdrop-blur-md rounded-3xl overflow-hidden border border-white/20 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
