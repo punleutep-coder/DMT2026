@@ -12,7 +12,7 @@ import {
 } from '@/lib/initial-data'
 import { isDocumentExceedingPeriod } from '@/lib/document-utils'
 import { hasDepartmentPermission, hasPermission, hasLabelPermission } from '@/lib/permissions'
-import { sanitizeFirebaseKey } from '@/lib/utils'
+import { sanitizeFirebaseKey, normalizeToLatin } from '@/lib/utils'
 import { fromZonedTime } from 'date-fns-tz';
 
 type Action =
@@ -472,7 +472,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     let docs = permissionFilteredDocs;
 
     if (state.filter.search) {
-      const searchLower = state.filter.search.toLowerCase();
+      const searchNormalizedLower = normalizeToLatin(state.filter.search).toLowerCase();
       docs = docs.filter(doc => {
           const fieldsToSearch = [
             doc.id, doc.name, doc.documentType, doc.label, doc.secondaryId,
@@ -484,7 +484,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           const historyText = (doc.history || []).map(h => `${h.receiver} ${h.note}`).join(' ');
           fieldsToSearch.push(historyText);
 
-          return fieldsToSearch.some(field => field && field.toLowerCase().includes(searchLower));
+          return fieldsToSearch.some(field => field && normalizeToLatin(field).toLowerCase().includes(searchNormalizedLower));
       });
     }
 
@@ -570,7 +570,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (state.filter.search) {
-      const searchLower = state.filter.search.toLowerCase();
+      const searchNormalizedLower = normalizeToLatin(state.filter.search).toLowerCase();
       metricDocs = metricDocs.filter(doc => {
           const fieldsToSearch = [
             doc.id, doc.name, doc.documentType, doc.label, doc.secondaryId,
@@ -582,7 +582,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           const historyText = (doc.history || []).map(h => `${h.receiver} ${h.note}`).join(' ');
           fieldsToSearch.push(historyText);
 
-          return fieldsToSearch.some(field => field && field.toLowerCase().includes(searchLower));
+          return fieldsToSearch.some(field => field && normalizeToLatin(field).toLowerCase().includes(searchNormalizedLower));
       });
     }
 
