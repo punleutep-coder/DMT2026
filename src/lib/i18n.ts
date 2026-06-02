@@ -156,6 +156,12 @@ const translations = {
     completedSuccess: "Completed (Success)",
     completedUnsuccess: "Completed (Unsuccess)",
     exceedingPeriod: "Exceeding Period",
+    releaseDateReached: "Release Date Reached",
+    splitDocument: "Split Document",
+    days: "Days",
+    hours: "Hours",
+    minutes: "Minutes",
+    in: "in",
     
     // Search & Filter
     searchByDocIdLabel: "Search Document",
@@ -491,6 +497,12 @@ const translations = {
       completedSuccess: "បានបញ្ចប់ (ជោគជ័យ)",
       completedUnsuccess: "បានបញ្ចប់ (មិនជោគជ័យ)",
       exceedingPeriod: "លើសរយៈពេល",
+      releaseDateReached: "ដល់កាលបរិច្ឆេទចេញផ្សាយ",
+      splitDocument: "បំបែកឯកសារ",
+      days: "ថ្ងៃ",
+      hours: "ម៉ោង",
+      minutes: "នាទី",
+      in: "ក្នុង",
       
       // Search & Filter
       searchByDocIdLabel: "ស្វែងរកឯកសារ",
