@@ -1,4 +1,5 @@
 'use client'
+import { useState, useEffect } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +19,7 @@ import {
   BarChart3,
   Languages,
   Type,
+  Sparkles,
 } from 'lucide-react'
 import { useAppContext } from '@/hooks/use-app-context'
 import { hasPermission } from '@/lib/permissions'
@@ -94,6 +96,63 @@ const FontSizeSwitcher = () => {
     )
 }
 
+const BackgroundSwitcher = () => {
+    const [bgAnim, setBgAnim] = useState('default');
+
+    useEffect(() => {
+        const saved = localStorage.getItem('docuFlow_bgAnim') || 'default';
+        setBgAnim(saved);
+        applyBgClass(saved);
+    }, []);
+
+    const applyBgClass = (type: string) => {
+        if (typeof document === 'undefined') return;
+        const body = document.body;
+        body.classList.remove('bg-anim-orbs', 'bg-anim-fluid', 'bg-anim-particles', 'bg-anim-hue-shift');
+        if (type !== 'default') {
+            body.classList.add(`bg-anim-${type}`);
+        }
+    };
+
+    const handleSelect = (type: string) => {
+        setBgAnim(type);
+        localStorage.setItem('docuFlow_bgAnim', type);
+        applyBgClass(type);
+    };
+
+    const animOptions = [
+        { code: 'default', name: 'Default Warm' },
+        { code: 'orbs', name: 'Sunny Beach' },
+        { code: 'fluid', name: 'Fluid Waves' },
+        { code: 'particles', name: 'Twinkling Stars' },
+        { code: 'hue-shift', name: 'Aurora Beach' }
+    ] as const;
+
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="Background Style">
+                    <Sparkles className="h-4 w-4 text-[#000066]" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2" align="end">
+                <div className="flex flex-col gap-1">
+                    {animOptions.map(option => (
+                        <Button
+                            key={option.code}
+                            variant={bgAnim === option.code ? 'secondary' : 'ghost'}
+                            size="sm"
+                            className="justify-start font-body text-xs font-bold"
+                            onClick={() => handleSelect(option.code)}
+                        >
+                            {option.name}
+                        </Button>
+                    ))}
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
 
 export default function DashboardSidebar() {
   const { state, dispatch } = useAppContext()
@@ -208,6 +267,7 @@ export default function DashboardSidebar() {
               <strong className="text-xs sm:text-sm text-primary font-bold font-body truncate max-w-[100px] sm:max-w-[120px]">{currentUser.username}</strong>
             </div>
              <div className="flex items-center gap-1 sm:gap-2">
+               <BackgroundSwitcher />
                <FontSizeSwitcher />
                <LanguageSwitcher />
              </div>

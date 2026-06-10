@@ -75,7 +75,7 @@ export default function WorkflowChart() {
   return (
     <>
       <CardHeader>
-        <CardTitle className="text-[18px] text-[#000066] font-body [text-shadow:2px_2px_4px_rgba(0,0,0,0.2)]">{t('workflowStatus')}</CardTitle>
+        <CardTitle className="text-xl sm:text-2xl font-black text-primary font-headline uppercase tracking-tight">{t('workflowStatus')}</CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>

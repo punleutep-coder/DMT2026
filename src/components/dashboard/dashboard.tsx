@@ -110,7 +110,7 @@ export default function Dashboard() {
   return (
     <SidebarProvider>
       <DashboardSidebar />
-      <div className="relative flex min-h-svh flex-1 flex-col bg-transparent min-w-0 w-full overflow-x-hidden">
+      <div className="relative flex h-svh flex-1 flex-col bg-transparent min-w-0 w-full overflow-y-auto overflow-x-hidden">
         <DashboardHeader />
         <main className="flex-1 space-y-6 p-4 sm:p-6 md:p-8">
           {renderContent()}

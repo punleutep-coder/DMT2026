@@ -146,7 +146,11 @@ export default function DocumentTableRow({ doc, index }: DocumentTableRowProps) 
 
         if (viewMap[type]) {
             dispatch({ type: 'SET_VIEW', payload: viewMap[type] });
-            dispatch({ type: 'SET_MODAL', payload: { type: type as any, docId: docId as string, firestoreId: firestoreId as string }});
+            if (type === 'addNote') {
+                dispatch({ type: 'SET_MODAL', payload: { type: null, docId: docId as string, firestoreId: firestoreId as string }});
+            } else {
+                dispatch({ type: 'SET_MODAL', payload: { type: type as any, docId: docId as string, firestoreId: firestoreId as string }});
+            }
         } else {
             dispatch({ type: 'SET_MODAL', payload: { type: type as any, docId: docId as string, firestoreId: firestoreId as string }})
         }

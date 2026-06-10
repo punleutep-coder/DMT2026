@@ -35,14 +35,70 @@ const MetricCard = ({
   }
 
   const colorMap = {
-    blue: { text: 'text-[#000066]', bg: 'bg-[#000066]/10', accent: 'bg-[#000066]' },
-    teal: { text: 'text-teal-600', bg: 'bg-teal-600/10', accent: 'bg-teal-600' },
-    amber: { text: 'text-amber-600', bg: 'bg-amber-600/10', accent: 'bg-amber-600' },
-    red: { text: 'text-red-600', bg: 'bg-red-600/10', accent: 'bg-red-600' },
-    green: { text: 'text-green-600', bg: 'bg-green-600/10', accent: 'bg-green-600' },
-    emerald: { text: 'text-emerald-600', bg: 'bg-emerald-600/10', accent: 'bg-emerald-600' },
-    rose: { text: 'text-rose-600', bg: 'bg-rose-600/10', accent: 'bg-rose-600' },
-    orange: { text: 'text-orange-600', bg: 'bg-orange-600/10', accent: 'bg-orange-600' },
+    blue: { 
+      text: 'text-[#000066]', 
+      bg: 'bg-[#000066]/10', 
+      border: 'border-[#000066]/15', 
+      borderHover: 'group-hover:border-[#000066]/35',
+      borderActive: 'border-[#000066]/60',
+      accent: 'bg-[#000066]' 
+    },
+    teal: { 
+      text: 'text-teal-600', 
+      bg: 'bg-teal-600/10', 
+      border: 'border-teal-600/15', 
+      borderHover: 'group-hover:border-teal-600/35',
+      borderActive: 'border-teal-600/60',
+      accent: 'bg-teal-600' 
+    },
+    amber: { 
+      text: 'text-amber-600', 
+      bg: 'bg-amber-600/10', 
+      border: 'border-amber-600/15', 
+      borderHover: 'group-hover:border-amber-600/35',
+      borderActive: 'border-amber-600/60',
+      accent: 'bg-amber-600' 
+    },
+    red: { 
+      text: 'text-red-600', 
+      bg: 'bg-red-600/10', 
+      border: 'border-red-600/15', 
+      borderHover: 'group-hover:border-red-600/35',
+      borderActive: 'border-red-600/60',
+      accent: 'bg-red-600' 
+    },
+    green: { 
+      text: 'text-green-600', 
+      bg: 'bg-green-600/10', 
+      border: 'border-green-600/15', 
+      borderHover: 'group-hover:border-green-600/35',
+      borderActive: 'border-green-600/60',
+      accent: 'bg-green-600' 
+    },
+    emerald: { 
+      text: 'text-emerald-600', 
+      bg: 'bg-emerald-600/10', 
+      border: 'border-emerald-600/15', 
+      borderHover: 'group-hover:border-emerald-600/35',
+      borderActive: 'border-emerald-600/60',
+      accent: 'bg-emerald-600' 
+    },
+    rose: { 
+      text: 'text-rose-600', 
+      bg: 'bg-rose-600/10', 
+      border: 'border-rose-600/15', 
+      borderHover: 'group-hover:border-rose-600/35',
+      borderActive: 'border-rose-600/60',
+      accent: 'bg-rose-600' 
+    },
+    orange: { 
+      text: 'text-orange-600', 
+      bg: 'bg-orange-600/10', 
+      border: 'border-orange-600/15', 
+      borderHover: 'group-hover:border-orange-600/35',
+      borderActive: 'border-orange-600/60',
+      accent: 'bg-orange-600' 
+    },
   };
 
   const colors = colorMap[baseColor];
@@ -50,8 +106,10 @@ const MetricCard = ({
   return (
     <Card
       className={cn(
-        "dashboard-metric-box relative overflow-hidden group border border-gray-600 transition-all duration-500 rounded-xl min-h-[100px] sm:min-h-[120px] lg:min-h-[140px]",
-        isActive && "active"
+        "dashboard-metric-box relative overflow-hidden group border transition-all duration-500 rounded-xl min-h-[100px] sm:min-h-[120px] lg:min-h-[140px]",
+        isActive 
+          ? cn("active", colors.borderActive) 
+          : cn(colors.border, colors.borderHover)
       )}
       onClick={handleClick}
     >
@@ -59,7 +117,7 @@ const MetricCard = ({
         <div className="flex items-start justify-between mb-1 sm:mb-2">
           <div className="space-y-1 overflow-hidden flex-1">
             <p 
-              className="text-xs sm:text-sm lg:text-base font-bold uppercase tracking-tight text-[#000099] leading-tight font-body opacity-80"
+              className="text-xs sm:text-sm lg:text-base font-black uppercase tracking-tight text-[#000099] leading-tight font-body"
               title={title}
             >
               {title}
@@ -85,7 +143,8 @@ const MetricCard = ({
       </CardContent>
       
       <div className={cn(
-        "absolute -bottom-12 -right-12 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-full",
+        "absolute -bottom-16 -right-16 w-32 h-32 blur-[40px] transition-opacity duration-500 rounded-full",
+        isActive ? "opacity-35" : "opacity-0 group-hover:opacity-20",
         colors.accent
       )} />
     </Card>

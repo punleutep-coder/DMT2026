@@ -171,6 +171,8 @@ const translations = {
     docsExceeding: "Documents exceeding:",
     allDepartments: "All Departments",
     calculate: "Calculate",
+    advancedFilter: "Advanced Filter",
+    advancedSettings: "Advanced Settings",
 
     // Action Menu
     viewLog: "View Log",
@@ -512,6 +514,8 @@ const translations = {
       docsExceeding: "ឯកសារលើសពី:",
       allDepartments: "នាយកដ្ឋានទាំងអស់",
       calculate: "គណនា",
+      advancedFilter: "តម្រងកម្រិតខ្ពស់",
+      advancedSettings: "ការកំណត់កម្រិតខ្ពស់",
 
       // Action Menu
       viewLog: "មើលកំណត់ហេតុ",

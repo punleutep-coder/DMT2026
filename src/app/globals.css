@@ -20,8 +20,8 @@
     --accent-foreground: 210 20% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 220 9% 70%;
-    --input: 220 9% 70%;
+    --border: 220 9% 45%;
+    --input: 220 9% 45%;
     --ring: 240 100% 20%;
     --radius: 0.5rem;
     --chart-1: 220.9 39.3% 11%;
@@ -73,13 +73,13 @@
   }
 
   strong, th, label, b, span, p, a, button {
-    font-weight: 400 !important;
+    font-weight: 400;
   }
 
   input, button, textarea, select, optgroup, option {
     font-family: inherit;
     font-size: inherit;
-    font-weight: 400 !important;
+    font-weight: 400;
     line-height: inherit;
   }
 }
@@ -91,21 +91,24 @@
   }
 
   .glassmorphic-card {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(156, 163, 175, 0.6);
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(156, 163, 175, 0.28) !important;
     box-shadow: 
-      0 4px 6px -1px rgba(0, 0, 0, 0.05), 
-      0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      0 4px 20px 0 rgba(15, 23, 42, 0.02),
+      0 10px 15px -3px rgba(15, 23, 42, 0.01),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
     @apply rounded-2xl p-4 sm:p-6 transition-all duration-300;
   }
   
   .glassmorphic-card:hover {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.48);
+    border: 1px solid rgba(156, 163, 175, 0.42) !important;
     box-shadow: 
-      0 10px 15px -3px rgba(0, 0, 0, 0.08), 
-      0 4px 6px -2px rgba(0, 0, 0, 0.04);
+      0 20px 25px -5px rgba(15, 23, 42, 0.04),
+      0 10px 10px -5px rgba(15, 23, 42, 0.02),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
   }
 }
 
@@ -139,26 +142,33 @@
 }
 
 .dashboard-metric-box {
-  @apply cursor-pointer transition-all duration-500 ease-out border border-white/50 bg-white/40 backdrop-blur-md;
+  @apply cursor-pointer transition-all duration-500 ease-out backdrop-blur-lg bg-white/25;
   box-shadow: 
-    0 2px 4px rgba(0,0,0,0.02), 
-    0 4px 8px rgba(0,0,0,0.02), 
-    0 8px 16px rgba(0,0,0,0.02), 
-    0 16px 32px rgba(0,0,0,0.02);
+    0 2px 4px rgba(15, 23, 42, 0.01),
+    0 4px 8px rgba(15, 23, 42, 0.015),
+    0 8px 16px rgba(15, 23, 42, 0.015),
+    0 16px 32px rgba(15, 23, 42, 0.01),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .dashboard-metric-box:hover {
-  @apply -translate-y-2 bg-white/60;
+  @apply -translate-y-1.5 bg-white/40;
   box-shadow: 
-    0 10px 20px rgba(0,0,0,0.04), 
-    0 20px 40px rgba(0,0,0,0.04), 
-    0 30px 60px rgba(0,0,0,0.04);
+    0 4px 6px rgba(15, 23, 42, 0.02),
+    0 10px 15px rgba(15, 23, 42, 0.025),
+    0 20px 25px rgba(15, 23, 42, 0.025),
+    0 35px 50px rgba(15, 23, 42, 0.03),
+    0 50px 80px rgba(15, 23, 42, 0.02),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .dashboard-metric-box.active {
-  @apply bg-white/80 ring-2 ring-primary/40;
-  transform: scale(0.98) translateY(2px);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+  @apply bg-white/50 ring-2 ring-primary/10;
+  box-shadow: 
+    0 2px 4px rgba(15, 23, 42, 0.01),
+    0 6px 12px rgba(15, 23, 42, 0.02),
+    inset 0 2px 4px 0 rgba(15, 23, 42, 0.04);
+  transform: scale(0.97) translateY(2px);
 }
 
  .loader {
@@ -315,7 +325,7 @@
 .border-white\/70,
 .border-white\/80,
 .border-white\/90 {
-  border-color: rgba(156, 163, 175, 0.5) !important;
+  border-color: rgba(75, 85, 99, 0.75) !important;
 }
 
 /* Responsive font sizes mapped to root html elements */
@@ -328,3 +338,267 @@ html.font-size-md {
 html.font-size-lg {
   font-size: 112.5% !important; /* 18px */
 }
+
+/* Animated Background Options */
+
+/* 1. Glass Orbs (Sunny Beach) Background */
+body.bg-anim-orbs {
+  background-color: #f1f5f9;
+  background-image: url('/sunny-beach.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+  position: relative;
+  overflow: hidden;
+}
+body.bg-anim-orbs::before,
+body.bg-anim-orbs::after {
+  content: '';
+  position: fixed;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: -2;
+  opacity: 0.45;
+  pointer-events: none;
+}
+body.bg-anim-orbs::before {
+  background: radial-gradient(circle, rgba(254, 240, 138, 0.4) 0%, rgba(254, 240, 138, 0) 70%);
+  top: -20vw;
+  left: -20vw;
+  animation: orb-move-1 25s infinite alternate ease-in-out;
+}
+body.bg-anim-orbs::after {
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.35) 0%, rgba(34, 211, 238, 0) 70%);
+  bottom: -20vw;
+  right: -20vw;
+  animation: orb-move-2 25s infinite alternate ease-in-out;
+}
+@keyframes orb-move-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(10vw, 15vh) scale(1.2); }
+  100% { transform: translate(-5vw, 5vh) scale(0.9); }
+}
+@keyframes orb-move-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-15vw, -10vh) scale(0.85); }
+  100% { transform: translate(5vw, -15vh) scale(1.15); }
+}
+
+/* 2. Fluid Waves (Mesh Gradient) */
+body.bg-anim-fluid {
+  background: linear-gradient(135deg, #e0f2fe, #fef08a, #fce7f3, #dcfce7);
+  background-size: 400% 400% !important;
+  background-image: linear-gradient(135deg, #e0f2fe, #fef08a, #fce7f3, #dcfce7) !important;
+  animation: fluid-waves 18s ease infinite !important;
+}
+@keyframes fluid-waves {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 3. Twinkling Warm Stars */
+body.bg-anim-particles {
+  background-color: #0f172a;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0),
+                    radial-gradient(rgba(255, 255, 255, 0.1) 2px, transparent 0) !important;
+  background-size: 40px 40px, 80px 80px !important;
+  animation: particle-shift 30s linear infinite !important;
+}
+@keyframes particle-shift {
+  0% { background-position: 0px 0px, 0px 0px; }
+  100% { background-position: 40px 80px, 80px 160px; }
+}
+
+/* 4. Aurora Sunset Beach View */
+body.bg-anim-hue-shift {
+  background-color: #0f172a;
+  background-image: url('/beach.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+  animation: beach-sunset-shift 24s ease-in-out infinite alternate !important;
+}
+@keyframes beach-sunset-shift {
+  0% { filter: hue-rotate(0deg) saturate(1) brightness(1); }
+  50% { filter: hue-rotate(10deg) saturate(1.1) brightness(1.05); }
+  100% { filter: hue-rotate(-10deg) saturate(0.95) brightness(0.95); }
+}
+
+/* Sidebar adjustments to match background animations */
+body.bg-anim-particles [data-sidebar="sidebar"] {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  border-right-color: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(20px);
+}
+body.bg-anim-hue-shift [data-sidebar="sidebar"] {
+  background-color: rgba(30, 20, 50, 0.5) !important; /* twilight indigo-purple glass */
+  border-right-color: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(20px);
+}
+body.bg-anim-fluid [data-sidebar="sidebar"] {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  border-right-color: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(20px);
+}
+body.bg-anim-orbs [data-sidebar="sidebar"] {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  border-right-color: rgba(156, 163, 175, 0.28) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* Sidebar dark theme text/icon color overrides */
+body.bg-anim-particles [data-sidebar="sidebar"],
+body.bg-anim-hue-shift [data-sidebar="sidebar"] {
+  color: #f1f5f9 !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] h2,
+body.bg-anim-hue-shift [data-sidebar="sidebar"] h2 {
+  color: #ffffff !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] span,
+body.bg-anim-hue-shift [data-sidebar="sidebar"] span {
+  color: #94a3b8 !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] strong,
+body.bg-anim-hue-shift [data-sidebar="sidebar"] strong {
+  color: #ffffff !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] button:not([data-active=true]),
+body.bg-anim-hue-shift [data-sidebar="sidebar"] button:not([data-active=true]) {
+  color: #cbd5e1 !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] button:not([data-active=true]):hover,
+body.bg-anim-hue-shift [data-sidebar="sidebar"] button:not([data-active=true]):hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] svg,
+body.bg-anim-hue-shift [data-sidebar="sidebar"] svg {
+  color: #94a3b8 !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] button[data-active=true] svg,
+body.bg-anim-hue-shift [data-sidebar="sidebar"] button[data-active=true] svg {
+  color: #ffffff !important;
+}
+body.bg-anim-particles [data-sidebar="sidebar"] button[data-active=true],
+body.bg-anim-hue-shift [data-sidebar="sidebar"] button[data-active=true] {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+/* Card and typography readability improvements under Aurora Beach theme */
+body.bg-anim-hue-shift .glassmorphic-card {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+body.bg-anim-hue-shift .glassmorphic-card:hover {
+  background: rgba(255, 255, 255, 0.82) !important;
+}
+
+/* Make text inside dashboard metrics and tables extremely readable */
+body.bg-anim-hue-shift .dashboard-metric-box {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+body.bg-anim-hue-shift .dashboard-metric-box:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Heading & general text styling for readability in Aurora Beach */
+body.bg-anim-hue-shift h1,
+body.bg-anim-hue-shift h2,
+body.bg-anim-hue-shift h3,
+body.bg-anim-hue-shift h4,
+body.bg-anim-hue-shift h5,
+body.bg-anim-hue-shift h6 {
+  color: #1e1b4b !important; /* deep indigo */
+  font-weight: 800 !important; /* bold, sharp headings */
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+body.bg-anim-hue-shift p,
+body.bg-anim-hue-shift span:not(.text-muted-foreground),
+body.bg-anim-hue-shift td,
+body.bg-anim-hue-shift th {
+  color: #0f172a !important; /* dark slate */
+  font-weight: 500 !important;
+}
+
+/* Department badge / pill texts visibility */
+body.bg-anim-hue-shift .text-muted-foreground {
+  color: #475569 !important; /* darker gray for muted text */
+  font-weight: 600 !important;
+}
+
+/* Ensure table headers are highly legible */
+body.bg-anim-hue-shift th {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+/* Card and typography readability improvements under Glass Orbs (Sunny Beach) theme */
+body.bg-anim-orbs [data-sidebar="sidebar"] {
+  background-color: rgba(255, 255, 255, 0.55) !important; /* light sky blue-white glass */
+  border-right-color: rgba(15, 23, 42, 0.12) !important;
+  backdrop-filter: blur(20px);
+}
+
+body.bg-anim-orbs .glassmorphic-card {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+body.bg-anim-orbs .glassmorphic-card:hover {
+  background: rgba(255, 255, 255, 0.82) !important;
+}
+
+body.bg-anim-orbs .dashboard-metric-box {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+body.bg-anim-orbs .dashboard-metric-box:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Heading & general text styling for readability in Sunny Beach */
+body.bg-anim-orbs h1,
+body.bg-anim-orbs h2,
+body.bg-anim-orbs h3,
+body.bg-anim-orbs h4,
+body.bg-anim-orbs h5,
+body.bg-anim-orbs h6 {
+  color: #032b57 !important; /* deep ocean navy */
+  font-weight: 800 !important; /* bold, sharp headings */
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+body.bg-anim-orbs p,
+body.bg-anim-orbs span:not(.text-muted-foreground),
+body.bg-anim-orbs td,
+body.bg-anim-orbs th {
+  color: #0f172a !important; /* dark slate */
+  font-weight: 500 !important;
+}
+
+body.bg-anim-orbs .text-muted-foreground {
+  color: #475569 !important; /* darker gray for muted text */
+  font-weight: 600 !important;
+}
+
+body.bg-anim-orbs th {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+
+

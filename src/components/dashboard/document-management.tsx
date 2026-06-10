@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button'
 import DocumentTable from './document-table'
 import { useAppContext } from '@/hooks/use-app-context'
-import SearchAndFilter from './search-and-filter'
+import SearchAndFilter, { AdvancedFilterAccordion } from './search-and-filter'
 import {
   Combine,
   Library,
@@ -21,7 +21,14 @@ import {
   PencilLine,
   CheckCircle,
   FilePlus,
+  Settings,
 } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { hasPermission } from '@/lib/permissions'
 import { useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
@@ -199,87 +206,113 @@ export default function DocumentManagement() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 sm:gap-2">
-        {hasPermission(currentUser, 'canAddDocument') && (
-          <Button onClick={() => openModal('addDocument')} size="sm" className="bg-[#000066] hover:bg-[#000099] text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-            <FilePlus className="w-3.5 h-3.5 mr-1.5" /> {t('addDocument')}
-          </Button>
-        )}
-        {hasPermission(currentUser, 'canMoveDocumentAdvance') && (
-          <Button onClick={() => openModal('bulkAdvance')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-green-700 hover:bg-green-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-            <Redo2 className="w-3.5 h-3.5 mr-1.5" /> {t('bulkAdvance')}
-          </Button>
-        )}
-        {hasPermission(currentUser, 'canEditDocumentName') && (
-            <Button onClick={() => openModal('bulkEditDetails')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-orange-700 hover:bg-orange-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <PencilLine className="w-3.5 h-3.5 mr-1.5" /> {t('bulkEdit')}
+      <div className="space-y-4">
+        {/* Core Actions Group */}
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          {hasPermission(currentUser, 'canAddDocument') && (
+            <Button onClick={() => openModal('addDocument')} size="sm" className="bg-[#000066] hover:bg-[#000099] text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+              <FilePlus className="w-3.5 h-3.5 mr-1.5" /> {t('addDocument')}
             </Button>
-        )}
-        {hasPermission(currentUser, 'canCompleteDocument') && (
-            <Button onClick={() => openModal('bulkComplete')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('bulkComplete')}
+          )}
+          {hasPermission(currentUser, 'canMoveDocumentAdvance') && (
+            <Button onClick={() => openModal('bulkAdvance')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-green-700 hover:bg-green-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+              <Redo2 className="w-3.5 h-3.5 mr-1.5" /> {t('bulkAdvance')}
             </Button>
-        )}
-        {hasPermission(currentUser, 'canCombineDocuments') && (
-          <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} size="sm" className="bg-blue-900 hover:bg-blue-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-            <Combine className="w-3.5 h-3.5 mr-1.5" /> {t('combineSelected')}
-          </Button>
-        )}
-        {hasPermission(currentUser, 'canDeleteDocument') && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteSelected}
-            disabled={state.selectedDocIds.length === 0}
-            className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs"
-          >
-            <Trash2 className="w-3.5 h-3.5 mr-1.5" /> {t('deleteSelected')}
-          </Button>
-        )}
-        
-        {currentUser?.role === 'Admin' && (
-          <>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageDepartments')} className="bg-indigo-900 hover:bg-indigo-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <Library className="w-3.5 h-3.5 mr-1.5" /> {t('manageWorkflowDepts')}
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-900 hover:bg-cyan-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <FileDigit className="w-3.5 h-3.5 mr-1.5" /> {t('manageDocTypes')}
-            </Button>
-             <Button variant="secondary" size="sm" onClick={() => openModal('manageLabels')} className="bg-rose-900 hover:bg-rose-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <Tags className="w-3.5 h-3.5 mr-1.5" /> {t('manageLabels')}
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageReceivers')} className="bg-orange-800 hover:bg-orange-900 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <Users2 className="w-3.5 h-3.5 mr-1.5" /> {t('manageReceivers')}
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-900 hover:bg-teal-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <FileCog className="w-3.5 h-3.5 mr-1.5" /> {t('manageAssignedDepts')}
-            </Button>
-          </>
-        )}
-        
-        {hasPermission(currentUser, 'canManageColumns') && (
-            <Button variant="secondary" size="sm" onClick={() => openModal('manageColumns')} className="bg-purple-900 hover:bg-purple-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
-                <Columns className="w-3.5 h-3.5 mr-1.5" /> {t('manageColumns')}
-            </Button>
-        )}
-         {hasPermission(currentUser, 'canExportData') && (
-            <>
-              <Button variant="outline" size="sm" onClick={handleExport} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
-                  <Download className="w-3.5 h-3.5 mr-1.5" /> {t('exportData')}
+          )}
+          {hasPermission(currentUser, 'canEditDocumentName') && (
+              <Button onClick={() => openModal('bulkEditDetails')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-orange-700 hover:bg-orange-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                  <PencilLine className="w-3.5 h-3.5 mr-1.5" /> {t('bulkEdit')}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => openModal('exportXLSX')} disabled={state.selectedDocIds.length === 0} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
-                <FileOutput className="w-3.5 h-3.5 mr-1.5" /> Export (XLSX)
+          )}
+          {hasPermission(currentUser, 'canCompleteDocument') && (
+              <Button onClick={() => openModal('bulkComplete')} disabled={state.selectedDocIds.length === 0} size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('bulkComplete')}
               </Button>
-            </>
-        )}
-         {currentUser?.role === 'Admin' && (
-            <>
-                <Button variant="outline" size="sm" onClick={handleImportClick} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
-                    <Upload className="w-3.5 h-3.5 mr-1.5" /> {t('importData')}
-                </Button>
-                <input type="file" id="json-file-input" accept=".json" className="hidden" onChange={handleImportFile} />
-            </>
-        )}
+          )}
+          {hasPermission(currentUser, 'canCombineDocuments') && (
+            <Button onClick={() => openModal('combineDocuments')} disabled={state.selectedDocIds.length < 2} size="sm" className="bg-blue-900 hover:bg-blue-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+              <Combine className="w-3.5 h-3.5 mr-1.5" /> {t('combineSelected')}
+            </Button>
+          )}
+          {hasPermission(currentUser, 'canDeleteDocument') && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteSelected}
+              disabled={state.selectedDocIds.length === 0}
+              className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" /> {t('deleteSelected')}
+            </Button>
+          )}
+        </div>
+
+        {/* Advanced Grid: Settings & Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Advanced Settings Accordion */}
+          {(currentUser?.role === 'Admin' || hasPermission(currentUser, 'canManageColumns') || hasPermission(currentUser, 'canExportData')) ? (
+            <Accordion type="single" collapsible className="w-full border rounded-2xl px-6 bg-white/30 border-white/20 shadow-sm">
+              <AccordionItem value="advanced-settings" className="border-b-0">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-5 w-5 text-indigo-600" />
+                    <span className="font-bold text-base text-indigo-600 uppercase tracking-tight">{t('advancedSettings')}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 pb-6">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {currentUser?.role === 'Admin' && (
+                      <>
+                        <Button variant="secondary" size="sm" onClick={() => openModal('manageDepartments')} className="bg-indigo-900 hover:bg-indigo-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                            <Library className="w-3.5 h-3.5 mr-1.5" /> {t('manageWorkflowDepts')}
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => openModal('manageDocumentTypes')} className="bg-cyan-900 hover:bg-cyan-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                            <FileDigit className="w-3.5 h-3.5 mr-1.5" /> {t('manageDocTypes')}
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => openModal('manageLabels')} className="bg-rose-900 hover:bg-rose-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                            <Tags className="w-3.5 h-3.5 mr-1.5" /> {t('manageLabels')}
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => openModal('manageReceivers')} className="bg-orange-800 hover:bg-orange-900 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                            <Users2 className="w-3.5 h-3.5 mr-1.5" /> {t('manageReceivers')}
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => openModal('manageAssignedDepartments')} className="bg-teal-900 hover:bg-teal-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                            <FileCog className="w-3.5 h-3.5 mr-1.5" /> {t('manageAssignedDepts')}
+                        </Button>
+                      </>
+                    )}
+                    
+                    {hasPermission(currentUser, 'canManageColumns') && (
+                        <Button variant="secondary" size="sm" onClick={() => openModal('manageColumns')} className="bg-purple-900 hover:bg-purple-950 text-white shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl transition-all active:scale-95 text-xs">
+                            <Columns className="w-3.5 h-3.5 mr-1.5" /> {t('manageColumns')}
+                        </Button>
+                    )}
+                    {hasPermission(currentUser, 'canExportData') && (
+                        <>
+                          <Button variant="outline" size="sm" onClick={handleExport} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
+                              <Download className="w-3.5 h-3.5 mr-1.5" /> {t('exportData')}
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => openModal('exportXLSX')} disabled={state.selectedDocIds.length === 0} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
+                            <FileOutput className="w-3.5 h-3.5 mr-1.5" /> Export (XLSX)
+                          </Button>
+                        </>
+                    )}
+                    {currentUser?.role === 'Admin' && (
+                        <>
+                            <Button variant="outline" size="sm" onClick={handleImportClick} className="shadow-lg font-body h-8 sm:h-9 px-3 rounded-xl hover:bg-black/5 text-xs">
+                                <Upload className="w-3.5 h-3.5 mr-1.5" /> {t('importData')}
+                            </Button>
+                            <input type="file" id="json-file-input" accept=".json" className="hidden" onChange={handleImportFile} />
+                        </>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          ) : <div />}
+
+          {/* Advanced Filter Accordion */}
+          <AdvancedFilterAccordion />
+        </div>
       </div>
 
       <SearchAndFilter />
